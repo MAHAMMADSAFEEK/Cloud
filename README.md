@@ -11,693 +11,547 @@
   --bg:#0f1117;--bg2:#181c27;--surface:#1e2336;--surface2:#252b40;
   --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
   --text:#f0f2f8;--muted:#8b92b0;--accent:#4f8ef7;--accent2:#34c98a;
-  --warn:#f5a623;--danger:#e74c3c;--purple:#9b6dff;
   --radius:10px;--radius-lg:16px;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-.topbar-left{display:flex;align-items:center;gap:14px;}
-.logo{font-size:18px;font-weight:600;color:var(--accent);letter-spacing:-0.3px;display:flex;align-items:center;gap:8px;}
-.logo i{font-size:20px;}
-.tagline{font-size:12px;color:var(--muted);}
-.topbar-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-#status-badge{font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(52,201,138,0.15);color:var(--accent2);border:1px solid rgba(52,201,138,0.3);}
-.btn{font-size:12px;padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
-.btn:hover{background:var(--surface2);border-color:var(--accent);}
-.btn-primary{background:var(--accent);border-color:var(--accent);color:#fff;}
-.btn-primary:hover{background:#3a7de0;border-color:#3a7de0;}
-.setup-panel{background:var(--bg2);border-bottom:1px solid var(--border);padding:20px 28px;}
-.setup-panel h2{font-size:13px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.05em;}
-.sheet-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.sheet-input-wrap{display:flex;flex-direction:column;gap:4px;}
-.sheet-input-wrap label{font-size:11px;color:var(--muted);}
-.sheet-input-wrap input{font-size:13px;padding:8px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg);color:var(--text);outline:none;width:100%;}
-.sheet-input-wrap input:focus{border-color:var(--accent);}
-.sheet-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.logo{font-size:18px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px;}
+.tagline{font-size:12px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+#status-badge{font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.3);}
+#last-updated{font-size:11px;color:var(--muted);}
+.btn-refresh{font-size:12px;padding:8px 18px;border-radius:var(--radius);border:1px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.btn-refresh:hover{background:#3a7de0;}
+.btn-refresh.spinning i{animation:spin 0.8s linear infinite;}
 .main{padding:24px 28px;}
-.section-title{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
-.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:28px;}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;position:relative;overflow:hidden;}
-.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-color,var(--accent));}
-.metric .icon{font-size:22px;color:var(--accent-color,var(--accent));margin-bottom:10px;opacity:0.85;}
-.metric .lbl{font-size:11px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.04em;}
-.metric .val{font-size:32px;font-weight:600;line-height:1;}
-.metric .sub{font-size:11px;color:var(--muted);margin-top:6px;}
-.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:28px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;}
-.card-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
-.card-title i{font-size:16px;color:var(--accent);}
-.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
-.filter-row select{font-size:12px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;outline:none;}
-.filter-row select:focus{border-color:var(--accent);}
-.filter-row label{font-size:12px;color:var(--muted);}
-.table-wrap{overflow-x:auto;border-radius:var(--radius);}
-table{width:100%;border-collapse:collapse;font-size:13px;}
-th{text-align:left;font-weight:500;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);padding:10px 12px;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;}
-td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
-tr:last-child td{border-bottom:none;}
-tr:hover td{background:var(--surface2);}
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;}
-.badge-green{background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.25);}
-.badge-blue{background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.25);}
-.badge-red{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.25);}
-.badge-orange{background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.25);}
-.badge-purple{background:rgba(155,109,255,0.15);color:#9b6dff;border:1px solid rgba(155,109,255,0.25);}
-.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-.progress-label{font-size:12px;color:var(--text);min-width:120px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.progress-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
-.progress-fill{height:100%;border-radius:4px;transition:width 0.6s ease;}
-.progress-count{font-size:12px;color:var(--muted);min-width:30px;text-align:right;}
-.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto;}
-.tab{font-size:13px;padding:8px 18px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;}
-.tab.active{background:var(--surface);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.3);}
+.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:4px;margin-bottom:24px;overflow-x:auto;}
+.tab{font-size:13px;padding:8px 18px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;display:flex;align-items:center;gap:6px;}
+.tab.active{background:var(--surface);color:var(--text);}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
+.section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:24px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;position:relative;overflow:hidden;}
+.metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc,var(--accent));}
+.metric .micon{font-size:20px;color:var(--mc,var(--accent));margin-bottom:8px;}
+.metric .mlbl{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.04em;}
+.metric .mval{font-size:30px;font-weight:600;line-height:1;}
+.metric .msub{font-size:11px;color:var(--muted);margin-top:5px;}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-bottom:24px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 22px;}
+.card-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.card-title i{color:var(--accent);font-size:16px;}
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+.filter-row label{font-size:12px;color:var(--muted);}
+.filter-row select,.filter-row input[type=date]{font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;outline:none;}
+.clr-btn{font-size:12px;padding:6px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;}
+.clr-btn:hover{color:var(--text);}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border);padding:9px 12px;text-transform:uppercase;letter-spacing:0.04em;white-space:nowrap;}
+td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface2);}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500;}
+.bg{background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.25);}
+.bb{background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.25);}
+.br{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.25);}
+.bo{background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.25);}
+.bp{background:rgba(155,109,255,0.15);color:#9b6dff;border:1px solid rgba(155,109,255,0.25);}
+.pr-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.pr-lbl{font-size:12px;min-width:130px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pr-track{flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;}
+.pr-fill{height:100%;border-radius:4px;transition:width 0.5s;}
+.pr-cnt{font-size:12px;color:var(--muted);min-width:28px;text-align:right;}
+.avatar{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;}
 .empty{text-align:center;color:var(--muted);padding:40px;font-size:13px;}
-.empty i{font-size:32px;display:block;margin-bottom:8px;opacity:0.4;}
-.pe-avatar{width:32px;height:32px;border-radius:50%;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;}
-#loading-overlay{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;}
-#loading-overlay.hidden{display:none;}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+#overlay{position:fixed;inset:0;background:rgba(15,17,23,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:999;}
+#overlay.hidden{display:none;}
+.spin{width:38px;height:38px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-size:14px;color:var(--muted);}
-@media(max-width:600px){.main{padding:16px;}.topbar{padding:12px 16px;}.sheet-grid{grid-template-columns:1fr;}}
+#overlay-txt{font-size:14px;color:var(--muted);}
+@media(max-width:600px){.main{padding:14px;}.topbar{padding:12px 16px;}.tagline{display:none;}}
 </style>
 </head>
 <body>
 
-<div id="loading-overlay" class="hidden">
-  <div class="spinner"></div>
-  <div class="load-txt" id="load-txt">Loading data…</div>
+<!-- Full-screen loading overlay -->
+<div id="overlay">
+  <div class="spin"></div>
+  <div id="overlay-txt">Connecting to Google Sheets…</div>
 </div>
 
+<!-- Top bar — ONLY logo + status + refresh -->
 <div class="topbar">
-  <div class="topbar-left">
+  <div style="display:flex;align-items:center;gap:12px;">
     <div class="logo"><i class="ti ti-bolt"></i> Ops Dashboard</div>
     <span class="tagline">PE · Attendance · TBT · DPR</span>
   </div>
   <div class="topbar-right">
-    <span id="status-badge"><i class="ti ti-circle-dot" style="font-size:10px;vertical-align:1px;"></i> Not loaded</span>
-    <span id="last-updated" style="font-size:11px;color:var(--muted);"></span>
-    <button class="btn btn-primary" onclick="loadAllSheets()"><i class="ti ti-refresh"></i> Refresh</button>
+    <span id="status-badge"><i class="ti ti-loader" style="font-size:10px;"></i> Loading…</span>
+    <span id="last-updated"></span>
+    <button class="btn-refresh" onclick="loadAll()">
+      <i class="ti ti-refresh"></i> Refresh
+    </button>
   </div>
 </div>
 
-<div class="setup-panel" id="setup-panel">
-  <h2>Google Sheet Configuration</h2>
-  <div class="sheet-grid">
-    <div class="sheet-input-wrap">
-      <label>Sheet ID</label>
-      <input type="text" id="sheet-id" placeholder="1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA" value="1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA"/>
-    </div>
-    <div class="sheet-input-wrap">
-      <label>Sheet tabs (GIDs — leave blank to use names)</label>
-      <input type="text" id="sheet-gids" placeholder="PE Master GID, Attendance GID, TBT GID, DPR GID" value=""/>
-    </div>
-  </div>
-  <div class="sheet-actions">
-    <button class="btn btn-primary" onclick="loadAllSheets()"><i class="ti ti-download"></i> Load Data</button>
-    <button class="btn" onclick="document.getElementById('setup-panel').style.display='none'"><i class="ti ti-chevron-up"></i> Hide</button>
-  </div>
-  <p style="font-size:11px;color:var(--muted);margin-top:10px;">Make sure the Google Sheet is set to <em>Anyone with the link can view</em>. The dashboard will auto-detect columns.</p>
-</div>
-
-<div class="main">
-  <div id="dashboard" style="display:none;">
-
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('pe')"><i class="ti ti-users" style="font-size:14px;vertical-align:-2px;margin-right:5px;"></i>PE Overview</button>
-      <button class="tab" onclick="switchTab('attendance')"><i class="ti ti-calendar-check" style="font-size:14px;vertical-align:-2px;margin-right:5px;"></i>Attendance</button>
-      <button class="tab" onclick="switchTab('tbt')"><i class="ti ti-clipboard-list" style="font-size:14px;vertical-align:-2px;margin-right:5px;"></i>TBT</button>
-      <button class="tab" onclick="switchTab('dpr')"><i class="ti ti-file-report" style="font-size:14px;vertical-align:-2px;margin-right:5px;"></i>DPR</button>
-    </div>
-
-    <!-- PE Overview Tab -->
-    <div id="tab-pe" class="tab-content active">
-      <div class="section-title">PE Summary</div>
-      <div class="metrics" id="pe-metrics"></div>
-      <div class="charts-grid">
-        <div class="card" style="grid-column:span 2;">
-          <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
-          <div class="filter-row">
-            <label>Dept:</label>
-            <select id="pe-filter-dept" onchange="renderPETable()"><option value="">All</option></select>
-            <label>Region:</label>
-            <select id="pe-filter-region" onchange="renderPETable()"><option value="">All</option></select>
-            <label>City:</label>
-            <select id="pe-filter-city" onchange="renderPETable()"><option value="">All</option></select>
-          </div>
-          <div class="table-wrap"><table><thead id="pe-thead"></thead><tbody id="pe-tbody"></tbody></table></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Attendance Tab -->
-    <div id="tab-attendance" class="tab-content">
-      <div class="section-title">Attendance Summary</div>
-      <div class="metrics" id="att-metrics"></div>
-      <div class="charts-grid">
-        <div class="card">
-          <div class="card-title"><i class="ti ti-map-pin"></i> City-wise Attendance</div>
-          <div id="city-chart-wrap"></div>
-        </div>
-        <div class="card">
-          <div class="card-title"><i class="ti ti-building"></i> Project-wise Visits</div>
-          <div id="project-chart-wrap"></div>
-        </div>
-        <div class="card" style="grid-column:1/-1;">
-          <div class="card-title"><i class="ti ti-list-details"></i> Attendance Log</div>
-          <div class="filter-row">
-            <label>Date:</label>
-            <input type="date" id="att-date-filter" onchange="renderAttTable()" style="font-size:12px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);">
-            <label>Status:</label>
-            <select id="att-status-filter" onchange="renderAttTable()"><option value="">All</option></select>
-            <label>City:</label>
-            <select id="att-city-filter" onchange="renderAttTable()"><option value="">All</option></select>
-            <button class="btn" onclick="document.getElementById('att-date-filter').value='';renderAttTable()"><i class="ti ti-x"></i> Clear</button>
-          </div>
-          <div class="table-wrap"><table><thead id="att-thead"></thead><tbody id="att-tbody"></tbody></table></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TBT Tab -->
-    <div id="tab-tbt" class="tab-content">
-      <div class="section-title">TBT Summary</div>
-      <div class="metrics" id="tbt-metrics"></div>
-      <div class="charts-grid">
-        <div class="card">
-          <div class="card-title"><i class="ti ti-users-group"></i> TBT by Vendor</div>
-          <div id="tbt-vendor-wrap"></div>
-        </div>
-        <div class="card" style="grid-column:1/-1;">
-          <div class="card-title"><i class="ti ti-list-details"></i> TBT Log</div>
-          <div class="table-wrap"><table><thead id="tbt-thead"></thead><tbody id="tbt-tbody"></tbody></table></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DPR Tab -->
-    <div id="tab-dpr" class="tab-content">
-      <div class="section-title">DPR Summary</div>
-      <div class="metrics" id="dpr-metrics"></div>
-      <div class="charts-grid">
-        <div class="card">
-          <div class="card-title"><i class="ti ti-chart-bar"></i> Completion Rate</div>
-          <div id="dpr-completion-wrap"></div>
-        </div>
-        <div class="card" style="grid-column:1/-1;">
-          <div class="card-title"><i class="ti ti-list-details"></i> DPR Log</div>
-          <div class="table-wrap"><table><thead id="dpr-thead"></thead><tbody id="dpr-tbody"></tbody></table></div>
-        </div>
-      </div>
-    </div>
-
+<!-- Dashboard -->
+<div class="main" id="main" style="display:none;">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('pe',this)"><i class="ti ti-users"></i> PE Overview</button>
+    <button class="tab" onclick="switchTab('att',this)"><i class="ti ti-calendar-check"></i> Attendance</button>
+    <button class="tab" onclick="switchTab('tbt',this)"><i class="ti ti-clipboard-list"></i> TBT</button>
+    <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
   </div>
 
-  <div id="no-data" style="text-align:center;padding:80px 20px;">
-    <i class="ti ti-database-off" style="font-size:48px;color:var(--muted);display:block;margin-bottom:16px;opacity:0.4;"></i>
-    <p style="color:var(--muted);font-size:14px;">Enter your Sheet ID above and click <strong style="color:var(--text);">Load Data</strong> to begin.</p>
+  <!-- PE TAB -->
+  <div id="tab-pe" class="tab-content active">
+    <div class="section-title">PE Summary</div>
+    <div class="metrics" id="pe-metrics"></div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
+      <div class="filter-row">
+        <label>Dept</label>
+        <select id="f-dept" onchange="renderPE()"><option value="">All</option></select>
+        <label>Region</label>
+        <select id="f-region" onchange="renderPE()"><option value="">All</option></select>
+        <label>Cluster</label>
+        <select id="f-cluster" onchange="renderPE()"><option value="">All</option></select>
+      </div>
+      <div class="table-wrap"><table><thead id="pe-head"></thead><tbody id="pe-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ATTENDANCE TAB -->
+  <div id="tab-att" class="tab-content">
+    <div class="section-title">Attendance Summary</div>
+    <div class="metrics" id="att-metrics"></div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-building"></i> Project-wise Visits</div>
+        <div id="proj-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-user-check"></i> PE Visit Count</div>
+        <div id="pe-visit-bars"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list-details"></i> Attendance Log</div>
+      <div class="filter-row">
+        <label>Date</label>
+        <input type="date" id="f-date" onchange="renderAtt()">
+        <label>Status</label>
+        <select id="f-vstatus" onchange="renderAtt()"><option value="">All</option></select>
+        <button class="clr-btn" onclick="document.getElementById('f-date').value='';document.getElementById('f-vstatus').value='';renderAtt()"><i class="ti ti-x"></i> Clear</button>
+      </div>
+      <div class="table-wrap"><table><thead id="att-head"></thead><tbody id="att-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- TBT TAB -->
+  <div id="tab-tbt" class="tab-content">
+    <div class="section-title">TBT Summary</div>
+    <div class="metrics" id="tbt-metrics"></div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-users-group"></i> Vendor-wise TBT</div>
+        <div id="tbt-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-mail"></i> Mail Status</div>
+        <div id="tbt-mail-bars"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list-details"></i> TBT Log</div>
+      <div class="table-wrap"><table><thead id="tbt-head"></thead><tbody id="tbt-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- DPR TAB -->
+  <div id="tab-dpr" class="tab-content">
+    <div class="section-title">DPR Summary</div>
+    <div class="metrics" id="dpr-metrics"></div>
+    <div class="charts-grid">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-chart-bar"></i> Completion Buckets</div>
+        <div id="dpr-bars"></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-alert-triangle"></i> Issues Reported</div>
+        <div id="dpr-issue-bars"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><i class="ti ti-list-details"></i> DPR Log</div>
+      <div class="table-wrap"><table><thead id="dpr-head"></thead><tbody id="dpr-body"></tbody></table></div>
+    </div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <script>
-// ─── State ───────────────────────────────────────────────────────────
-let peData=[], attData=[], tbtData=[], dprData=[];
-let peHeaders=[], attHeaders=[], tbtHeaders=[], dprHeaders=[];
+// ── HARDCODED CONFIG — no UI needed ──────────────────────────
+const SID = '1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA';
+const SHEETS = {
+  pe:  '819368336',
+  att: '1499073248',
+  tbt: '1641565259',
+  dpr: '351032265'
+};
 
-// Sheet tab names → GID map (will be auto-fetched or user-provided)
-const SHEET_TABS = [
-  {name:'PE Master',      gid:'0'},
-  {name:'Attendance Tracker', gid:'2088990270'},
-  {name:'TBT',            gid:''},
-  {name:'DPR',            gid:''},
-];
+let D = { pe:{h:[],r:[]}, att:{h:[],r:[]}, tbt:{h:[],r:[]}, dpr:{h:[],r:[]} };
 
-// ─── Helpers ─────────────────────────────────────────────────────────
-function csvUrl(sheetId, gid) {
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+// ── Helpers ──────────────────────────────────────────────────
+const csvUrl = gid => `https://docs.google.com/spreadsheets/d/${SID}/export?format=csv&gid=${gid}`;
+
+function ci(headers,...kws){
+  for(const kw of kws){
+    const i=headers.findIndex(h=>h.toLowerCase().replace(/[\s\-_]/g,'').includes(kw.toLowerCase().replace(/[\s\-_]/g,'')));
+    if(i>=0)return i;
+  }return -1;
 }
+const v=(row,i)=>i>=0?(row[i]||'').trim():'';
 
-function col(headers, ...keywords) {
-  for (const kw of keywords) {
-    const i = headers.findIndex(h => h.toLowerCase().includes(kw.toLowerCase()));
-    if (i >= 0) return i;
-  }
-  return -1;
-}
-
-function val(row, idx) { return idx >= 0 ? (row[idx]||'').trim() : ''; }
-
-function showLoading(txt) {
-  document.getElementById('load-txt').textContent = txt;
-  document.getElementById('loading-overlay').classList.remove('hidden');
-}
-function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
-
-function parseCSV(url) {
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true, header: false, skipEmptyLines: true,
-      complete: r => resolve(r.data),
-      error: e => reject(e)
+function parseSheet(gid){
+  return new Promise((res,rej)=>{
+    Papa.parse(csvUrl(gid),{
+      download:true,header:false,skipEmptyLines:true,
+      complete:r=>{if(r.data.length<1)rej('Empty');else res(r.data);},
+      error:e=>rej(e)
     });
   });
 }
 
-function metricHTML(icon, label, value, sub, accentColor) {
-  return `<div class="metric" style="--accent-color:${accentColor}">
-    <div class="icon"><i class="ti ${icon}"></i></div>
-    <div class="lbl">${label}</div>
-    <div class="val">${value}</div>
-    ${sub ? `<div class="sub">${sub}</div>` : ''}
+function metric(icon,lbl,val,sub,color){
+  return `<div class="metric" style="--mc:${color}">
+    <div class="micon"><i class="ti ${icon}"></i></div>
+    <div class="mlbl">${lbl}</div>
+    <div class="mval">${val}</div>
+    ${sub?`<div class="msub">${sub}</div>`:''}
   </div>`;
 }
 
-function progressBar(label, count, max, color) {
-  const pct = max ? Math.round(count/max*100) : 0;
-  return `<div class="progress-row">
-    <div class="progress-label" title="${label}">${label}</div>
-    <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${color}"></div></div>
-    <div class="progress-count">${count}</div>
-  </div>`;
+function bars(data,color){
+  if(!data.length)return'<div class="empty">No data</div>';
+  const m=data[0][1]||1;
+  return data.map(([lbl,n])=>`<div class="pr-row">
+    <div class="pr-lbl" title="${lbl}">${lbl}</div>
+    <div class="pr-track"><div class="pr-fill" style="width:${Math.round(n/m*100)}%;background:${color}"></div></div>
+    <div class="pr-cnt">${n}</div>
+  </div>`).join('');
 }
 
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-'+name).classList.add('active');
-  event.currentTarget.classList.add('active');
-}
-
-function fillSelect(selId, values) {
-  const sel = document.getElementById(selId);
-  if (!sel) return;
-  const cur = sel.value;
-  while (sel.options.length > 1) sel.remove(1);
-  [...new Set(values)].filter(Boolean).sort().forEach(v => {
-    const o = document.createElement('option'); o.value = v; o.textContent = v;
-    if (v === cur) o.selected = true;
-    sel.appendChild(o);
+function fillSel(id,vals){
+  const s=document.getElementById(id);if(!s)return;
+  const cur=s.value;while(s.options.length>1)s.remove(1);
+  [...new Set(vals)].filter(Boolean).sort().forEach(v=>{
+    const o=document.createElement('option');o.value=v;o.textContent=v;
+    if(v===cur)o.selected=true;s.appendChild(o);
   });
 }
 
-function renderSimpleTable(theadId, tbodyId, headers, rows, renderRow) {
-  document.getElementById(theadId).innerHTML = '<tr>' + headers.map(h=>`<th>${h}</th>`).join('') + '</tr>';
-  const tbody = document.getElementById(tbodyId);
-  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="${headers.length}" class="empty"><i class="ti ti-mood-empty"></i>No records found</td></tr>`; return; }
-  tbody.innerHTML = rows.map(renderRow).join('');
+function setOverlay(txt){document.getElementById('overlay-txt').textContent=txt;}
+
+function switchTab(name,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
 }
 
-// ─── Load All Sheets ──────────────────────────────────────────────────
-async function loadAllSheets() {
-  const sheetId = document.getElementById('sheet-id').value.trim();
-  if (!sheetId) { alert('Please enter your Google Sheet ID'); return; }
-
-  showLoading('Loading PE Master…');
-  try {
-    // Try known GIDs first, fallback to 0
-    const gids = document.getElementById('sheet-gids').value.trim().split(',').map(s=>s.trim());
-
-    showLoading('Loading PE Master…');
-    const pRaw = await parseCSV(csvUrl(sheetId, gids[0]||'0'));
-    peHeaders = pRaw[0]||[]; peData = pRaw.slice(1);
-
-    showLoading('Loading Attendance Tracker…');
-    const aRaw = await parseCSV(csvUrl(sheetId, gids[1]||'2088990270'));
-    attHeaders = aRaw[0]||[]; attData = aRaw.slice(1);
-
-    showLoading('Loading TBT…');
-    const tRaw = await parseCSV(csvUrl(sheetId, gids[2]||''));
-    tbtHeaders = tRaw[0]||[]; tbtData = tRaw.slice(1);
-
-    showLoading('Loading DPR…');
-    const dRaw = await parseCSV(csvUrl(sheetId, gids[3]||''));
-    dprHeaders = dRaw[0]||[]; dprData = dRaw.slice(1);
-
-    buildDashboard();
-    document.getElementById('status-badge').innerHTML = '<i class="ti ti-circle-check" style="font-size:10px;vertical-align:1px;"></i> Live';
-    document.getElementById('status-badge').style.cssText = 'font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);';
-    document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
-  } catch(e) {
-    alert('Failed to load sheet. Make sure it is public and the Sheet ID is correct.\n\n'+e);
+// ── Load ─────────────────────────────────────────────────────
+async function loadAll(){
+  document.getElementById('overlay').classList.remove('hidden');
+  document.querySelector('.btn-refresh').classList.add('spinning');
+  try{
+    for(const [key,gid] of Object.entries(SHEETS)){
+      const labels={pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR'};
+      setOverlay(`Loading ${labels[key]}…`);
+      try{
+        const rows=await parseSheet(gid);
+        D[key].h=rows[0]||[];D[key].r=rows.slice(1);
+      }catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
+    }
+    buildAll();
+    document.getElementById('main').style.display='block';
+    document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
+    document.getElementById('status-badge').style.cssText='font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);';
+    document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
+  }catch(e){
+    document.getElementById('status-badge').innerHTML='<i class="ti ti-alert-circle" style="font-size:10px"></i> Error';
+    document.getElementById('status-badge').style.cssText='font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);';
     console.error(e);
-  } finally { hideLoading(); }
+  }finally{
+    document.getElementById('overlay').classList.add('hidden');
+    document.querySelector('.btn-refresh').classList.remove('spinning');
+  }
 }
 
-// ─── Build Dashboard ──────────────────────────────────────────────────
-function buildDashboard() {
-  document.getElementById('no-data').style.display = 'none';
-  document.getElementById('dashboard').style.display = 'block';
+function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();}
 
-  buildPE();
-  buildAttendance();
-  buildTBT();
-  buildDPR();
+// ── PE ───────────────────────────────────────────────────────
+function buildPE(){
+  const h=D.pe.h,r=D.pe.r;
+  const NI=ci(h,'EmployeeName','name'),SI=ci(h,'SSEID','sse'),
+        EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),
+        RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
+  const ah=D.att.h,ar=D.att.r;
+  const AEI=ci(ah,'UserEmail','email'),ACI=ci(ah,'CheckinTime','checkin'),AOI=ci(ah,'CheckoutTime','checkout');
+  const th=D.tbt.h,TUI=ci(th,'Uniqueid','unique');
+  const dh=D.dpr.h,DUI=ci(dh,'UniqueID','unique');
+
+  const ciEmails=new Set(ar.filter(x=>v(x,ACI)).map(x=>v(x,AEI).toLowerCase()));
+  const fullEmails=new Set(ar.filter(x=>v(x,ACI)&&v(x,AOI)).map(x=>v(x,AEI).toLowerCase()));
+  const visitMap={};ar.forEach(x=>{const e=v(x,AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
+  const tbtIds=new Set(D.tbt.r.map(x=>v(x,TUI)).filter(Boolean));
+  const dprIds=new Set(D.dpr.r.map(x=>v(x,DUI)).filter(Boolean));
+
+  const total=r.length;
+  const ci_=r.filter(x=>ciEmails.has(v(x,EI).toLowerCase())).length;
+  const full=r.filter(x=>fullEmails.has(v(x,EI).toLowerCase())).length;
+
+  document.getElementById('pe-metrics').innerHTML=
+    metric('ti-users','Total PEs',total,'In PE Master','#4f8ef7')+
+    metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}% of PEs`,'#34c98a')+
+    metric('ti-circle-check','Full Attendance',full,'Check-in + Check-out','#9b6dff')+
+    metric('ti-user-off','Absent',total-ci_,'No check-in today','#e74c3c')+
+    metric('ti-clipboard-list','TBT Leads',tbtIds.size,'Unique submissions','#f5a623')+
+    metric('ti-file-report','DPR Leads',dprIds.size,'Unique submissions','#34c98a');
+
+  fillSel('f-dept',r.map(x=>v(x,DI)));
+  fillSel('f-region',r.map(x=>v(x,RI)));
+  fillSel('f-cluster',r.map(x=>v(x,CLI)));
+  renderPE();
 }
 
-// ─── PE Tab ───────────────────────────────────────────────────────────
-function buildPE() {
-  const nameI = col(peHeaders,'Employee Name','name');
-  const sseI  = col(peHeaders,'SSE ID','sse');
-  const mobileI = col(peHeaders,'Mobile','mobile','phone');
-  const mailI = col(peHeaders,'Mail','email','mail');
-  const deptI = col(peHeaders,'Dept','department');
-  const regionI = col(peHeaders,'Region');
-  const clusterI = col(peHeaders,'Cluster head');
-  const cityMgrI = col(peHeaders,'City Manager');
-  const cityMgrMailI = col(peHeaders,'City Manager mail');
+function renderPE(){
+  const h=D.pe.h,r=D.pe.r;
+  const NI=ci(h,'EmployeeName','name'),SI=ci(h,'SSEID','sse'),
+        EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),
+        RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
+  const ah=D.att.h,ar=D.att.r;
+  const AEI=ci(ah,'UserEmail','email'),ACI=ci(ah,'CheckinTime','checkin'),AOI=ci(ah,'CheckoutTime','checkout');
+  const TUI=ci(D.tbt.h,'Uniqueid','unique'),DUI=ci(D.dpr.h,'UniqueID','unique');
 
-  const totalPE = peData.length;
+  const ciEmails=new Set(ar.filter(x=>v(x,ACI)).map(x=>v(x,AEI).toLowerCase()));
+  const fullEmails=new Set(ar.filter(x=>v(x,ACI)&&v(x,AOI)).map(x=>v(x,AEI).toLowerCase()));
+  const visitMap={};ar.forEach(x=>{const e=v(x,AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
+  const tbtIds=new Set(D.tbt.r.map(x=>v(x,TUI)).filter(Boolean));
+  const dprIds=new Set(D.dpr.r.map(x=>v(x,DUI)).filter(Boolean));
 
-  // Who did check-in (match by email)
-  const attEmailI = col(attHeaders,'User Email','email');
-  const attCheckinI = col(attHeaders,'Check-in Time','checkin','check-in');
-  const attCheckoutI = col(attHeaders,'Check-out Time','checkout','check-out');
+  const fd=document.getElementById('f-dept').value;
+  const fr=document.getElementById('f-region').value;
+  const fc=document.getElementById('f-cluster').value;
 
-  const emailsWithCheckin = new Set(attData.filter(r=>val(r,attCheckinI)).map(r=>val(r,attEmailI).toLowerCase()));
-  const emailsWithFull    = new Set(attData.filter(r=>val(r,attCheckinI)&&val(r,attCheckoutI)).map(r=>val(r,attEmailI).toLowerCase()));
-
-  // TBT unique IDs
-  const tbtUidI = col(tbtHeaders,'Unique id','unique');
-  const tbtUids = new Set(tbtData.map(r=>val(r,tbtUidI)).filter(Boolean));
-
-  // DPR unique IDs
-  const dprUidI = col(dprHeaders,'Unique ID','unique');
-  const dprUids = new Set(dprData.map(r=>val(r,dprUidI)).filter(Boolean));
-
-  // PE SSE IDs and mail
-  const peEmails = peData.map(r=>val(r,mailI).toLowerCase());
-  const peSseIds = peData.map(r=>val(r,sseI));
-
-  const checkinCount = peEmails.filter(e=>emailsWithCheckin.has(e)).length;
-  const fullCount    = peEmails.filter(e=>emailsWithFull.has(e)).length;
-
-  // TBT/DPR leads — by unique ID matching SSE ID or similar
-  const tbtLeads = tbtData.length > 0 ? new Set(tbtData.map(r=>val(r,tbtUidI)).filter(Boolean)).size : 0;
-  const dprLeads = dprData.length > 0 ? new Set(dprData.map(r=>val(r,dprUidI)).filter(Boolean)).size : 0;
-
-  document.getElementById('pe-metrics').innerHTML =
-    metricHTML('ti-users','Total PEs', totalPE, 'In PE Master', '#4f8ef7') +
-    metricHTML('ti-login','Checked In', checkinCount, `${Math.round(checkinCount/totalPE*100)||0}% of total`, '#34c98a') +
-    metricHTML('ti-circle-check','Full Attendance', fullCount, 'Check-in + Check-out', '#9b6dff') +
-    metricHTML('ti-clipboard-list','TBT Leads', tbtLeads, 'Unique IDs submitted', '#f5a623') +
-    metricHTML('ti-file-report','DPR Leads', dprLeads, 'Unique IDs submitted', '#e74c3c');
-
-  // Fill filters
-  fillSelect('pe-filter-dept', peData.map(r=>val(r,deptI)));
-  fillSelect('pe-filter-region', peData.map(r=>val(r,regionI)));
-  fillSelect('pe-filter-city', peData.map(r=>val(r,cityMgrI)));
-
-  renderPETable();
-}
-
-function renderPETable() {
-  const nameI=col(peHeaders,'Employee Name','name');
-  const sseI=col(peHeaders,'SSE ID','sse');
-  const mobileI=col(peHeaders,'Mobile','mobile');
-  const mailI=col(peHeaders,'Mail','email','mail');
-  const deptI=col(peHeaders,'Dept','department');
-  const regionI=col(peHeaders,'Region');
-  const clusterI=col(peHeaders,'Cluster head');
-  const cityMgrI=col(peHeaders,'City Manager');
-
-  const attEmailI=col(attHeaders,'User Email','email');
-  const attCheckinI=col(attHeaders,'Check-in Time','checkin');
-  const attCheckoutI=col(attHeaders,'Check-out Time','checkout');
-  const tbtUidI=col(tbtHeaders,'Unique id','unique');
-  const dprUidI=col(dprHeaders,'Unique ID','unique');
-
-  const emailsCheckin=new Set(attData.filter(r=>val(r,attCheckinI)).map(r=>val(r,attEmailI).toLowerCase()));
-  const emailsFull=new Set(attData.filter(r=>val(r,attCheckinI)&&val(r,attCheckoutI)).map(r=>val(r,attEmailI).toLowerCase()));
-
-  // Count visits per email
-  const visitCount={};
-  attData.forEach(r=>{const e=val(r,attEmailI).toLowerCase();visitCount[e]=(visitCount[e]||0)+1;});
-
-  const tbtIds=new Set(tbtData.map(r=>val(r,tbtUidI)).filter(Boolean));
-  const dprIds=new Set(dprData.map(r=>val(r,dprUidI)).filter(Boolean));
-
-  const fDept=document.getElementById('pe-filter-dept').value;
-  const fRegion=document.getElementById('pe-filter-region').value;
-  const fCity=document.getElementById('pe-filter-city').value;
-
-  let rows=peData.filter(r=>{
-    if(fDept&&val(r,deptI)!==fDept)return false;
-    if(fRegion&&val(r,regionI)!==fRegion)return false;
-    if(fCity&&val(r,cityMgrI)!==fCity)return false;
+  const rows=r.filter(x=>{
+    if(fd&&v(x,DI)!==fd)return false;
+    if(fr&&v(x,RI)!==fr)return false;
+    if(fc&&v(x,CLI)!==fc)return false;
     return true;
   });
 
-  document.getElementById('pe-thead').innerHTML=`<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>TBT</th><th>DPR</th></tr>`;
-
-  const tbody=document.getElementById('pe-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="10" class="empty"><i class="ti ti-mood-empty"></i>No records</td></tr>';return;}
-
-  tbody.innerHTML=rows.map((r,i)=>{
-    const email=val(r,mailI).toLowerCase();
-    const hasCheckin=emailsCheckin.has(email);
-    const hasFull=emailsFull.has(email);
-    const attBadge=hasFull?'<span class="badge badge-green">Full</span>':hasCheckin?'<span class="badge badge-blue">Check-in</span>':'<span class="badge badge-red">Absent</span>';
-    const visits=visitCount[email]||0;
-    const name=val(r,nameI)||'—';
-    const initials=name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('pe-head').innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>TBT</th><th>DPR</th></tr>';
+  const tbody=document.getElementById('pe-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" class="empty">No records</td></tr>';return;}
+  tbody.innerHTML=rows.map((x,i)=>{
+    const email=v(x,EI).toLowerCase();
+    const hasFull=fullEmails.has(email),hasIn=ciEmails.has(email);
+    const attB=hasFull?'<span class="badge bg">Full</span>':hasIn?'<span class="badge bb">Check-in</span>':'<span class="badge br">Absent</span>';
+    const name=v(x,NI)||'—';
+    const init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase();
+    const sse=v(x,SI);
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td><div style="display:flex;align-items:center;gap:8px;"><div class="pe-avatar">${initials}</div><div><div style="font-weight:500">${name}</div><div style="font-size:11px;color:var(--muted)">${val(r,mailI)||''}</div></div></div></td>
-      <td>${val(r,sseI)||'—'}</td>
-      <td>${val(r,deptI)||'—'}</td>
-      <td>${val(r,regionI)||'—'}</td>
-      <td>${val(r,cityMgrI)||'—'}</td>
-      <td>${attBadge}</td>
-      <td><span class="badge badge-blue">${visits}</span></td>
-      <td>${tbtIds.has(val(r,sseI))?'<span class="badge badge-green">✓</span>':'<span class="badge badge-red">✗</span>'}</td>
-      <td>${dprIds.has(val(r,sseI))?'<span class="badge badge-green">✓</span>':'<span class="badge badge-red">✗</span>'}</td>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar">${init}</div>
+        <div><div style="font-weight:500;font-size:13px">${name}</div>
+        <div style="font-size:11px;color:var(--muted)">${v(x,EI)}</div></div>
+      </div></td>
+      <td><span class="badge bp">${sse||'—'}</span></td>
+      <td>${v(x,DI)||'—'}</td><td>${v(x,RI)||'—'}</td>
+      <td style="font-size:12px">${v(x,CLI)||'—'}</td>
+      <td style="font-size:12px">${v(x,CMI)||'—'}</td>
+      <td>${attB}</td>
+      <td><span class="badge bb">${visitMap[email]||0}</span></td>
+      <td>${tbtIds.has(sse)?'<span class="badge bg">✓</span>':'<span class="badge br">✗</span>'}</td>
+      <td>${dprIds.has(sse)?'<span class="badge bg">✓</span>':'<span class="badge br">✗</span>'}</td>
     </tr>`;
   }).join('');
 }
 
-// ─── Attendance Tab ───────────────────────────────────────────────────
-function buildAttendance() {
-  const emailI=col(attHeaders,'User Email','email');
-  const dateI=col(attHeaders,'Date');
-  const projI=col(attHeaders,'Project Name','project');
-  const projIdI=col(attHeaders,'Project ID');
-  const checkinI=col(attHeaders,'Check-in Time','checkin');
-  const checkoutI=col(attHeaders,'Check-out Time','checkout');
-  const locI=col(attHeaders,'Check-in Location','location');
-  const statusI=col(attHeaders,'Visit Status','status');
-  const remarkI=col(attHeaders,'Remark','remark');
+// ── Attendance ───────────────────────────────────────────────
+function buildAtt(){
+  const h=D.att.h,r=D.att.r;
+  const EI=ci(h,'UserEmail','email'),DI=ci(h,'Date'),
+        PI=ci(h,'ProjectName','project'),CI=ci(h,'CheckinTime','checkin'),
+        OI=ci(h,'CheckoutTime','checkout'),LI=ci(h,'CheckinLocation','location'),
+        VSI=ci(h,'VisitStatus','status'),RI=ci(h,'Remark','remark');
 
-  const total=attData.length;
-  const withCheckin=attData.filter(r=>val(r,checkinI)).length;
-  const withFull=attData.filter(r=>val(r,checkinI)&&val(r,checkoutI)).length;
-  const uniquePE=new Set(attData.map(r=>val(r,emailI))).size;
-  const uniqueProj=new Set(attData.map(r=>val(r,projI))).size;
+  const total=r.length,withIn=r.filter(x=>v(x,CI)).length,
+        withFull=r.filter(x=>v(x,CI)&&v(x,OI)).length,
+        uPE=new Set(r.map(x=>v(x,EI))).size,uProj=new Set(r.map(x=>v(x,PI))).size;
 
   document.getElementById('att-metrics').innerHTML=
-    metricHTML('ti-calendar','Total Visits',total,'All records','#4f8ef7')+
-    metricHTML('ti-users','Unique PEs',uniquePE,'With attendance','#34c98a')+
-    metricHTML('ti-login','Check-ins',withCheckin,`${Math.round(withCheckin/total*100)||0}% of visits`,'#9b6dff')+
-    metricHTML('ti-circle-check','Full (In+Out)',withFull,`${Math.round(withFull/total*100)||0}% complete`,'#f5a623')+
-    metricHTML('ti-building','Unique Projects',uniqueProj,'Visited','#e74c3c');
+    metric('ti-calendar','Total Visits',total,'All records','#4f8ef7')+
+    metric('ti-users','Unique PEs',uPE,'With any visit','#34c98a')+
+    metric('ti-login','Check-ins',withIn,`${total?Math.round(withIn/total*100):0}%`,'#9b6dff')+
+    metric('ti-circle-check','Full (In+Out)',withFull,`${total?Math.round(withFull/total*100):0}%`,'#f5a623')+
+    metric('ti-building','Projects',uProj,'Unique','#e74c3c');
 
-  // City-wise chart (derive city from location or project)
-  // Use Project Name as grouping since city may not be direct column
-  const projCount={};
-  attData.forEach(r=>{ const p=val(r,projI)||'Unknown'; projCount[p]=(projCount[p]||0)+1; });
-  const topProj=Object.entries(projCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const maxP=topProj[0]?.[1]||1;
-  document.getElementById('city-chart-wrap').innerHTML=topProj.map(([c,n])=>progressBar(c,n,maxP,'#4f8ef7')).join('')||'<div class="empty">No data</div>';
+  const pm={};r.forEach(x=>{const p=v(x,PI)||'Unknown';pm[p]=(pm[p]||0)+1;});
+  document.getElementById('proj-bars').innerHTML=bars(Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
+  const em={};r.forEach(x=>{const e=v(x,EI)||'Unknown';em[e]=(em[e]||0)+1;});
+  document.getElementById('pe-visit-bars').innerHTML=bars(Object.entries(em).sort((a,b)=>b[1]-a[1]).slice(0,12),'#34c98a');
 
-  // Project-wise
-  const projVisits={};
-  attData.forEach(r=>{ const p=val(r,projI)||'Unknown'; projVisits[p]=(projVisits[p]||0)+1; });
-  const topPV=Object.entries(projVisits).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const maxPV=topPV[0]?.[1]||1;
-  document.getElementById('project-chart-wrap').innerHTML=topPV.map(([p,n])=>progressBar(p,n,maxPV,'#34c98a')).join('')||'<div class="empty">No data</div>';
-
-  // Fill filters
-  fillSelect('att-status-filter', attData.map(r=>val(r,statusI)));
-  fillSelect('att-city-filter', attData.map(r=>val(r,projI)));
-
-  renderAttTable();
+  fillSel('f-vstatus',r.map(x=>v(x,VSI)));
+  renderAtt();
 }
 
-function renderAttTable() {
-  const emailI=col(attHeaders,'User Email','email');
-  const dateI=col(attHeaders,'Date');
-  const projI=col(attHeaders,'Project Name','project');
-  const checkinI=col(attHeaders,'Check-in Time','checkin');
-  const checkoutI=col(attHeaders,'Check-out Time','checkout');
-  const locI=col(attHeaders,'Check-in Location','location');
-  const statusI=col(attHeaders,'Visit Status','status');
-  const remarkI=col(attHeaders,'Remark','remark');
+function renderAtt(){
+  const h=D.att.h,r=D.att.r;
+  const EI=ci(h,'UserEmail','email'),DI=ci(h,'Date'),
+        PI=ci(h,'ProjectName','project'),CI=ci(h,'CheckinTime','checkin'),
+        OI=ci(h,'CheckoutTime','checkout'),LI=ci(h,'CheckinLocation','location'),
+        VSI=ci(h,'VisitStatus','status'),RI=ci(h,'Remark','remark');
 
-  const fDate=document.getElementById('att-date-filter').value;
-  const fStatus=document.getElementById('att-status-filter').value;
-  const fCity=document.getElementById('att-city-filter').value;
+  const fd=document.getElementById('f-date').value;
+  const fs=document.getElementById('f-vstatus').value;
 
-  let rows=attData.filter(r=>{
-    if(fStatus&&val(r,statusI)!==fStatus)return false;
-    if(fCity&&val(r,projI)!==fCity)return false;
-    if(fDate){
-      const d=val(r,dateI);
-      if(!d.includes(fDate)&&!fDate.includes(d))return false;
+  let rows=r.filter(x=>{
+    if(fs&&v(x,VSI)!==fs)return false;
+    if(fd){
+      const d=v(x,DI);
+      const fmtd=fd.split('-').reverse().join('/');
+      if(!d.includes(fmtd)&&!d.includes(fd))return false;
     }
     return true;
   });
 
-  document.getElementById('att-thead').innerHTML='<tr><th>#</th><th>Email</th><th>Date</th><th>Project</th><th>Check-in</th><th>Check-out</th><th>Location</th><th>Status</th><th>Remarks</th></tr>';
-  const tbody=document.getElementById('att-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty"><i class="ti ti-mood-empty"></i>No records</td></tr>';return;}
-
-  tbody.innerHTML=rows.slice(0,200).map((r,i)=>{
-    const checkin=val(r,checkinI),checkout=val(r,checkoutI);
-    const status=val(r,statusI);
-    const sBadge=checkin&&checkout?'<span class="badge badge-green">Complete</span>':checkin?'<span class="badge badge-blue">Checked In</span>':'<span class="badge badge-red">Absent</span>';
+  document.getElementById('att-head').innerHTML='<tr><th>#</th><th>Email</th><th>Date</th><th>Project</th><th>Check-in</th><th>Check-out</th><th>Location</th><th>Status</th><th>Remarks</th></tr>';
+  const tbody=document.getElementById('att-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No records</td></tr>';return;}
+  tbody.innerHTML=rows.slice(0,300).map((x,i)=>{
+    const cin=v(x,CI),cout=v(x,OI),st=v(x,VSI);
+    const sb=cin&&cout?'<span class="badge bg">Complete</span>':cin?'<span class="badge bb">In only</span>':'<span class="badge br">Absent</span>';
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td style="font-size:12px">${val(r,emailI)||'—'}</td>
-      <td>${val(r,dateI)||'—'}</td>
-      <td>${val(r,projI)||'—'}</td>
-      <td>${checkin||'—'}</td>
-      <td>${checkout||'—'}</td>
-      <td style="font-size:11px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${val(r,locI)||'—'}</td>
-      <td>${status?`<span class="badge badge-blue">${status}</span>`:sBadge}</td>
-      <td style="font-size:12px;color:var(--muted)">${val(r,remarkI)||'—'}</td>
+      <td style="font-size:12px">${v(x,EI)||'—'}</td>
+      <td>${v(x,DI)||'—'}</td><td style="font-size:12px">${v(x,PI)||'—'}</td>
+      <td style="font-size:12px">${cin||'—'}</td><td style="font-size:12px">${cout||'—'}</td>
+      <td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis">${v(x,LI)||'—'}</td>
+      <td>${st?`<span class="badge bb">${st}</span>`:sb}</td>
+      <td style="font-size:11px;color:var(--muted)">${v(x,RI)||'—'}</td>
     </tr>`;
   }).join('');
-  if(rows.length>200) tbody.innerHTML+=`<tr><td colspan="9" style="text-align:center;color:var(--muted);font-size:12px;padding:10px;">Showing 200 of ${rows.length} records</td></tr>`;
+  if(rows.length>300)tbody.innerHTML+=`<tr><td colspan="9" style="text-align:center;color:var(--muted);font-size:12px;padding:10px">Showing 300 of ${rows.length}</td></tr>`;
 }
 
-// ─── TBT Tab ──────────────────────────────────────────────────────────
-function buildTBT() {
-  const vendorI=col(tbtHeaders,'Vendor','vendor','I&C');
-  const topicI=col(tbtHeaders,'Topic','topic');
-  const techI=col(tbtHeaders,'Technician','technician');
-  const helperI=col(tbtHeaders,'Helper','helper');
-  const tsI=col(tbtHeaders,'Time stamp','timestamp','time');
-  const uidI=col(tbtHeaders,'Unique id','unique');
-  const reportI=col(tbtHeaders,'TBT Report','report');
-  const mailI=col(tbtHeaders,'Mail status','mail');
-  const planI=col(tbtHeaders,'Tomorrow','tomorrow','plan');
+// ── TBT ─────────────────────────────────────────────────────
+function buildTBT(){
+  const h=D.tbt.h,r=D.tbt.r;
+  const VI=ci(h,'Vendor','IC','I&C'),TI=ci(h,'Topic'),
+        TEI=ci(h,'Technician'),HI=ci(h,'Helper'),
+        TSI=ci(h,'Timestamp','time'),UI=ci(h,'Uniqueid','unique'),
+        RI2=ci(h,'TBTReport','report'),MSI=ci(h,'Mailstatus','mail');
 
-  const total=tbtData.length;
-  const uniqueIds=new Set(tbtData.map(r=>val(r,uidI)).filter(Boolean)).size;
-  const totalTech=tbtData.reduce((s,r)=>s+(parseInt(val(r,techI))||0),0);
-  const totalHelp=tbtData.reduce((s,r)=>s+(parseInt(val(r,helperI))||0),0);
-  const withReport=tbtData.filter(r=>val(r,reportI)).length;
-  const mailSent=tbtData.filter(r=>(val(r,mailI)||'').toLowerCase().includes('sent')||val(r,mailI)).length;
+  const total=r.length,uIds=new Set(r.map(x=>v(x,UI)).filter(Boolean)).size,
+        totTech=r.reduce((s,x)=>s+(parseInt(v(x,TEI))||0),0),
+        totHelp=r.reduce((s,x)=>s+(parseInt(v(x,HI))||0),0),
+        withRep=r.filter(x=>v(x,RI2)).length,
+        mailSent=r.filter(x=>(v(x,MSI)||'').toLowerCase().includes('sent')).length;
 
   document.getElementById('tbt-metrics').innerHTML=
-    metricHTML('ti-clipboard-list','Total TBT',total,'Sessions recorded','#4f8ef7')+
-    metricHTML('ti-id','Unique IDs',uniqueIds,'Unique PE submissions','#34c98a')+
-    metricHTML('ti-tool','Technicians',totalTech,'Total attendees','#9b6dff')+
-    metricHTML('ti-users','Helpers',totalHelp,'Total helpers','#f5a623')+
-    metricHTML('ti-file-check','Reports',withReport,`of ${total} sessions`,'#e74c3c');
+    metric('ti-clipboard-list','Total TBT',total,'Sessions','#4f8ef7')+
+    metric('ti-id','Unique IDs',uIds,'PE submissions','#34c98a')+
+    metric('ti-tool','Technicians',totTech,'Total','#9b6dff')+
+    metric('ti-users','Helpers',totHelp,'Total','#f5a623')+
+    metric('ti-file-check','With Report',withRep,`of ${total}`,'#e74c3c')+
+    metric('ti-send','Mail Sent',mailSent,`of ${total}`,'#34c98a');
 
-  // Vendor chart
-  const vendorCount={};
-  tbtData.forEach(r=>{ const v=val(r,vendorI)||'Unknown'; vendorCount[v]=(vendorCount[v]||0)+1; });
-  const topV=Object.entries(vendorCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const maxV=topV[0]?.[1]||1;
-  document.getElementById('tbt-vendor-wrap').innerHTML=topV.map(([v,n])=>progressBar(v,n,maxV,'#9b6dff')).join('')||'<div class="empty">No data</div>';
+  const vm={};r.forEach(x=>{const vv=v(x,VI)||'Unknown';vm[vv]=(vm[vv]||0)+1;});
+  document.getElementById('tbt-bars').innerHTML=bars(Object.entries(vm).sort((a,b)=>b[1]-a[1]).slice(0,10),'#9b6dff');
+  const mm={'Sent':0,'Pending':0};
+  r.forEach(x=>{if((v(x,MSI)||'').toLowerCase().includes('sent'))mm['Sent']++;else mm['Pending']++;});
+  document.getElementById('tbt-mail-bars').innerHTML=bars([['Sent',mm.Sent],['Pending',mm.Pending]],'#4f8ef7');
 
-  // Table
-  const cols=['#','Unique ID','Vendor','Topic','Technicians','Helpers','Timestamp','Report','Mail'];
-  document.getElementById('tbt-thead').innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
-  const tbody=document.getElementById('tbt-tbody');
-  if(!tbtData.length){tbody.innerHTML=`<tr><td colspan="${cols.length}" class="empty"><i class="ti ti-mood-empty"></i>No TBT records</td></tr>`;return;}
-  tbody.innerHTML=tbtData.slice(0,200).map((r,i)=>{
-    const report=val(r,reportI);
-    const mail=val(r,mailI);
-    return `<tr>
-      <td style="color:var(--muted)">${i+1}</td>
-      <td><span class="badge badge-purple">${val(r,uidI)||'—'}</span></td>
-      <td>${val(r,vendorI)||'—'}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">${val(r,topicI)||'—'}</td>
-      <td>${val(r,techI)||'0'}</td>
-      <td>${val(r,helperI)||'0'}</td>
-      <td style="font-size:11px">${val(r,tsI)||'—'}</td>
-      <td>${report?'<span class="badge badge-green">✓ Yes</span>':'<span class="badge badge-red">✗ No</span>'}</td>
-      <td>${mail?`<span class="badge badge-blue">${mail}</span>`:'<span class="badge badge-red">Pending</span>'}</td>
-    </tr>`;
-  }).join('');
+  document.getElementById('tbt-head').innerHTML='<tr><th>#</th><th>Unique ID</th><th>Vendor</th><th>Topic</th><th>Tech</th><th>Helpers</th><th>Timestamp</th><th>Report</th><th>Mail</th></tr>';
+  const tbody=document.getElementById('tbt-body');
+  if(!r.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No TBT records</td></tr>';return;}
+  tbody.innerHTML=r.slice(0,300).map((x,i)=>`<tr>
+    <td style="color:var(--muted)">${i+1}</td>
+    <td><span class="badge bp">${v(x,UI)||'—'}</span></td>
+    <td style="font-size:12px">${v(x,VI)||'—'}</td>
+    <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(x,TI)||'—'}</td>
+    <td>${v(x,TEI)||'0'}</td><td>${v(x,HI)||'0'}</td>
+    <td style="font-size:11px">${v(x,TSI)||'—'}</td>
+    <td>${v(x,RI2)?'<span class="badge bg">✓ Yes</span>':'<span class="badge br">✗ No</span>'}</td>
+    <td>${v(x,MSI)?`<span class="badge bb">${v(x,MSI)}</span>`:'<span class="badge bo">Pending</span>'}</td>
+  </tr>`).join('');
 }
 
-// ─── DPR Tab ──────────────────────────────────────────────────────────
-function buildDPR() {
-  const cidI=col(dprHeaders,'Child ID','child');
-  const planI=col(dprHeaders,'Today\'s Work Plan','plan','work');
-  const mpI=col(dprHeaders,'Manpower','manpower');
-  const taskI=col(dprHeaders,'Completed Task','completed','task');
-  const pctI=col(dprHeaders,'% of completion','completion','%','percent');
-  const issueI=col(dprHeaders,'Issues','issue','challenges');
-  const remarkI=col(dprHeaders,'Remarks','remark');
-  const tsI=col(dprHeaders,'Timestamp','timestamp','time');
-  const uidI=col(dprHeaders,'Unique ID','unique');
+// ── DPR ─────────────────────────────────────────────────────
+function buildDPR(){
+  const h=D.dpr.h,r=D.dpr.r;
+  const CII=ci(h,'ChildID','child'),PI=ci(h,'WorkPlan','plan','work'),
+        MPI=ci(h,'Manpower'),PCI=ci(h,'%','completion','percent'),
+        ISI=ci(h,'Issues','challenges'),RI=ci(h,'Remarks','remark'),
+        TSI=ci(h,'Timestamp','time'),UI=ci(h,'UniqueID','unique');
 
-  const total=dprData.length;
-  const uniqueIds=new Set(dprData.map(r=>val(r,uidI)).filter(Boolean)).size;
-  const totalMP=dprData.reduce((s,r)=>s+(parseInt(val(r,mpI))||0),0);
-  const withIssues=dprData.filter(r=>val(r,issueI)&&val(r,issueI).toLowerCase()!=='no'&&val(r,issueI).toLowerCase()!=='none').length;
-
-  const pcts=dprData.map(r=>parseFloat(val(r,pctI))||0).filter(n=>n>0);
-  const avgPct=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
+  const total=r.length,uIds=new Set(r.map(x=>v(x,UI)).filter(Boolean)).size,
+        totMP=r.reduce((s,x)=>s+(parseInt(v(x,MPI))||0),0),
+        withIss=r.filter(x=>{const i=v(x,ISI).toLowerCase();return i&&i!=='no'&&i!=='none'&&i!=='na';}).length;
+  const pcts=r.map(x=>parseFloat(v(x,PCI))||0).filter(n=>n>0);
+  const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
 
   document.getElementById('dpr-metrics').innerHTML=
-    metricHTML('ti-file-report','Total DPR',total,'Reports submitted','#4f8ef7')+
-    metricHTML('ti-id','Unique IDs',uniqueIds,'Unique PE submissions','#34c98a')+
-    metricHTML('ti-users','Total Manpower',totalMP,'Across all DPRs','#9b6dff')+
-    metricHTML('ti-percentage','Avg Completion',avgPct+'%','Average across DPRs','#f5a623')+
-    metricHTML('ti-alert-triangle','With Issues',withIssues,`of ${total} reports`,'#e74c3c');
+    metric('ti-file-report','Total DPR',total,'Reports','#4f8ef7')+
+    metric('ti-id','Unique IDs',uIds,'PE submissions','#34c98a')+
+    metric('ti-users','Manpower',totMP,'Total','#9b6dff')+
+    metric('ti-percentage','Avg Completion',avg+'%','Across DPRs','#f5a623')+
+    metric('ti-alert-triangle','With Issues',withIss,`of ${total}`,'#e74c3c');
 
-  // Completion distribution
-  const buckets={'0-25%':0,'26-50%':0,'51-75%':0,'76-100%':0};
-  dprData.forEach(r=>{
-    const p=parseFloat(val(r,pctI))||0;
-    if(p<=25)buckets['0-25%']++;
-    else if(p<=50)buckets['26-50%']++;
-    else if(p<=75)buckets['51-75%']++;
-    else buckets['76-100%']++;
-  });
-  const maxB=Math.max(...Object.values(buckets));
-  const bColors={'0-25%':'#e74c3c','26-50%':'#f5a623','51-75%':'#4f8ef7','76-100%':'#34c98a'};
-  document.getElementById('dpr-completion-wrap').innerHTML=Object.entries(buckets).map(([k,v])=>progressBar(k,v,maxB,bColors[k])).join('');
+  const buckets=[['0–25%',0],['26–50%',0],['51–75%',0],['76–100%',0]];
+  r.forEach(x=>{const p=parseFloat(v(x,PCI))||0;if(p<=25)buckets[0][1]++;else if(p<=50)buckets[1][1]++;else if(p<=75)buckets[2][1]++;else buckets[3][1]++;});
+  const bC=['#e74c3c','#f5a623','#4f8ef7','#34c98a'];
+  const maxB=Math.max(...buckets.map(b=>b[1]))||1;
+  document.getElementById('dpr-bars').innerHTML=buckets.map(([l,n],i)=>`<div class="pr-row">
+    <div class="pr-lbl">${l}</div>
+    <div class="pr-track"><div class="pr-fill" style="width:${Math.round(n/maxB*100)}%;background:${bC[i]}"></div></div>
+    <div class="pr-cnt">${n}</div>
+  </div>`).join('');
 
-  // Table
-  const cols=['#','Unique ID','Child ID','Work Plan','Manpower','Completion','Issues','Remarks','Timestamp'];
-  document.getElementById('dpr-thead').innerHTML='<tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr>';
-  const tbody=document.getElementById('dpr-tbody');
-  if(!dprData.length){tbody.innerHTML=`<tr><td colspan="${cols.length}" class="empty"><i class="ti ti-mood-empty"></i>No DPR records</td></tr>`;return;}
-  tbody.innerHTML=dprData.slice(0,200).map((r,i)=>{
-    const pct=parseFloat(val(r,pctI))||0;
-    const pctColor=pct>=75?'badge-green':pct>=50?'badge-blue':pct>=25?'badge-orange':'badge-red';
-    const issue=val(r,issueI);
-    const hasIssue=issue&&issue.toLowerCase()!=='no'&&issue.toLowerCase()!=='none';
+  const im={};
+  r.forEach(x=>{const iss=v(x,ISI);if(iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na'){const k=iss.slice(0,35);im[k]=(im[k]||0)+1;}});
+  const topI=Object.entries(im).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  document.getElementById('dpr-issue-bars').innerHTML=topI.length?bars(topI,'#e74c3c'):'<div class="empty" style="padding:16px;font-size:13px;">No issues reported</div>';
+
+  document.getElementById('dpr-head').innerHTML='<tr><th>#</th><th>Unique ID</th><th>Child ID</th><th>Work Plan</th><th>Manpower</th><th>Completion</th><th>Issues</th><th>Remarks</th><th>Timestamp</th></tr>';
+  const tbody=document.getElementById('dpr-body');
+  if(!r.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No DPR records</td></tr>';return;}
+  tbody.innerHTML=r.slice(0,300).map((x,i)=>{
+    const pct=parseFloat(v(x,PCI))||0;
+    const pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br';
+    const iss=v(x,ISI),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td><span class="badge badge-purple">${val(r,uidI)||'—'}</span></td>
-      <td style="font-size:11px">${val(r,cidI)||'—'}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;font-size:12px">${val(r,planI)||'—'}</td>
-      <td>${val(r,mpI)||'—'}</td>
-      <td><span class="badge ${pctColor}">${pct}%</span></td>
-      <td>${hasIssue?`<span class="badge badge-red">⚠ Yes</span>`:'<span class="badge badge-green">None</span>'}</td>
-      <td style="font-size:11px;color:var(--muted);max-width:130px;overflow:hidden;text-overflow:ellipsis">${val(r,remarkI)||'—'}</td>
-      <td style="font-size:11px">${val(r,tsI)||'—'}</td>
+      <td><span class="badge bp">${v(x,UI)||'—'}</span></td>
+      <td style="font-size:11px">${v(x,CII)||'—'}</td>
+      <td style="font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${v(x,PI)||'—'}</td>
+      <td>${v(x,MPI)||'—'}</td>
+      <td><span class="badge ${pc}">${pct}%</span></td>
+      <td>${hasIss?'<span class="badge br">⚠ Yes</span>':'<span class="badge bg">None</span>'}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${v(x,RI)||'—'}</td>
+      <td style="font-size:11px">${v(x,TSI)||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-// Auto-load on page open
-window.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('ops_sheet_id');
-  if (saved) document.getElementById('sheet-id').value = saved;
-});
+// Auto-load on open
+loadAll();
 </script>
 </body>
 </html>
