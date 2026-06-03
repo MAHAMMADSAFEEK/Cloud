@@ -92,6 +92,7 @@ tr:hover td{background:var(--surface2);}
 .pbar-fill{height:100%;border-radius:3px;}
 .pct-lbl{font-size:11px;color:var(--muted);min-width:32px;text-align:right;}
 .wip-pct{font-size:11px;color:#f5a623;margin-left:4px;}
+#proj-metrics{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
 @media(max-width:600px){.main{padding:12px;}.topbar{padding:10px 14px;}.filter-topbar{top:45px;padding:8px 14px;}}
 </style>
 </head>
@@ -309,6 +310,13 @@ function setOverlay(txt){document.getElementById('overlay-txt').textContent=txt;
 function switchTab(name,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');}
 function fillSel(id,vals){const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);[...new Set(vals)].filter(Boolean).sort().forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});}
 function metric(icon,lbl,val,sub,color){return `<div class="metric" style="--mc:${color}"><div class="micon"><i class="ti ${icon}"></i></div><div class="mlbl">${lbl}</div><div class="mval">${val}</div>${sub?`<div class="msub">${sub}</div>`:''}</div>`;}
+function metricWithBar(icon,lbl,val,sub,color,pct,barColor){
+  const bar=barColor?`<div style="margin-top:8px;height:4px;background:var(--bg2);border-radius:2px;overflow:hidden;"><div style="width:${Math.min(pct,100)}%;height:100%;background:${barColor};border-radius:2px;transition:width 0.5s;"></div></div>`:'';
+  return `<div class="metric" style="--mc:${color}"><div class="micon"><i class="ti ${icon}"></i></div><div class="mlbl">${lbl}</div><div class="mval">${val}</div>${sub?`<div class="msub">${sub}</div>`:''} ${bar}</div>`;
+}
+function metricDate(icon,lbl,val,sub,color){
+  return `<div class="metric" style="--mc:${color}"><div class="micon"><i class="ti ${icon}"></i></div><div class="mlbl">${lbl}</div><div class="mval" style="font-size:16px;line-height:1.3;margin-top:2px;">${val}</div>${sub?`<div class="msub">${sub}</div>`:''}</div>`;
+}
 function bars(data,color){if(!data.length)return'<div class="empty">No data</div>';const m=data[0][1]||1;return data.map(([lbl,n])=>`<div class="pr-row"><div class="pr-lbl" title="${lbl}">${lbl}</div><div class="pr-track"><div class="pr-fill" style="width:${Math.round(n/m*100)}%;background:${color}"></div></div><div class="pr-cnt">${n}</div></div>`).join('');}
 
 function dateMatch(cellVal,filterDate){
@@ -605,9 +613,12 @@ function renderProjectSummary(projId,projName){
 
   // ── Step 3: Get workplan items
   const wh=D.workplan.h,wr=D.workplan.r;
-  const W_PLAN=ci(wh,'ProcessFlow','process flow','process');
-  const W_PCT=ci(wh,'Completion','completion %');
-  const workplanItems=wr.map(r=>v(r,W_PLAN)).filter(Boolean);
+  // Build workplan with A=process, B=expected completion %
+  const workplanItemsRaw=wr.filter(r=>(r[0]||'').trim()).map(r=>({
+    plan:(r[0]||'').trim(),
+    expectedPct:parseFloat((r[1]||'').trim())||0
+  }));
+  const workplanItems=workplanItemsRaw.map(w=>w.plan);
 
   // ── Step 4: For each workplan item, find latest DPR entry
   // Group DPR by work plan
@@ -626,7 +637,7 @@ function renderProjectSummary(projId,projName){
   const tbody=document.getElementById('proj-workplan-body');
   let completedCount=0,wipCount=0,pendingCount=0;
 
-  const rows=workplanItems.map((plan,idx)=>{
+  const rows=workplanItemsRaw.map(({plan,expectedPct},idx)=>{
     const planNorm=norm(plan);
     // Find matching DPR entries (fuzzy match)
     const matchedDPR=dprForProj.filter(r=>{
@@ -636,7 +647,7 @@ function renderProjectSummary(projId,projName){
 
     if(!matchedDPR.length){
       pendingCount++;
-      return{plan,status:'pending',pct:0,mp:0,startDate:null,endDate:null,remarks:'',matchedDPR:[]};
+      return{plan,expectedPct,status:'pending',pct:0,mp:0,startDate:null,endDate:null,remarks:'',matchedDPR:[]};
     }
 
     // Sort by timestamp to get latest
@@ -658,7 +669,7 @@ function renderProjectSummary(projId,projName){
     if(latestTask.includes('complet')||latestPct>=100){status='done';pct=100;completedCount++;}
     else{status='wip';pct=latestPct;wipCount++;}
 
-    return{plan,status,pct,mp:totalMP,startDate,endDate,remarks:latestRemarks,matchedDPR:sorted};
+    return{plan,expectedPct,status,pct,mp:totalMP,startDate,endDate,remarks:latestRemarks,matchedDPR:sorted};
   });
 
   pendingCount=workplanItems.length-completedCount-wipCount;
@@ -690,23 +701,89 @@ function renderProjectSummary(projId,projName){
     </tr>`;
   }).join('');
 
-  // ── Metrics
-  const overallPct=workplanItems.length?Math.round(completedCount/workplanItems.length*100):0;
-  document.getElementById('proj-metrics').innerHTML=
-    metric('ti-list-check','Total Items',workplanItems.length,'Workplan items','#4f8ef7')+
-    metric('ti-circle-check','Completed',completedCount,`${overallPct}% complete`,'#34c98a')+
-    metric('ti-loader','In Progress',wipCount,'WIP items','#f5a623')+
-    metric('ti-clock','Pending',pendingCount,'Not started','#e74c3c')+
-    metric('ti-file-report','DPR Entries',dprForProj.length,'For this project','#9b6dff');
+  // ── Overall project dates from DPR timestamps
+  const allProjDates=dprForProj.map(r=>parseDate(v(r,D_TS))).filter(Boolean);
+  const projStartDate=allProjDates.length?new Date(Math.min(...allProjDates)):null;
+  const projEndDate=allProjDates.length?new Date(Math.max(...allProjDates)):null;
+  const projTAT=projStartDate&&projEndDate?Math.ceil((projEndDate-projStartDate)/(1000*60*60*24))+1:null;
 
-  // ── DPR Activity Log
-  const logBody=document.getElementById('proj-dpr-log-body');
+  // ── Weighted completion % from Workplan B column (expected %)
+  // For each completed item, add its expectedPct; for WIP add proportional; pending = 0
+  let weightedCompleted=0,totalWeight=0;
+  rows.forEach(r=>{
+    const w=r.expectedPct||0;
+    totalWeight+=w;
+    if(r.status==='done') weightedCompleted+=w;
+    else if(r.status==='wip') weightedCompleted+=w*(r.pct/100);
+  });
+  const weightedPct=totalWeight>0?Math.round(weightedCompleted/totalWeight*100):0;
+
+  // Simple counts
+  const total_=workplanItems.length;
+  const completedPct=total_?Math.round(completedCount/total_*100):0;
+  const wipPct=total_?Math.round(wipCount/total_*100):0;
+  const pendingPct=total_?Math.round(pendingCount/total_*100):0;
+
+  // ── DPR sorted for log + last updated
   const dprSorted=[...dprForProj].sort((a,b)=>{
     const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));
     if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;
     return db-da; // newest first
   });
+  const lastDPREntry=dprSorted.length?dprSorted[0]:null;
+  const lastWorkPlan=lastDPREntry?v(lastDPREntry,D_PLAN):'—';
+  const lastDPRDate=lastDPREntry?parseDate(v(lastDPREntry,D_TS)):null;
 
+  const tatCard=`<div class="metric" style="--mc:#4f8ef7;grid-column:span 2;min-width:280px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <i class="ti ti-calendar-stats" style="font-size:16px;color:#4f8ef7;"></i>
+      <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;">Project Timeline</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-calendar-event" style="font-size:13px;color:#34c98a;"></i>Start Date</span>
+        <span style="font-size:13px;font-weight:600;color:#34c98a;">${projStartDate?fmtDate(projStartDate):'—'}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-calendar-check" style="font-size:13px;color:#f5a623;"></i>End Date</span>
+        <span style="font-size:13px;font-weight:600;color:#f5a623;">${projEndDate?fmtDate(projEndDate):'—'}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-clock-hour-4" style="font-size:13px;color:#9b6dff;"></i>TAT</span>
+        <span style="font-size:13px;font-weight:600;color:#9b6dff;">${projTAT!==null?projTAT+' days':'—'}</span>
+      </div>
+    </div>
+  </div>`;
+
+  const lastUpdatedCard=`<div class="metric" style="--mc:#4f8ef7;grid-column:span 2;min-width:280px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+      <i class="ti ti-history" style="font-size:16px;color:#4f8ef7;"></i>
+      <span style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;font-weight:500;">Last DPR Update</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-calendar" style="font-size:13px;color:#4f8ef7;"></i>Date</span>
+        <span style="font-size:13px;font-weight:600;color:#4f8ef7;">${lastDPRDate?fmtDate(lastDPRDate):'—'}</span>
+      </div>
+      <div style="padding:6px 10px;background:var(--bg2);border-radius:8px;">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i class="ti ti-clipboard-list" style="font-size:13px;color:#34c98a;"></i>Work Plan</div>
+        <div style="font-size:12px;font-weight:500;color:var(--text);line-height:1.4;">${lastWorkPlan||'—'}</div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('proj-metrics').innerHTML=
+    metricWithBar('ti-list-check','Total Items',total_,'Workplan items','#4f8ef7',100,100)+
+    metricWithBar('ti-circle-check','Completed',completedCount,`${completedPct}% of items`,'#34c98a',completedPct,'#34c98a')+
+    metricWithBar('ti-loader','In Progress',wipCount,`${wipPct}% of items`,'#f5a623',wipPct,'#f5a623')+
+    metricWithBar('ti-clock','Pending',pendingCount,`${pendingPct}% of items`,'#e74c3c',pendingPct,'#e74c3c')+
+    metricWithBar('ti-file-report','DPR Entries',dprForProj.length,'For this project','#9b6dff',100,'#9b6dff')+
+    metricWithBar('ti-chart-donut','Completion %',weightedPct+'%','Weighted by workplan %','#34c98a',weightedPct,'#34c98a')+
+    tatCard+
+    lastUpdatedCard;
+
+  // ── DPR Activity Log
+  const logBody=document.getElementById('proj-dpr-log-body');
   logBody.innerHTML=dprSorted.map((r,i)=>{
     const pct=parseFloat(v(r,D_PCT))||0,pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br';
     const iss=v(r,D_ISS),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';
