@@ -133,6 +133,57 @@ tr:hover td{background:var(--surface2);}
     <div class="metrics" id="pe-metrics"></div>
     <div class="card">
       <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
+      <!-- PE Filter Bar -->
+      <div class="pe-filter-bar">
+        <i class="ti ti-filter" style="color:var(--accent);font-size:13px;"></i>
+        <label>Cluster Head</label>
+        <select id="pe-f-cluster" onchange="buildPE()"><option value="">All</option></select>
+        <div class="pe-fdivider"></div>
+        <label>City Manager</label>
+        <select id="pe-f-city" onchange="buildPE()"><option value="">All</option></select>
+        <div class="pe-fdivider"></div>
+        <label>Attendance</label>
+        <select id="pe-f-att" onchange="buildPE()">
+          <option value="">All</option>
+          <option value="full">Full (In+Out)</option>
+          <option value="in">Check-in Only</option>
+          <option value="absent">Absent</option>
+        </select>
+        <div class="pe-fdivider"></div>
+        <label>Month</label>
+        <select id="pe-f-month" onchange="onPEMonthChange()">
+          <option value="">All</option>
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+        <label>Week</label>
+        <select id="pe-f-week" onchange="onPEWeekChange()">
+          <option value="">All</option>
+          <option value="1">Week 1 (1–7)</option>
+          <option value="2">Week 2 (8–14)</option>
+          <option value="3">Week 3 (15–21)</option>
+          <option value="4">Week 4 (22–28)</option>
+          <option value="5">Week 5 (29–31)</option>
+        </select>
+        <div class="pe-fdivider"></div>
+        <label>Date</label>
+        <input type="date" id="pe-f-date" onchange="onPEDateChange()">
+        <div class="pe-fdivider"></div>
+        <label>Visit Status</label>
+        <select id="pe-f-vstatus" onchange="buildPE()"><option value="">All</option></select>
+        <button class="clr-btn" style="height:28px;font-size:11px;" onclick="clearPEFilters()"><i class="ti ti-x"></i> Clear</button>
+        <span id="pe-filter-tag" class="pe-active-tag" style="display:none;"></span>
+      </div>
       <div class="table-wrap"><table><thead id="pe-head"></thead><tbody id="pe-body"></tbody></table></div>
     </div>
   </div>
@@ -354,7 +405,8 @@ async function loadAll(){
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
     }
     // Global filters removed
-    // Fill project filters
+    // Fill PE filters and project filters
+    populatePEFilters();
     buildProjFilters();
     buildAll();
     document.getElementById('main').style.display='block';
@@ -371,18 +423,100 @@ async function loadAll(){
 function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();}
 
 // ── PE ────────────────────────────────────────────────────────
+function populatePEFilters(){
+  // Called once after data loads to fill dropdown options
+  const h=D.pe.h,r=D.pe.r;
+  const CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
+  const clusters=[...new Set(r.map(x=>v(x,CLI)).filter(Boolean))].sort();
+  const cities=[...new Set(r.map(x=>v(x,CMI)).filter(Boolean))].sort();
+  const vsStatuses=[...new Set(D.att.r.map(x=>v(x,ci(D.att.h,'VisitStatus','status'))).filter(Boolean))].sort();
+  const sel=(id,vals)=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);vals.forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});};
+  sel('pe-f-cluster',clusters);
+  sel('pe-f-city',cities);
+  sel('pe-f-vstatus',vsStatuses);
+}
+
+function clearPEFilters(){
+  ['pe-f-cluster','pe-f-city','pe-f-att','pe-f-month','pe-f-week','pe-f-date','pe-f-vstatus'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  buildPE();
+}
+
+// Month/Week/Date are mutually exclusive at the detail level:
+// Picking month clears date; picking date clears month+week
+function onPEMonthChange(){
+  const m=document.getElementById('pe-f-month').value;
+  if(m){document.getElementById('pe-f-date').value='';}
+  buildPE();
+}
+function onPEWeekChange(){
+  const w=document.getElementById('pe-f-week').value;
+  if(w){document.getElementById('pe-f-date').value='';}
+  buildPE();
+}
+function onPEDateChange(){
+  const d=document.getElementById('pe-f-date').value;
+  if(d){document.getElementById('pe-f-month').value='';document.getElementById('pe-f-week').value='';}
+  buildPE();
+}
+
 function buildPE(){
   const h=D.pe.h,r=D.pe.r;
   const NI=ci(h,'EmployeeName','name'),SI=ci(h,'SSEID','sse'),EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
-  const filteredPE=r; // no global filter
+
+  // Read PE-local filters
+  const fCluster=(document.getElementById('pe-f-cluster')||{}).value||'';
+  const fCity=(document.getElementById('pe-f-city')||{}).value||'';
+  const fAtt=(document.getElementById('pe-f-att')||{}).value||'';
+  const fMonth=parseInt((document.getElementById('pe-f-month')||{}).value||'')||0;
+  const fWeek=parseInt((document.getElementById('pe-f-week')||{}).value||'')||0;
+  const fDate=(document.getElementById('pe-f-date')||{}).value||'';
+  const fVS=(document.getElementById('pe-f-vstatus')||{}).value||'';
 
   // Attendance columns
-  const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout'),_AVSI=ci(D.att.h,'VisitStatus','status');
-  const allAtt=D.att.r;
+  const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout'),_AVSI=ci(D.att.h,'VisitStatus','status'),_ADI=ci(D.att.h,'Date');
 
-  // Visit Status counts per PE email (col M of Attendance)
-  const vsMap={}; // email -> {onsite:n, without:n, noact:n}
-  allAtt.forEach(x=>{
+  // Helper: parse attendance date cell (DD/MM/YYYY or M/D/YYYY)
+  function attDateObj(cellVal){
+    if(!cellVal)return null;
+    const p=cellVal.trim().split(/[\/\-]/);
+    if(p.length===3){
+      // Try DD/MM/YYYY first
+      const d=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
+      if(!isNaN(d))return d;
+      // Try M/D/YYYY
+      const d2=new Date(`${p[2]}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`);
+      if(!isNaN(d2))return d2;
+    }
+    const d3=new Date(cellVal);
+    return isNaN(d3)?null:d3;
+  }
+
+  // Filter attendance rows by date / month / week / visit status
+  const filtAtt=D.att.r.filter(x=>{
+    if(fVS&&v(x,_AVSI)!==fVS)return false;
+    const cellDate=v(x,_ADI);
+    if(fDate){if(!dateMatch(cellDate,fDate))return false;}
+    else if(fMonth||fWeek){
+      const d=attDateObj(cellDate);
+      if(!d)return false;
+      if(fMonth&&(d.getMonth()+1)!==fMonth)return false;
+      if(fWeek){
+        const day=d.getDate();
+        const weekOfDay=day<=7?1:day<=14?2:day<=21?3:day<=28?4:5;
+        if(weekOfDay!==fWeek)return false;
+      }
+    }
+    return true;
+  });
+
+  // Build per-email sets from filtered attendance
+  const ciEmails=new Set(filtAtt.filter(x=>v(x,_ACI)).map(x=>v(x,_AEI).toLowerCase()));
+  const fullEmails=new Set(filtAtt.filter(x=>v(x,_ACI)&&v(x,_AOI)).map(x=>v(x,_AEI).toLowerCase()));
+  const visitMap={};filtAtt.forEach(x=>{const e=v(x,_AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
+
+  // Visit Status counts per PE from filtered att
+  const vsMap={};
+  filtAtt.forEach(x=>{
     const e=(v(x,_AEI)||'').toLowerCase();
     if(!e)return;
     if(!vsMap[e])vsMap[e]={onsite:0,without:0,noact:0};
@@ -392,12 +526,12 @@ function buildPE(){
     else if(st==='No Activity')vsMap[e].noact++;
   });
 
-  // Check-in/out time per PE (min checkin, max checkout)
+  // Check-in/out time per PE from filtered att
   function parseTime(t){if(!t)return null;const d=new Date('1970/01/01 '+t);return isNaN(d)?null:d;}
   function fmtTime(d){if(!d)return'—';return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
-  function timeDiff(a,b){if(!a||!b)return'—';const diff=Math.round((b-a)/60000);const h=Math.floor(diff/60),m=diff%60;return h>0?`${h}h ${m}m`:`${m}m`;}
-  const timeMap={}; // email -> {minCI, maxCO}
-  allAtt.forEach(x=>{
+  function timeDiff(a,b){if(!a||!b)return'—';const diff=Math.round((b-a)/60000);const hh=Math.floor(diff/60),mm=diff%60;return hh>0?`${hh}h ${mm}m`:`${mm}m`;}
+  const timeMap={};
+  filtAtt.forEach(x=>{
     const e=(v(x,_AEI)||'').toLowerCase();
     if(!e)return;
     const ci_t=parseTime(v(x,_ACI)),co_t=parseTime(v(x,_AOI));
@@ -406,38 +540,56 @@ function buildPE(){
     if(co_t&&(!timeMap[e].maxCO||co_t>timeMap[e].maxCO))timeMap[e].maxCO=co_t;
   });
 
-  // TBT/DPR links from TBT sheet col M (TBT Report) and col N (DPR Report)
+  // TBT/DPR links
   const TUI=ci(D.tbt.h,'Uniqueid','unique');
   const TBTLI=ci(D.tbt.h,'TBTReport','tbt report');
   const DPRLI=ci(D.tbt.h,'DPRReport','dpr report');
-  // Map SSE id -> latest TBT row (for links)
-  const tbtBySse={};
-  D.tbt.r.forEach(x=>{const uid=v(x,TUI)||'';const sseMatch=uid.split('_')[0];if(sseMatch&&!tbtBySse[sseMatch])tbtBySse[sseMatch]=x;});
-
-  const ciEmails=new Set(allAtt.filter(x=>v(x,_ACI)).map(x=>v(x,_AEI).toLowerCase()));
-  const fullEmails=new Set(allAtt.filter(x=>v(x,_ACI)&&v(x,_AOI)).map(x=>v(x,_AEI).toLowerCase()));
-  const visitMap={};allAtt.forEach(x=>{const e=v(x,_AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
-
-  // For TBT/DPR links: match by SSE ID in Unique ID
-  // TBT unique id format: SSEID_something → look for rows where uniqueId starts with SSE
   function getLinkBtn(link,label){
     if(!link||!link.startsWith('http'))return'<span style="color:var(--muted);font-size:11px;">—</span>';
     return`<a href="${link}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-folder-open" style="font-size:12px;"></i>${label}</a>`;
   }
 
-  const total=filteredPE.length,ci_=filteredPE.filter(x=>ciEmails.has(v(x,EI).toLowerCase())).length,full=filteredPE.filter(x=>fullEmails.has(v(x,EI).toLowerCase())).length;
-  document.getElementById('pe-metrics').innerHTML=metric('ti-users','Total PEs',total,'','#4f8ef7')+metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}%`,'#34c98a')+metric('ti-circle-check','Full Attendance',full,'In+Out','#9b6dff')+metric('ti-user-off','Absent',total-ci_,'No check-in','#e74c3c');
+  // Filter PE master rows
+  let filteredPE=r.filter(x=>{
+    if(fCluster&&v(x,CLI)!==fCluster)return false;
+    if(fCity&&v(x,CMI)!==fCity)return false;
+    return true;
+  });
+
+  // Filter by attendance status AFTER we know which emails qualify
+  if(fAtt){
+    filteredPE=filteredPE.filter(x=>{
+      const email=v(x,EI).toLowerCase();
+      if(fAtt==='full')return fullEmails.has(email);
+      if(fAtt==='in')return ciEmails.has(email)&&!fullEmails.has(email);
+      if(fAtt==='absent')return!ciEmails.has(email);
+      return true;
+    });
+  }
+
+  // Filter indicator
+  const activeFilters=[fCluster,fCity,fAtt,fMonth?String(fMonth):'',fWeek?String(fWeek):'',fDate,fVS].filter(Boolean).length;
+  const tag=document.getElementById('pe-filter-tag');
+  if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
+
+  const total=filteredPE.length;
+  const ci_=filteredPE.filter(x=>ciEmails.has(v(x,EI).toLowerCase())).length;
+  const full=filteredPE.filter(x=>fullEmails.has(v(x,EI).toLowerCase())).length;
+  document.getElementById('pe-metrics').innerHTML=
+    metric('ti-users','Total PEs',total,'','#4f8ef7')+
+    metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}%`,'#34c98a')+
+    metric('ti-circle-check','Full Attendance',full,'In+Out','#9b6dff')+
+    metric('ti-user-off','Absent',total-ci_,'No check-in','#e74c3c');
 
   document.getElementById('pe-head').innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>Onsite Visit</th><th>Without Visit Update</th><th>No Activity</th><th>Total Activity</th><th>TBT</th><th>DPR</th><th>Check-In Time</th><th>Check-Out Time</th><th>Total Duration</th></tr>';
   const tbody=document.getElementById('pe-body');
-  if(!filteredPE.length){tbody.innerHTML='<tr><td colspan="18" class="empty">No records</td></tr>';return;}
+  if(!filteredPE.length){tbody.innerHTML='<tr><td colspan="18" class="empty">No records match the selected filters</td></tr>';return;}
   tbody.innerHTML=filteredPE.map((x,i)=>{
     const email=v(x,EI).toLowerCase(),hasFull=fullEmails.has(email),hasIn=ciEmails.has(email);
     const attB=hasFull?'<span class="badge bg">Full</span>':hasIn?'<span class="badge bb">Check-in</span>':'<span class="badge br">Absent</span>';
     const name=v(x,NI)||'—',init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(),sse=v(x,SI)||'';
     const vs=vsMap[email]||{onsite:0,without:0,noact:0};
     const totalAct=vs.onsite+vs.without+vs.noact;
-    // TBT/DPR links: find TBT row whose uniqueId contains sse
     const tbtRow=D.tbt.r.find(t=>(v(t,TUI)||'').includes(sse)&&sse);
     const tbtLink=tbtRow?v(tbtRow,TBTLI):'';
     const dprLink=tbtRow?v(tbtRow,DPRLI):'';
