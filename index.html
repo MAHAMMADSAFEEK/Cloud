@@ -18,12 +18,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-refresh{font-size:12px;padding:7px 16px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
 .btn-refresh:hover{background:#3a7de0;}
 .btn-refresh.spinning i{animation:spin 0.8s linear infinite;}
-.filter-topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:10px 24px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:49px;z-index:99;}
-.filter-topbar label{font-size:11px;color:var(--muted);white-space:nowrap;}
-.filter-topbar select,.filter-topbar input[type=date]{font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;outline:none;height:30px;}
+
+
+
 .clr-btn{font-size:11px;padding:5px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;height:30px;}
 .clr-btn:hover{color:var(--text);}
-.filter-divider{width:1px;height:20px;background:var(--border2);margin:0 4px;}
+
 .main{padding:20px 24px;width:100%;}
 .tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto;}
 .tab{font-size:13px;padding:7px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
@@ -68,7 +68,7 @@ tr:hover td{background:var(--surface2);}
 .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 #overlay-txt{font-size:14px;color:var(--muted);}
-.active-filters{font-size:11px;color:var(--accent);padding:2px 8px;background:rgba(79,142,247,0.1);border-radius:20px;border:1px solid rgba(79,142,247,0.2);}
+
 /* Project Summary styles */
 .proj-filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;}
 .proj-search-wrap{position:relative;min-width:240px;}
@@ -93,7 +93,7 @@ tr:hover td{background:var(--surface2);}
 .pct-lbl{font-size:11px;color:var(--muted);min-width:32px;text-align:right;}
 .wip-pct{font-size:11px;color:#f5a623;margin-left:4px;}
 #proj-metrics{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
-@media(max-width:600px){.main{padding:12px;}.topbar{padding:10px 14px;}.filter-topbar{top:45px;padding:8px 14px;}}
+@media(max-width:600px){.main{padding:12px;}.topbar{padding:10px 14px;}}
 </style>
 </head>
 <body>
@@ -116,25 +116,7 @@ tr:hover td{background:var(--surface2);}
 </div>
 
 <!-- GLOBAL FILTER BAR -->
-<div class="filter-topbar">
-  <i class="ti ti-filter" style="color:var(--accent);font-size:14px;"></i>
-  <label>Date</label>
-  <input type="date" id="g-date" onchange="applyFilters()">
-  <div class="filter-divider"></div>
-  <label>Dept</label>
-  <select id="g-dept" onchange="applyFilters()"><option value="">All</option></select>
-  <label>Region</label>
-  <select id="g-region" onchange="applyFilters()"><option value="">All</option></select>
-  <label>Cluster</label>
-  <select id="g-cluster" onchange="applyFilters()"><option value="">All</option></select>
-  <label>City Mgr</label>
-  <select id="g-city" onchange="applyFilters()"><option value="">All</option></select>
-  <div class="filter-divider"></div>
-  <label>Visit Status</label>
-  <select id="g-vstatus" onchange="applyFilters()"><option value="">All</option></select>
-  <button class="clr-btn" onclick="clearFilters()"><i class="ti ti-x"></i> Clear</button>
-  <span id="filter-indicator" style="display:none;" class="active-filters"></span>
-</div>
+
 
 <div class="main" id="main" style="display:none;">
   <div class="tabs">
@@ -346,24 +328,19 @@ function fmtDate(d){if(!d)return'—';return d.toLocaleDateString('en-IN',{day:'
 function getFilteredPEEmails(){
   const h=D.pe.h,r=D.pe.r;
   if(!r.length)return null;
-  const EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
-  const fd=document.getElementById('g-dept').value,fr=document.getElementById('g-region').value,fc=document.getElementById('g-cluster').value,fm=document.getElementById('g-city').value;
-  if(!fd&&!fr&&!fc&&!fm)return null;
-  const filtered=r.filter(x=>{if(fd&&v(x,DI)!==fd)return false;if(fr&&v(x,RI)!==fr)return false;if(fc&&v(x,CLI)!==fc)return false;if(fm&&v(x,CMI)!==fm)return false;return true;});
-  return new Set(filtered.map(x=>v(x,EI).toLowerCase()));
+  const EI=ci(h,'Mailid','email','mail');
+  return new Set(r.map(x=>v(x,EI).toLowerCase()));
 }
 
 function getFilteredAtt(){
   const ah=D.att.h,ar=D.att.r;
   const EI=ci(ah,'UserEmail','email'),DI=ci(ah,'Date'),PI=ci(ah,'ProjectName','project'),CI=ci(ah,'CheckinTime','checkin'),OI=ci(ah,'CheckoutTime','checkout'),LI=ci(ah,'CheckinLocation','location'),VSI=ci(ah,'VisitStatus','status'),RI=ci(ah,'Remark','remark');
-  const fDate=document.getElementById('g-date').value,fStatus=document.getElementById('g-vstatus').value;
-  const peEmails=getFilteredPEEmails();
-  return{rows:ar.filter(x=>{if(peEmails!==null&&!peEmails.has(v(x,EI).toLowerCase()))return false;if(fStatus&&v(x,VSI)!==fStatus)return false;if(fDate&&!dateMatch(v(x,DI),fDate))return false;return true;}),EI,DI,PI,CI,OI,LI,VSI,RI};
+  return{rows:ar,EI,DI,PI,CI,OI,LI,VSI,RI};
 }
 
-function applyFilters(){updateFilterIndicator();buildAll();}
-function clearFilters(){['g-date','g-dept','g-region','g-cluster','g-city','g-vstatus'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});applyFilters();}
-function updateFilterIndicator(){const active=['g-date','g-dept','g-region','g-cluster','g-city','g-vstatus'].filter(id=>{const el=document.getElementById(id);return el&&el.value;});const ind=document.getElementById('filter-indicator');if(active.length){ind.style.display='inline';ind.textContent=`${active.length} filter${active.length>1?'s':''} active`;}else{ind.style.display='none';}}
+function applyFilters(){buildAll();}
+function clearFilters(){buildAll();}
+function updateFilterIndicator(){}
 
 // ── Load ──────────────────────────────────────────────────────
 async function loadAll(){
@@ -376,13 +353,7 @@ async function loadAll(){
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
     }
-    // Fill global filters
-    const ph=D.pe.h,pr=D.pe.r;
-    fillSel('g-dept',pr.map(x=>v(x,ci(ph,'Dept','department'))));
-    fillSel('g-region',pr.map(x=>v(x,ci(ph,'Region'))));
-    fillSel('g-cluster',pr.map(x=>v(x,ci(ph,'Clusterhead','cluster'))));
-    fillSel('g-city',pr.map(x=>v(x,ci(ph,'CityManager','city'))));
-    fillSel('g-vstatus',D.att.r.map(x=>v(x,ci(D.att.h,'VisitStatus','status'))));
+    // Global filters removed
     // Fill project filters
     buildProjFilters();
     buildAll();
@@ -403,26 +374,95 @@ function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();}
 function buildPE(){
   const h=D.pe.h,r=D.pe.r;
   const NI=ci(h,'EmployeeName','name'),SI=ci(h,'SSEID','sse'),EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
-  const fd=document.getElementById('g-dept').value,fr=document.getElementById('g-region').value,fc=document.getElementById('g-cluster').value,fm=document.getElementById('g-city').value;
-  const filteredPE=r.filter(x=>{if(fd&&v(x,DI)!==fd)return false;if(fr&&v(x,RI)!==fr)return false;if(fc&&v(x,CLI)!==fc)return false;if(fm&&v(x,CMI)!==fm)return false;return true;});
-  const{rows:filtAtt}=getFilteredAtt();
-  const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout');
-  const ciEmails=new Set(filtAtt.filter(x=>v(x,_ACI)).map(x=>v(x,_AEI).toLowerCase()));
-  const fullEmails=new Set(filtAtt.filter(x=>v(x,_ACI)&&v(x,_AOI)).map(x=>v(x,_AEI).toLowerCase()));
-  const visitMap={};filtAtt.forEach(x=>{const e=v(x,_AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
-  const TUI=ci(D.tbt.h,'Uniqueid','unique'),DUI=ci(D.dpr.h,'UniqueID','unique');
-  const tbtIds=new Set(D.tbt.r.map(x=>v(x,TUI)).filter(Boolean));
-  const dprIds=new Set(D.dpr.r.map(x=>v(x,DUI)).filter(Boolean));
+  const filteredPE=r; // no global filter
+
+  // Attendance columns
+  const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout'),_AVSI=ci(D.att.h,'VisitStatus','status');
+  const allAtt=D.att.r;
+
+  // Visit Status counts per PE email (col M of Attendance)
+  const vsMap={}; // email -> {onsite:n, without:n, noact:n}
+  allAtt.forEach(x=>{
+    const e=(v(x,_AEI)||'').toLowerCase();
+    if(!e)return;
+    if(!vsMap[e])vsMap[e]={onsite:0,without:0,noact:0};
+    const st=(v(x,_AVSI)||'').trim();
+    if(st==='Onsite Visit')vsMap[e].onsite++;
+    else if(st==='Without Visit Update')vsMap[e].without++;
+    else if(st==='No Activity')vsMap[e].noact++;
+  });
+
+  // Check-in/out time per PE (min checkin, max checkout)
+  function parseTime(t){if(!t)return null;const d=new Date('1970/01/01 '+t);return isNaN(d)?null:d;}
+  function fmtTime(d){if(!d)return'—';return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
+  function timeDiff(a,b){if(!a||!b)return'—';const diff=Math.round((b-a)/60000);const h=Math.floor(diff/60),m=diff%60;return h>0?`${h}h ${m}m`:`${m}m`;}
+  const timeMap={}; // email -> {minCI, maxCO}
+  allAtt.forEach(x=>{
+    const e=(v(x,_AEI)||'').toLowerCase();
+    if(!e)return;
+    const ci_t=parseTime(v(x,_ACI)),co_t=parseTime(v(x,_AOI));
+    if(!timeMap[e])timeMap[e]={minCI:null,maxCO:null};
+    if(ci_t&&(!timeMap[e].minCI||ci_t<timeMap[e].minCI))timeMap[e].minCI=ci_t;
+    if(co_t&&(!timeMap[e].maxCO||co_t>timeMap[e].maxCO))timeMap[e].maxCO=co_t;
+  });
+
+  // TBT/DPR links from TBT sheet col M (TBT Report) and col N (DPR Report)
+  const TUI=ci(D.tbt.h,'Uniqueid','unique');
+  const TBTLI=ci(D.tbt.h,'TBTReport','tbt report');
+  const DPRLI=ci(D.tbt.h,'DPRReport','dpr report');
+  // Map SSE id -> latest TBT row (for links)
+  const tbtBySse={};
+  D.tbt.r.forEach(x=>{const uid=v(x,TUI)||'';const sseMatch=uid.split('_')[0];if(sseMatch&&!tbtBySse[sseMatch])tbtBySse[sseMatch]=x;});
+
+  const ciEmails=new Set(allAtt.filter(x=>v(x,_ACI)).map(x=>v(x,_AEI).toLowerCase()));
+  const fullEmails=new Set(allAtt.filter(x=>v(x,_ACI)&&v(x,_AOI)).map(x=>v(x,_AEI).toLowerCase()));
+  const visitMap={};allAtt.forEach(x=>{const e=v(x,_AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
+
+  // For TBT/DPR links: match by SSE ID in Unique ID
+  // TBT unique id format: SSEID_something → look for rows where uniqueId starts with SSE
+  function getLinkBtn(link,label){
+    if(!link||!link.startsWith('http'))return'<span style="color:var(--muted);font-size:11px;">—</span>';
+    return`<a href="${link}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-folder-open" style="font-size:12px;"></i>${label}</a>`;
+  }
+
   const total=filteredPE.length,ci_=filteredPE.filter(x=>ciEmails.has(v(x,EI).toLowerCase())).length,full=filteredPE.filter(x=>fullEmails.has(v(x,EI).toLowerCase())).length;
-  document.getElementById('pe-metrics').innerHTML=metric('ti-users','Total PEs',total,'Filtered','#4f8ef7')+metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}%`,'#34c98a')+metric('ti-circle-check','Full Attendance',full,'In+Out','#9b6dff')+metric('ti-user-off','Absent',total-ci_,'No check-in','#e74c3c')+metric('ti-clipboard-list','TBT Leads',tbtIds.size,'','#f5a623')+metric('ti-file-report','DPR Leads',dprIds.size,'','#34c98a');
-  document.getElementById('pe-head').innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>TBT</th><th>DPR</th></tr>';
+  document.getElementById('pe-metrics').innerHTML=metric('ti-users','Total PEs',total,'','#4f8ef7')+metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}%`,'#34c98a')+metric('ti-circle-check','Full Attendance',full,'In+Out','#9b6dff')+metric('ti-user-off','Absent',total-ci_,'No check-in','#e74c3c');
+
+  document.getElementById('pe-head').innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>Onsite Visit</th><th>Without Visit Update</th><th>No Activity</th><th>Total Activity</th><th>TBT</th><th>DPR</th><th>Check-In Time</th><th>Check-Out Time</th><th>Total Duration</th></tr>';
   const tbody=document.getElementById('pe-body');
-  if(!filteredPE.length){tbody.innerHTML='<tr><td colspan="11" class="empty">No records</td></tr>';return;}
+  if(!filteredPE.length){tbody.innerHTML='<tr><td colspan="18" class="empty">No records</td></tr>';return;}
   tbody.innerHTML=filteredPE.map((x,i)=>{
     const email=v(x,EI).toLowerCase(),hasFull=fullEmails.has(email),hasIn=ciEmails.has(email);
     const attB=hasFull?'<span class="badge bg">Full</span>':hasIn?'<span class="badge bb">Check-in</span>':'<span class="badge br">Absent</span>';
-    const name=v(x,NI)||'—',init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(),sse=v(x,SI);
-    return `<tr><td style="color:var(--muted)">${i+1}</td><td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${init}</div><div><div style="font-weight:500;font-size:13px">${name}</div><div style="font-size:11px;color:var(--muted)">${v(x,EI)}</div></div></div></td><td><span class="badge bp">${sse||'—'}</span></td><td>${v(x,DI)||'—'}</td><td>${v(x,RI)||'—'}</td><td style="font-size:12px">${v(x,CLI)||'—'}</td><td style="font-size:12px">${v(x,CMI)||'—'}</td><td>${attB}</td><td><span class="badge bb">${visitMap[email]||0}</span></td><td>${tbtIds.has(sse)?'<span class="badge bg">✓</span>':'<span class="badge br">✗</span>'}</td><td>${dprIds.has(sse)?'<span class="badge bg">✓</span>':'<span class="badge br">✗</span>'}</td></tr>`;
+    const name=v(x,NI)||'—',init=name.split(' ').map(w=>w[0]||'').join('').slice(0,2).toUpperCase(),sse=v(x,SI)||'';
+    const vs=vsMap[email]||{onsite:0,without:0,noact:0};
+    const totalAct=vs.onsite+vs.without+vs.noact;
+    // TBT/DPR links: find TBT row whose uniqueId contains sse
+    const tbtRow=D.tbt.r.find(t=>(v(t,TUI)||'').includes(sse)&&sse);
+    const tbtLink=tbtRow?v(tbtRow,TBTLI):'';
+    const dprLink=tbtRow?v(tbtRow,DPRLI):'';
+    const tm=timeMap[email]||{};
+    const dur=timeDiff(tm.minCI,tm.maxCO);
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><div style="display:flex;align-items:center;gap:8px"><div class="avatar">${init}</div><div><div style="font-weight:500;font-size:13px">${name}</div><div style="font-size:11px;color:var(--muted)">${v(x,EI)}</div></div></div></td>
+      <td><span class="badge bp">${sse||'—'}</span></td>
+      <td style="font-size:12px">${v(x,DI)||'—'}</td>
+      <td style="font-size:12px">${v(x,RI)||'—'}</td>
+      <td style="font-size:12px">${v(x,CLI)||'—'}</td>
+      <td style="font-size:12px">${v(x,CMI)||'—'}</td>
+      <td>${attB}</td>
+      <td><span class="badge bb">${visitMap[email]||0}</span></td>
+      <td><span class="badge bg">${vs.onsite}</span></td>
+      <td><span class="badge bo">${vs.without}</span></td>
+      <td><span class="badge br">${vs.noact}</span></td>
+      <td><span class="badge bp" style="font-weight:600">${totalAct}</span></td>
+      <td>${getLinkBtn(tbtLink,'TBT Report')}</td>
+      <td>${getLinkBtn(dprLink,'DPR Report')}</td>
+      <td style="font-size:12px;white-space:nowrap">${fmtTime(tm.minCI)}</td>
+      <td style="font-size:12px;white-space:nowrap">${fmtTime(tm.maxCO)}</td>
+      <td style="font-size:12px;font-weight:500;color:${dur==='—'?'var(--muted)':'#34c98a'}">${dur}</td>
+    </tr>`;
   }).join('');
 }
 
@@ -435,7 +475,7 @@ function buildAtt(){
   document.getElementById('proj-bars').innerHTML=bars(Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
   const em={};rows.forEach(x=>{const e=v(x,EI)||'Unknown';em[e]=(em[e]||0)+1;});
   document.getElementById('pe-visit-bars').innerHTML=bars(Object.entries(em).sort((a,b)=>b[1]-a[1]).slice(0,12),'#34c98a');
-  fillSel('g-vstatus',D.att.r.map(x=>v(x,VSI)));
+
   document.getElementById('att-head').innerHTML='<tr><th>#</th><th>Email</th><th>Date</th><th>Project</th><th>Check-in</th><th>Check-out</th><th>Location</th><th>Status</th><th>Remarks</th></tr>';
   const tbody=document.getElementById('att-body');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No records</td></tr>';return;}
