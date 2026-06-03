@@ -70,9 +70,19 @@ tr:hover td{background:var(--surface2);}
 #overlay-txt{font-size:14px;color:var(--muted);}
 .active-filters{font-size:11px;color:var(--accent);padding:2px 8px;background:rgba(79,142,247,0.1);border-radius:20px;border:1px solid rgba(79,142,247,0.2);}
 /* Project Summary styles */
-.proj-filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
-.proj-filter-bar select{font-size:12px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;outline:none;min-width:200px;}
-.proj-filter-bar input{font-size:12px;padding:6px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;min-width:200px;}
+.proj-filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;}
+.proj-search-wrap{position:relative;min-width:240px;}
+.proj-search-wrap input{font-size:12px;padding:7px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;width:100%;}
+.proj-search-wrap input:focus{border-color:var(--accent);}
+.proj-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);z-index:200;max-height:220px;overflow-y:auto;display:none;box-shadow:0 8px 24px rgba(0,0,0,0.4);}
+.proj-dropdown.open{display:block;}
+.proj-dropdown-item{padding:8px 12px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--border);}
+.proj-dropdown-item:last-child{border-bottom:none;}
+.proj-dropdown-item:hover{background:var(--surface2);}
+.proj-dropdown-item.no-results{color:var(--muted);cursor:default;}
+.proj-dropdown-item mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
+.btn-search{font-size:12px;padding:7px 18px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;height:32px;}
+.btn-search:hover{background:#3a7de0;}
 .proj-info-bar{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:var(--surface2);border-radius:var(--radius);font-size:12px;}
 .proj-info-bar span{color:var(--muted);}
 .proj-info-bar strong{color:var(--text);}
@@ -192,15 +202,24 @@ tr:hover td{background:var(--surface2);}
     <div class="card">
       <div class="card-title"><i class="ti ti-search"></i> Select Project</div>
       <div class="proj-filter-bar">
-        <div>
+        <div class="proj-search-wrap">
           <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Project Name</label>
-          <select id="proj-name-sel" onchange="onProjNameChange()"><option value="">-- Select Project --</option></select>
+          <input type="text" id="proj-name-input" placeholder="Type to search project name…" autocomplete="off"
+            oninput="filterProjDropdown('name')" onfocus="openDropdown('name')" onblur="closeDropdownDelayed('name')"/>
+          <div class="proj-dropdown" id="proj-name-dd"></div>
+        </div>
+        <div class="proj-search-wrap">
+          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Project ID</label>
+          <input type="text" id="proj-id-input" placeholder="Type to search project ID…" autocomplete="off"
+            oninput="filterProjDropdown('id')" onfocus="openDropdown('id')" onblur="closeDropdownDelayed('id')"/>
+          <div class="proj-dropdown" id="proj-id-dd"></div>
         </div>
         <div>
-          <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:4px;">Project ID</label>
-          <select id="proj-id-sel" onchange="onProjIdChange()"><option value="">-- Select ID --</option></select>
+          <label style="font-size:11px;color:transparent;display:block;margin-bottom:4px;">.</label>
+          <button class="btn-search" onclick="searchProject()"><i class="ti ti-search"></i> Search</button>
         </div>
-        <div style="align-self:flex-end;">
+        <div>
+          <label style="font-size:11px;color:transparent;display:block;margin-bottom:4px;">.</label>
           <button class="clr-btn" onclick="clearProjFilter()"><i class="ti ti-x"></i> Clear</button>
         </div>
       </div>
@@ -453,54 +472,101 @@ function buildDPR(){
 }
 
 // ── PROJECT SUMMARY ───────────────────────────────────────────
+let allProjects=[]; // [{name, id}]
+
 function buildProjFilters(){
   const lh=D.lead.h,lr=D.lead.r;
   const PNI=ci(lh,'ProjectName','project name'),PII=ci(lh,'ProjectID','project id');
-  // Unique projects
   const projMap={};
   lr.forEach(r=>{
     const pn=v(r,PNI),pi=v(r,PII);
     if(pn&&pi)projMap[pi]={name:pn,id:pi};
   });
-  const sorted=Object.values(projMap).sort((a,b)=>a.name.localeCompare(b.name));
-  const namesSorted=[...new Set(sorted.map(p=>p.name))].sort();
-  const idsSorted=[...new Set(sorted.map(p=>p.id))].sort();
-  fillSel('proj-name-sel',namesSorted);
-  fillSel('proj-id-sel',idsSorted);
+  allProjects=Object.values(projMap).sort((a,b)=>a.name.localeCompare(b.name));
 }
 
-function onProjNameChange(){
-  const sel=document.getElementById('proj-name-sel').value;
-  if(!sel)return;
-  // Find matching ID
-  const lh=D.lead.h,lr=D.lead.r;
-  const PNI=ci(lh,'ProjectName','project name'),PII=ci(lh,'ProjectID','project id');
-  const match=lr.find(r=>v(r,PNI)===sel);
-  if(match){const pid=v(match,PII);document.getElementById('proj-id-sel').value=pid;}
-  renderProjectSummary();
+function highlight(text,query){
+  if(!query)return text;
+  const idx=text.toLowerCase().indexOf(query.toLowerCase());
+  if(idx<0)return text;
+  return text.slice(0,idx)+'<mark>'+text.slice(idx,idx+query.length)+'</mark>'+text.slice(idx+query.length);
 }
 
-function onProjIdChange(){
-  const sel=document.getElementById('proj-id-sel').value;
-  if(!sel)return;
-  const lh=D.lead.h,lr=D.lead.r;
-  const PNI=ci(lh,'ProjectName','project name'),PII=ci(lh,'ProjectID','project id');
-  const match=lr.find(r=>v(r,PII)===sel);
-  if(match){const pn=v(match,PNI);document.getElementById('proj-name-sel').value=pn;}
-  renderProjectSummary();
+function filterProjDropdown(type){
+  const inputId=type==='name'?'proj-name-input':'proj-id-input';
+  const ddId=type==='name'?'proj-name-dd':'proj-id-dd';
+  const query=document.getElementById(inputId).value.trim().toLowerCase();
+  const dd=document.getElementById(ddId);
+  const filtered=query?allProjects.filter(p=>(type==='name'?p.name:p.id).toLowerCase().includes(query)):allProjects.slice(0,30);
+  if(!filtered.length){dd.innerHTML='<div class="proj-dropdown-item no-results">No results found</div>';dd.classList.add('open');return;}
+  dd.innerHTML=filtered.slice(0,40).map(p=>{
+    const label=type==='name'?p.name:p.id;
+    const sub=type==='name'?p.id:p.name;
+    return `<div class="proj-dropdown-item" onmousedown="selectProj('${p.id.replace(/'/g,"\\'")}','${p.name.replace(/'/g,"\\'")}','${type}')">
+      <div style="font-weight:500">${highlight(label,document.getElementById(inputId).value.trim())}</div>
+      <div style="font-size:11px;color:var(--muted)">${sub}</div>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+function openDropdown(type){
+  filterProjDropdown(type);
+}
+
+function closeDropdownDelayed(type){
+  setTimeout(()=>{
+    const ddId=type==='name'?'proj-name-dd':'proj-id-dd';
+    document.getElementById(ddId).classList.remove('open');
+  },200);
+}
+
+function selectProj(id,name,type){
+  document.getElementById('proj-name-input').value=name;
+  document.getElementById('proj-id-input').value=id;
+  document.getElementById('proj-name-dd').classList.remove('open');
+  document.getElementById('proj-id-dd').classList.remove('open');
+  renderProjectSummary(id,name);
+}
+
+function searchProject(){
+  const nameVal=document.getElementById('proj-name-input').value.trim();
+  const idVal=document.getElementById('proj-id-input').value.trim();
+  // Try exact ID match first
+  if(idVal){
+    const match=allProjects.find(p=>p.id.toLowerCase()===idVal.toLowerCase());
+    if(match){renderProjectSummary(match.id,match.name);return;}
+    // fuzzy
+    const fuzzy=allProjects.find(p=>p.id.toLowerCase().includes(idVal.toLowerCase()));
+    if(fuzzy){renderProjectSummary(fuzzy.id,fuzzy.name);document.getElementById('proj-id-input').value=fuzzy.id;document.getElementById('proj-name-input').value=fuzzy.name;return;}
+  }
+  if(nameVal){
+    const match=allProjects.find(p=>p.name.toLowerCase()===nameVal.toLowerCase());
+    if(match){renderProjectSummary(match.id,match.name);document.getElementById('proj-id-input').value=match.id;return;}
+    const fuzzy=allProjects.find(p=>p.name.toLowerCase().includes(nameVal.toLowerCase()));
+    if(fuzzy){renderProjectSummary(fuzzy.id,fuzzy.name);document.getElementById('proj-id-input').value=fuzzy.id;document.getElementById('proj-name-input').value=fuzzy.name;return;}
+  }
+  alert('No project found. Try a different name or ID.');
 }
 
 function clearProjFilter(){
-  document.getElementById('proj-name-sel').value='';
-  document.getElementById('proj-id-sel').value='';
+  document.getElementById('proj-name-input').value='';
+  document.getElementById('proj-id-input').value='';
+  document.getElementById('proj-name-dd').classList.remove('open');
+  document.getElementById('proj-id-dd').classList.remove('open');
   document.getElementById('proj-summary-area').style.display='none';
   document.getElementById('proj-empty').style.display='block';
   document.getElementById('proj-info-bar').style.display='none';
 }
 
-function renderProjectSummary(){
-  const projId=document.getElementById('proj-id-sel').value;
-  const projName=document.getElementById('proj-name-sel').value;
+// Also allow Enter key to trigger search
+document.addEventListener('DOMContentLoaded',()=>{
+  ['proj-name-input','proj-id-input'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')searchProject();});
+  });
+});
+
+function renderProjectSummary(projId,projName){
   if(!projId){clearProjFilter();return;}
 
   // ── Step 1: Find all Attendance Tracker rows for this project
