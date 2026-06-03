@@ -94,6 +94,21 @@ tr:hover td{background:var(--surface2);}
 .wip-pct{font-size:11px;color:#f5a623;margin-left:4px;}
 #proj-metrics{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));}
 @media(max-width:600px){.main{padding:12px;}.topbar{padding:10px 14px;}}
+/* ── PE Filter Bar ─────────────────────────────────────────── */
+.pe-filter-bar{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;padding:12px 24px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:49px;z-index:98;}
+.pe-filter-group{display:flex;flex-direction:column;gap:4px;}
+.pe-filter-group label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:500;white-space:nowrap;}
+.pe-filter-group select,
+.pe-filter-group input[type=date]{font-size:12px;padding:5px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);cursor:pointer;outline:none;height:30px;min-width:130px;transition:border-color 0.15s,box-shadow 0.15s;}
+.pe-filter-group select:focus,
+.pe-filter-group input[type=date]:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,142,247,0.15);}
+.pe-fdivider{width:1px;height:30px;background:var(--border2);margin:0 2px;align-self:center;}
+.pe-filter-actions{display:flex;flex-direction:column;gap:4px;}
+.pe-filter-actions>.spacer{font-size:10px;color:transparent;display:block;height:14px;}
+.pe-clr-btn{font-size:12px;padding:0 14px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;height:30px;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;white-space:nowrap;}
+.pe-clr-btn:hover{color:var(--text);border-color:var(--border2);background:var(--surface2);}
+.pe-active-tag{font-size:11px;color:var(--accent);padding:3px 10px;background:rgba(79,142,247,0.1);border-radius:20px;border:1px solid rgba(79,142,247,0.2);align-self:center;white-space:nowrap;margin-left:4px;}
+
 </style>
 </head>
 <body>
@@ -129,62 +144,59 @@ tr:hover td{background:var(--surface2);}
 
   <!-- PE TAB -->
   <div id="tab-pe" class="tab-content active">
-    <div class="section-title">PE Summary</div>
-    <div class="metrics" id="pe-metrics"></div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
-      <!-- PE Filter Bar -->
+    <!-- PE Filter Bar — sticky below topbar -->
       <div class="pe-filter-bar">
-        <i class="ti ti-filter" style="color:var(--accent);font-size:13px;"></i>
-        <label>Cluster Head</label>
-        <select id="pe-f-cluster" onchange="buildPE()"><option value="">All</option></select>
+        <div class="pe-filter-group">
+          <label>Cluster Head</label>
+          <select id="pe-f-cluster" onchange="buildPE()"><option value="">All Clusters</option></select>
+        </div>
+        <div class="pe-filter-group">
+          <label>City Manager</label>
+          <select id="pe-f-city" onchange="buildPE()"><option value="">All City Mgrs</option></select>
+        </div>
         <div class="pe-fdivider"></div>
-        <label>City Manager</label>
-        <select id="pe-f-city" onchange="buildPE()"><option value="">All</option></select>
+        <div class="pe-filter-group">
+          <label>Attendance</label>
+          <select id="pe-f-att" onchange="buildPE()">
+            <option value="">All Status</option>
+            <option value="full">Full (In+Out)</option>
+            <option value="in">Check-in Only</option>
+            <option value="absent">Absent</option>
+          </select>
+        </div>
+        <div class="pe-filter-group">
+          <label>Visit Status</label>
+          <select id="pe-f-vstatus" onchange="buildPE()"><option value="">All Visits</option></select>
+        </div>
         <div class="pe-fdivider"></div>
-        <label>Attendance</label>
-        <select id="pe-f-att" onchange="buildPE()">
-          <option value="">All</option>
-          <option value="full">Full (In+Out)</option>
-          <option value="in">Check-in Only</option>
-          <option value="absent">Absent</option>
-        </select>
+        <div class="pe-filter-group">
+          <label>Month</label>
+          <select id="pe-f-month" onchange="onPEMonthChange()"><option value="">All Months</option></select>
+        </div>
+        <div class="pe-filter-group">
+          <label>Week</label>
+          <select id="pe-f-week" onchange="onPEWeekChange()"><option value="">All Weeks</option></select>
+        </div>
+        <div class="pe-filter-group">
+          <label>Date</label>
+          <select id="pe-f-date" onchange="onPEDateChange()"><option value="">All Dates</option></select>
+        </div>
         <div class="pe-fdivider"></div>
-        <label>Month</label>
-        <select id="pe-f-month" onchange="onPEMonthChange()">
-          <option value="">All</option>
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
-        <label>Week</label>
-        <select id="pe-f-week" onchange="onPEWeekChange()">
-          <option value="">All</option>
-          <option value="1">Week 1 (1–7)</option>
-          <option value="2">Week 2 (8–14)</option>
-          <option value="3">Week 3 (15–21)</option>
-          <option value="4">Week 4 (22–28)</option>
-          <option value="5">Week 5 (29–31)</option>
-        </select>
-        <div class="pe-fdivider"></div>
-        <label>Date</label>
-        <input type="date" id="pe-f-date" onchange="onPEDateChange()">
-        <div class="pe-fdivider"></div>
-        <label>Visit Status</label>
-        <select id="pe-f-vstatus" onchange="buildPE()"><option value="">All</option></select>
-        <button class="clr-btn" style="height:28px;font-size:11px;" onclick="clearPEFilters()"><i class="ti ti-x"></i> Clear</button>
+        <div class="pe-filter-actions">
+          <span class="spacer"></span>
+          <button class="pe-clr-btn" onclick="clearPEFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button>
+        </div>
         <span id="pe-filter-tag" class="pe-active-tag" style="display:none;"></span>
       </div>
-      <div class="table-wrap"><table><thead id="pe-head"></thead><tbody id="pe-body"></tbody></table></div>
+    <div style="padding:20px 24px 0;">
+      <div class="section-title">PE Summary</div>
+      <div class="metrics" id="pe-metrics"></div>
+    </div>
+    <div style="padding:0 24px 20px;">
+      <div class="card">
+        <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
+        <div class="table-wrap"><table><thead id="pe-head"></thead><tbody id="pe-body"></tbody></table></div>
+      </div>
     </div>
   </div>
 
@@ -424,16 +436,82 @@ function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
-  // Called once after data loads to fill dropdown options
   const h=D.pe.h,r=D.pe.r;
   const CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
   const clusters=[...new Set(r.map(x=>v(x,CLI)).filter(Boolean))].sort();
   const cities=[...new Set(r.map(x=>v(x,CMI)).filter(Boolean))].sort();
   const vsStatuses=[...new Set(D.att.r.map(x=>v(x,ci(D.att.h,'VisitStatus','status'))).filter(Boolean))].sort();
+
+  // Build Month, Week, Date options from Attendance col B (Date)
+  const _ADI=ci(D.att.h,'Date');
+  const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthSet=new Set(), weekSet=new Set(), dateSet=new Set();
+
+  D.att.r.forEach(x=>{
+    const raw=v(x,_ADI);
+    if(!raw)return;
+    const d=attDateObjStatic(raw);
+    if(!d)return;
+    const mo=d.getMonth()+1; // 1-12
+    const day=d.getDate();
+    const wk=day<=7?1:day<=14?2:day<=21?3:day<=28?4:5;
+    // Store as "YYYY-MM" so months sort correctly across years
+    monthSet.add(`${d.getFullYear()}-${String(mo).padStart(2,'0')}|${MONTH_NAMES[mo-1]} ${d.getFullYear()}`);
+    weekSet.add(wk);
+    // Store date as ISO for value, display as DD MMM YYYY
+    const iso=`${d.getFullYear()}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const disp=d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+    dateSet.add(`${iso}|${disp}`);
+  });
+
+  // Sort months chronologically
+  const monthsSorted=[...monthSet].sort((a,b)=>a.localeCompare(b));
+  // Sort dates chronologically
+  const datesSorted=[...dateSet].sort((a,b)=>a.localeCompare(b));
+  // Weeks always 1-5 but only include those present
+  const weeksSorted=[...weekSet].sort((a,b)=>a-b);
+
+  const selOpts=(id,entries,valFn,lblFn)=>{
+    const s=document.getElementById(id);
+    if(!s)return;
+    const cur=s.value;
+    while(s.options.length>1)s.remove(1);
+    entries.forEach(e=>{
+      const o=document.createElement('option');
+      o.value=valFn(e); o.textContent=lblFn(e);
+      if(o.value===cur)o.selected=true;
+      s.appendChild(o);
+    });
+  };
+
   const sel=(id,vals)=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);vals.forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});};
   sel('pe-f-cluster',clusters);
   sel('pe-f-city',cities);
   sel('pe-f-vstatus',vsStatuses);
+
+  // Month: value = "YYYY-MM", label = "January 2026"
+  selOpts('pe-f-month', monthsSorted, e=>e.split('|')[0], e=>e.split('|')[1]);
+  // Week: value = week number, label = "Week N (D–D)"
+  const weekLabels={1:'Week 1 (1–7)',2:'Week 2 (8–14)',3:'Week 3 (15–21)',4:'Week 4 (22–28)',5:'Week 5 (29–31)'};
+  selOpts('pe-f-week', weeksSorted, e=>String(e), e=>weekLabels[e]);
+  // Date: value = ISO date "YYYY-MM-DD", label = "13 May 2026"
+  selOpts('pe-f-date', datesSorted, e=>e.split('|')[0], e=>e.split('|')[1]);
+}
+
+// Static helper (no closure needed) for parsing att date strings
+function attDateObjStatic(raw){
+  if(!raw)return null;
+  const p=raw.trim().split(/[\/\-]/);
+  if(p.length>=3){
+    // Try DD/MM/YYYY
+    const d=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
+    if(!isNaN(d)&&d.getFullYear()>2000)return d;
+    // Try M/D/YYYY
+    const d2=new Date(`${p[2]}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`);
+    if(!isNaN(d2)&&d2.getFullYear()>2000)return d2;
+  }
+  const d3=new Date(raw);
+  return isNaN(d3)?null:d3;
 }
 
 function clearPEFilters(){
@@ -475,31 +553,19 @@ function buildPE(){
   // Attendance columns
   const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout'),_AVSI=ci(D.att.h,'VisitStatus','status'),_ADI=ci(D.att.h,'Date');
 
-  // Helper: parse attendance date cell (DD/MM/YYYY or M/D/YYYY)
-  function attDateObj(cellVal){
-    if(!cellVal)return null;
-    const p=cellVal.trim().split(/[\/\-]/);
-    if(p.length===3){
-      // Try DD/MM/YYYY first
-      const d=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
-      if(!isNaN(d))return d;
-      // Try M/D/YYYY
-      const d2=new Date(`${p[2]}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`);
-      if(!isNaN(d2))return d2;
-    }
-    const d3=new Date(cellVal);
-    return isNaN(d3)?null:d3;
-  }
-
   // Filter attendance rows by date / month / week / visit status
   const filtAtt=D.att.r.filter(x=>{
     if(fVS&&v(x,_AVSI)!==fVS)return false;
     const cellDate=v(x,_ADI);
     if(fDate){if(!dateMatch(cellDate,fDate))return false;}
     else if(fMonth||fWeek){
-      const d=attDateObj(cellDate);
+      const d=attDateObjStatic(cellDate);
       if(!d)return false;
-      if(fMonth&&(d.getMonth()+1)!==fMonth)return false;
+      if(fMonth){
+        // fMonth is "YYYY-MM"
+        const yr=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0');
+        if(`${yr}-${mo}`!==fMonth)return false;
+      }
       if(fWeek){
         const day=d.getDate();
         const weekOfDay=day<=7?1:day<=14?2:day<=21?3:day<=28?4:5;
