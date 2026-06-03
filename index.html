@@ -705,7 +705,8 @@ function renderProjectSummary(projId,projName){
   const allProjDates=dprForProj.map(r=>parseDate(v(r,D_TS))).filter(Boolean);
   const projStartDate=allProjDates.length?new Date(Math.min(...allProjDates)):null;
   const projEndDate=allProjDates.length?new Date(Math.max(...allProjDates)):null;
-  const projTAT=projStartDate&&projEndDate?Math.ceil((projEndDate-projStartDate)/(1000*60*60*24))+1:null;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const projTAT=projStartDate?Math.ceil((today-projStartDate)/(1000*60*60*24))+1:null;
 
   // ── Weighted completion % from Workplan B column (expected %)
   // For each completed item, add its expectedPct; for WIP add proportional; pending = 0
@@ -749,11 +750,14 @@ function renderProjectSummary(projId,projName){
         <span style="font-size:13px;font-weight:600;color:#f5a623;">${projEndDate?fmtDate(projEndDate):'—'}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
-        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-clock-hour-4" style="font-size:13px;color:#9b6dff;"></i>TAT</span>
-        <span style="font-size:13px;font-weight:600;color:#9b6dff;">${projTAT!==null?projTAT+' days':'—'}</span>
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-clock-hour-4" style="font-size:13px;color:#34c98a;"></i>TAT (Today − Start)</span>
+        <span style="font-size:13px;font-weight:700;color:#34c98a;">${projTAT!==null?projTAT+' days':'—'}</span>
       </div>
     </div>
   </div>`;
+
+  // Pending from = Today - Last DPR Date
+  const pendingFromDays=lastDPRDate?Math.ceil((today-lastDPRDate)/(1000*60*60*24)):null;
 
   const lastUpdatedCard=`<div class="metric" style="--mc:#4f8ef7;grid-column:span 2;min-width:280px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
@@ -762,8 +766,12 @@ function renderProjectSummary(projId,projName){
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:var(--bg2);border-radius:8px;">
-        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-calendar" style="font-size:13px;color:#4f8ef7;"></i>Date</span>
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-calendar" style="font-size:13px;color:#4f8ef7;"></i>Last Updated</span>
         <span style="font-size:13px;font-weight:600;color:#4f8ef7;">${lastDPRDate?fmtDate(lastDPRDate):'—'}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:rgba(231,76,60,0.1);border-radius:8px;border:1px solid rgba(231,76,60,0.25);">
+        <span style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;"><i class="ti ti-alert-triangle" style="font-size:13px;color:#e74c3c;"></i>Pending From</span>
+        <span style="font-size:13px;font-weight:700;color:#e74c3c;">${pendingFromDays!==null?pendingFromDays+' days':'—'}</span>
       </div>
       <div style="padding:6px 10px;background:var(--bg2);border-radius:8px;">
         <div style="font-size:11px;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i class="ti ti-clipboard-list" style="font-size:13px;color:#34c98a;"></i>Work Plan</div>
