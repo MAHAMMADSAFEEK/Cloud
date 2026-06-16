@@ -133,6 +133,12 @@ tr:hover td{background:var(--surface2);}
 .pov-ms-opt input{accent-color:var(--accent);cursor:pointer;margin:0;width:14px;height:14px;flex-shrink:0;}
 .pov-ms-opt .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
 .pov-ms-cnt{font-size:10px;font-weight:600;color:var(--muted);background:var(--bg);border-radius:10px;padding:1px 7px;flex-shrink:0;}
+
+/* ── Reports dimension selector ── */
+.rpt-dim-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.rpt-dim{font-size:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
+.rpt-dim:hover{color:var(--text);border-color:var(--accent);}
+.rpt-dim.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
@@ -167,6 +173,7 @@ tr:hover td{background:var(--surface2);}
     <button class="tab" onclick="switchTab('tbt',this)"><i class="ti ti-clipboard-list"></i> TBT</button>
     <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
     <button class="tab" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
+    <button class="tab" onclick="switchTab('rpt',this)"><i class="ti ti-chart-pie"></i> Reports</button>
     <button class="tab" onclick="switchTab('proj',this)"><i class="ti ti-building-skyscraper"></i> Project Summary</button>
   </div>
 
@@ -312,6 +319,21 @@ tr:hover td{background:var(--surface2);}
       <div class="card">
         <div class="card-title"><i class="ti ti-table"></i> Project Master</div>
         <div class="table-wrap"><table><thead id="pov-head"></thead><tbody id="pov-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORTS TAB -->
+  <div id="tab-rpt" class="tab-content">
+    <div style="padding:20px 24px 0;">
+      <div class="section-title">Reports &amp; Analytics</div>
+      <div class="metrics" id="rpt-metrics"></div>
+    </div>
+    <div style="padding:0 24px 20px;">
+      <div class="rpt-dim-bar" id="rpt-dim-bar"></div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-table"></i> <span id="rpt-table-title">City-wise Report</span></div>
+        <div class="table-wrap"><table><thead id="rpt-head"></thead><tbody id="rpt-body"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -532,7 +554,7 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();}
+function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
@@ -1649,6 +1671,81 @@ function openProjectSummaryFor(projId,projName){
   if(idInput)idInput.value=projId;
   renderProjectSummary(projId,projName);
   window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── REPORTS TAB ───────────────────────────────────────────────
+const RPT_DIMS=[
+  {key:'city',    label:'City',         col:'CITY',    icon:'ti-building'},
+  {key:'cluster', label:'Cluster Head', col:'CLUSTER', icon:'ti-users-group'},
+  {key:'citymgr', label:'City Manager', col:'CITYMGR', icon:'ti-user-cog'},
+  {key:'pe',      label:'PE',           col:'PE',      icon:'ti-user'}
+];
+let _rptDim='city';
+function setRPTDim(k){_rptDim=k;buildRPT();}
+
+function buildRPT(){
+  const dim=RPT_DIMS.find(d=>d.key===_rptDim)||RPT_DIMS[0];
+  const dimBar=document.getElementById('rpt-dim-bar');
+  if(dimBar)dimBar.innerHTML=RPT_DIMS.map(d=>`<button class="rpt-dim ${d.key===_rptDim?'active':''}" onclick="setRPTDim('${d.key}')"><i class="ti ${d.icon}"></i> ${d.label}-wise</button>`).join('');
+  const titleEl=document.getElementById('rpt-table-title');
+  if(titleEl)titleEl.textContent=dim.label+'-wise Report';
+
+  const r=D.lead.r;
+  const groups={};
+  let tProjects=0,tSize=0,tCompleted=0,tInProcess=0,tPending=0,tNotAssigned=0;
+  r.forEach(x=>{
+    if(!lv(x,LEAD_COL.PID))return;
+    let g=lv(x,LEAD_COL[dim.col]);
+    if(!g)g=(dim.key==='pe')?'— Not Assigned':'(Blank)';
+    if(!groups[g])groups[g]={count:0,size:0,completed:0,inProcess:0,pending:0,notAssigned:0};
+    const size=povNum(lv(x,LEAD_COL.SIZE));
+    const peAssigned=!!lv(x,LEAD_COL.PE);
+    const m=computeProjectMetrics(lv(x,LEAD_COL.PID));
+    const G=groups[g];
+    G.count++; G.size+=size; if(!peAssigned)G.notAssigned++;
+    if(m.status==='done')G.completed++; else if(m.status==='wip')G.inProcess++; else G.pending++;
+    tProjects++; tSize+=size; if(!peAssigned)tNotAssigned++;
+    if(m.status==='done')tCompleted++; else if(m.status==='wip')tInProcess++; else tPending++;
+  });
+
+  const metricsEl=document.getElementById('rpt-metrics');
+  if(metricsEl)metricsEl.innerHTML=
+    metric('ti-building-skyscraper','Total Projects',tProjects,'All projects','#4f8ef7')+
+    metric('ti-ruler-2','Total Size',Math.round(tSize).toLocaleString(),'Sum of capacity','#9b6dff')+
+    metricWithBar('ti-circle-check','Completed',tCompleted,`${tProjects?Math.round(tCompleted/tProjects*100):0}% of projects`,'#34c98a',tProjects?tCompleted/tProjects*100:0,'#34c98a')+
+    metricWithBar('ti-loader','In Process',tInProcess,`${tProjects?Math.round(tInProcess/tProjects*100):0}% of projects`,'#f5a623',tProjects?tInProcess/tProjects*100:0,'#f5a623')+
+    metricWithBar('ti-clock','Pending',tPending,`${tProjects?Math.round(tPending/tProjects*100):0}% of projects`,'#e74c3c',tProjects?tPending/tProjects*100:0,'#e74c3c')+
+    metricWithBar('ti-user-off','Not Assigned',tNotAssigned,`${tProjects?Math.round(tNotAssigned/tProjects*100):0}% of projects`,'#e74c3c',tProjects?tNotAssigned/tProjects*100:0,'#e74c3c');
+
+  document.getElementById('rpt-head').innerHTML=`<tr><th>#</th><th>${dim.label}</th><th style="text-align:right;">Projects</th><th style="text-align:right;">Size</th><th style="text-align:right;">Completed</th><th style="text-align:right;">In Process</th><th style="text-align:right;">Pending</th><th style="text-align:right;">Not Assigned</th><th style="min-width:130px;">Completion %</th></tr>`;
+  const tbody=document.getElementById('rpt-body');
+  const entries=Object.entries(groups).sort((a,b)=>b[1].count-a[1].count);
+  if(!entries.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No data</td></tr>';return;}
+  tbody.innerHTML=entries.map(([g,G],i)=>{
+    const pct=G.count?Math.round(G.completed/G.count*100):0;
+    const col=pct>=75?'#34c98a':pct>=40?'#f5a623':'#e74c3c';
+    const bar=`<div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden;"><div style="width:${pct}%;height:100%;background:${col};border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:${col};min-width:32px;text-align:right;">${pct}%</span></div>`;
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-size:13px;font-weight:500">${g}</td>
+      <td style="text-align:right;font-weight:600">${G.count}</td>
+      <td style="text-align:right;color:var(--muted)">${Math.round(G.size).toLocaleString()}</td>
+      <td style="text-align:right;"><span class="badge bg">${G.completed}</span></td>
+      <td style="text-align:right;"><span class="badge bo">${G.inProcess}</span></td>
+      <td style="text-align:right;"><span class="badge br">${G.pending}</span></td>
+      <td style="text-align:right;color:#e74c3c;font-weight:500;">${G.notAssigned}</td>
+      <td>${bar}</td>
+    </tr>`;
+  }).join('')+`<tr style="border-top:2px solid var(--border2);">
+    <td></td><td style="font-weight:700;">Total</td>
+    <td style="text-align:right;font-weight:700;">${tProjects}</td>
+    <td style="text-align:right;font-weight:700;">${Math.round(tSize).toLocaleString()}</td>
+    <td style="text-align:right;font-weight:700;color:#34c98a;">${tCompleted}</td>
+    <td style="text-align:right;font-weight:700;color:#f5a623;">${tInProcess}</td>
+    <td style="text-align:right;font-weight:700;color:#e74c3c;">${tPending}</td>
+    <td style="text-align:right;font-weight:700;color:#e74c3c;">${tNotAssigned}</td>
+    <td style="font-weight:700;">${tProjects?Math.round(tCompleted/tProjects*100):0}%</td>
+  </tr>`;
 }
 
 loadAll();
