@@ -131,7 +131,8 @@ tr:hover td{background:var(--surface2);}
 .pov-ms-opt:last-child{border-bottom:none;}
 .pov-ms-opt:hover{background:var(--surface2);}
 .pov-ms-opt input{accent-color:var(--accent);cursor:pointer;margin:0;width:14px;height:14px;flex-shrink:0;}
-.pov-ms-opt .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pov-ms-opt .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+.pov-ms-cnt{font-size:10px;font-weight:600;color:var(--muted);background:var(--bg);border-radius:10px;padding:1px 7px;flex-shrink:0;}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
@@ -287,6 +288,10 @@ tr:hover td{background:var(--surface2);}
       <div class="pe-filter-group">
         <label>PE</label>
         <div class="pov-ms" id="pov-ms-pe"></div>
+      </div>
+      <div class="pe-filter-group">
+        <label>Project Status</label>
+        <div class="pov-ms" id="pov-ms-status"></div>
       </div>
       <div class="pe-fdivider"></div>
       <div class="pe-filter-actions">
@@ -1252,14 +1257,28 @@ function lv(row,i){return (i>=0 && row[i]!=null)?String(row[i]).trim():'';}
 function povNum(s){if(!s)return 0;const n=parseFloat(String(s).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
 
 // Multi-select state: selected values per filter + full option lists
+const POV_STATUSES=['Not Assigned','Completed','In Process','Pending'];
 const POV_MS_CFG={
   city:    {col:'CITY',    all:'All Cities',    ph:'Search cities…'},
   cluster: {col:'CLUSTER', all:'All Clusters',  ph:'Search clusters…'},
   citymgr: {col:'CITYMGR', all:'All City Mgrs', ph:'Search city managers…'},
-  pe:      {col:'PE',      all:'All PEs',        ph:'Search PEs…'}
+  pe:      {col:'PE',      all:'All PEs',        ph:'Search PEs…'},
+  status:  {col:null,      all:'All Statuses',   ph:'Search status…', fixed:POV_STATUSES}
 };
-let _povMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
-let _povMSAll={city:[],cluster:[],citymgr:[],pe:[]};
+let _povMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set(),status:new Set()};
+let _povMSAll={city:[],cluster:[],citymgr:[],pe:[],status:POV_STATUSES.slice()};
+let _povMSCounts={city:{},cluster:{},citymgr:{},pe:{},status:{}};
+
+// Status tags for a lead row (a project may be "Not Assigned" plus one of done/wip/pending)
+function povProjectStatuses(x){
+  const tags=[];
+  if(!lv(x,LEAD_COL.PE))tags.push('Not Assigned');
+  const m=computeProjectMetrics(lv(x,LEAD_COL.PID));
+  if(m.status==='done')tags.push('Completed');
+  else if(m.status==='wip')tags.push('In Process');
+  else tags.push('Pending');
+  return tags;
+}
 
 function populatePOVFilters(){
   const r=D.lead.r;
@@ -1276,6 +1295,9 @@ function populatePOVFilters(){
     // drop any previously-selected values that no longer exist
     _povMS[k]=new Set([..._povMS[k]].filter(v=>sets[k].has(v)));
   });
+  // status: fixed list; prune selections to valid values
+  _povMSAll.status=POV_STATUSES.slice();
+  _povMS.status=new Set([..._povMS.status].filter(v=>POV_STATUSES.includes(v)));
   Object.keys(POV_MS_CFG).forEach(buildPOVMSWidget);
   recomputePOVOptions();
 }
@@ -1307,11 +1329,13 @@ function renderPOVMSOptions(key){
   const q=((document.getElementById('pov-ms-search-'+key)||{}).value||'').trim().toLowerCase();
   const opts=_povMSAll[key].filter(o=>!q||o.toLowerCase().includes(q));
   if(!opts.length){box.innerHTML='<div class="pov-ms-empty">No matches</div>';return;}
+  const counts=_povMSCounts[key]||{};
   const hl=(t)=>{if(!q)return t;const i=t.toLowerCase().indexOf(q);return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);};
   box.innerHTML=opts.map(o=>{
     const checked=_povMS[key].has(o)?'checked':'';
     const safe=o.replace(/"/g,'&quot;').replace(/'/g,"\\'");
-    return `<label class="pov-ms-opt" onclick="event.stopPropagation()"><input type="checkbox" ${checked} onchange="togglePOVMSOption('${key}','${safe}')"/><span class="lbl" title="${o.replace(/"/g,'&quot;')}">${hl(o)}</span></label>`;
+    const cnt=counts[o]||0;
+    return `<label class="pov-ms-opt" onclick="event.stopPropagation()"><input type="checkbox" ${checked} onchange="togglePOVMSOption('${key}','${safe}')"/><span class="lbl" title="${o.replace(/"/g,'&quot;')}">${hl(o)}</span><span class="pov-ms-cnt">${cnt}</span></label>`;
   }).join('');
 }
 
@@ -1330,18 +1354,26 @@ function povRowPassesExcept(x,exceptKey){
   if(exceptKey!=='cluster' && _povMS.cluster.size && !_povMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
   if(exceptKey!=='citymgr' && _povMS.citymgr.size && !_povMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
   if(exceptKey!=='pe'      && _povMS.pe.size      && !_povMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  if(exceptKey!=='status'  && _povMS.status.size){ if(!povProjectStatuses(x).some(t=>_povMS.status.has(t)))return false; }
   return true;
 }
 
-// Dependent dropdowns: each filter's options = values co-occurring with the OTHER filters' selections
+// Dependent dropdowns: each filter's options + counts = values co-occurring with the OTHER filters' selections
 function recomputePOVOptions(){
   const r=D.lead.r;
   Object.keys(POV_MS_CFG).forEach(key=>{
-    const colIdx=LEAD_COL[POV_MS_CFG[key].col];
-    const set=new Set();
-    r.forEach(x=>{ if(povRowPassesExcept(x,key)){ const val=lv(x,colIdx); if(val)set.add(val); } });
-    _povMS[key].forEach(v=>set.add(v)); // keep current selections visible
-    _povMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));
+    const counts={};
+    if(key==='status'){
+      r.forEach(x=>{ if(povRowPassesExcept(x,key)){ povProjectStatuses(x).forEach(t=>counts[t]=(counts[t]||0)+1); } });
+      _povMSAll[key]=POV_STATUSES.slice(); // always show all statuses, in fixed order
+    } else {
+      const colIdx=LEAD_COL[POV_MS_CFG[key].col];
+      r.forEach(x=>{ if(povRowPassesExcept(x,key)){ const val=lv(x,colIdx); if(val)counts[val]=(counts[val]||0)+1; } });
+      const set=new Set(Object.keys(counts));
+      _povMS[key].forEach(v=>set.add(v)); // keep current selections visible
+      _povMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));
+    }
+    _povMSCounts[key]=counts;
     renderPOVMSOptions(key);
   });
 }
@@ -1473,7 +1505,7 @@ function povCityCombo(cityCount,citySize){
 
 function buildPOV(){
   const r=D.lead.r;
-  const fCity=_povMS.city, fCluster=_povMS.cluster, fCityMgr=_povMS.citymgr, fPE=_povMS.pe;
+  const fCity=_povMS.city, fCluster=_povMS.cluster, fCityMgr=_povMS.citymgr, fPE=_povMS.pe, fStatus=_povMS.status;
 
   // Filter lead rows; gate on a real project (Project ID non-empty)
   const rows=r.filter(x=>{
@@ -1482,11 +1514,12 @@ function buildPOV(){
     if(fCluster.size&&!fCluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
     if(fCityMgr.size&&!fCityMgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
     if(fPE.size&&!fPE.has(lv(x,LEAD_COL.PE)))return false;
+    if(fStatus.size&&!povProjectStatuses(x).some(t=>fStatus.has(t)))return false;
     return true;
   });
 
   // Filter indicator tag (count of filter groups with a selection)
-  const activeFilters=[fCity,fCluster,fCityMgr,fPE].filter(s=>s.size).length;
+  const activeFilters=[fCity,fCluster,fCityMgr,fPE,fStatus].filter(s=>s.size).length;
   const tag=document.getElementById('pov-filter-tag');
   if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
 
