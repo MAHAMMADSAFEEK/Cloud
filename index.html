@@ -1190,6 +1190,7 @@ function populatePOVFilters(){
     _povMS[k]=new Set([..._povMS[k]].filter(v=>sets[k].has(v)));
   });
   Object.keys(POV_MS_CFG).forEach(buildPOVMSWidget);
+  recomputePOVOptions();
 }
 
 function buildPOVMSWidget(key){
@@ -1231,18 +1232,42 @@ function togglePOVMSOption(key,val){
   if(_povMS[key].has(val))_povMS[key].delete(val);
   else _povMS[key].add(val);
   updatePOVMSControl(key);
+  recomputePOVOptions();
   buildPOV();
+}
+
+// Does a lead row satisfy every selected filter EXCEPT the named one?
+function povRowPassesExcept(x,exceptKey){
+  if(!lv(x,LEAD_COL.PID))return false;
+  if(exceptKey!=='city'    && _povMS.city.size    && !_povMS.city.has(lv(x,LEAD_COL.CITY)))return false;
+  if(exceptKey!=='cluster' && _povMS.cluster.size && !_povMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+  if(exceptKey!=='citymgr' && _povMS.citymgr.size && !_povMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+  if(exceptKey!=='pe'      && _povMS.pe.size      && !_povMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  return true;
+}
+
+// Dependent dropdowns: each filter's options = values co-occurring with the OTHER filters' selections
+function recomputePOVOptions(){
+  const r=D.lead.r;
+  Object.keys(POV_MS_CFG).forEach(key=>{
+    const colIdx=LEAD_COL[POV_MS_CFG[key].col];
+    const set=new Set();
+    r.forEach(x=>{ if(povRowPassesExcept(x,key)){ const val=lv(x,colIdx); if(val)set.add(val); } });
+    _povMS[key].forEach(v=>set.add(v)); // keep current selections visible
+    _povMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));
+    renderPOVMSOptions(key);
+  });
 }
 
 function selectAllPOVMS(key){
   const q=((document.getElementById('pov-ms-search-'+key)||{}).value||'').trim().toLowerCase();
   _povMSAll[key].filter(o=>!q||o.toLowerCase().includes(q)).forEach(o=>_povMS[key].add(o));
-  renderPOVMSOptions(key);updatePOVMSControl(key);buildPOV();
+  updatePOVMSControl(key);recomputePOVOptions();buildPOV();
 }
 
 function clearPOVMS(key){
   _povMS[key].clear();
-  renderPOVMSOptions(key);updatePOVMSControl(key);buildPOV();
+  updatePOVMSControl(key);recomputePOVOptions();buildPOV();
 }
 
 function updatePOVMSControl(key){
@@ -1268,7 +1293,8 @@ document.addEventListener('click',e=>{
 });
 
 function clearPOVFilters(){
-  Object.keys(_povMS).forEach(k=>{_povMS[k].clear();updatePOVMSControl(k);renderPOVMSOptions(k);});
+  Object.keys(_povMS).forEach(k=>{_povMS[k].clear();updatePOVMSControl(k);});
+  recomputePOVOptions();
   buildPOV();
 }
 
