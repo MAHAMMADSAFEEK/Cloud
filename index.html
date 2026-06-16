@@ -1550,7 +1550,7 @@ function buildPOV(){
 
   // Cards
   const totalProjects=rows.length;
-  let totalSize=0,assigned=0,notAssigned=0,completed=0,inProcess=0,pending=0;
+  let totalSize=0,assigned=0,notAssigned=0,completed=0,inProcess=0,pending=0,pendingAssigned=0,pendingNotAssigned=0;
   const cityCount={},citySize={};
   // Update-recency buckets (days since last DPR entry)
   let upNever=0,upOk=0,up7=0,up15=0,up30=0;
@@ -1559,14 +1559,15 @@ function buildPOV(){
     const projId=lv(x,LEAD_COL.PID);
     const city=lv(x,LEAD_COL.CITY)||'Unknown';
     const size=povNum(lv(x,LEAD_COL.SIZE));
+    const peAssigned=!!lv(x,LEAD_COL.PE);
     totalSize+=size;
-    if(lv(x,LEAD_COL.PE))assigned++;else notAssigned++;
+    if(peAssigned)assigned++;else notAssigned++;
     cityCount[city]=(cityCount[city]||0)+1;
     citySize[city]=(citySize[city]||0)+size;
     const m=computeProjectMetrics(projId);
     if(m.status==='done')completed++;
     else if(m.status==='wip')inProcess++;
-    else pending++;
+    else {pending++; if(peAssigned)pendingAssigned++; else pendingNotAssigned++;}
     // recency
     if(!m.dprCount||!m.lastDate)upNever++;
     else{const days=Math.floor((today-m.lastDate)/(1000*60*60*24));if(days>=30)up30++;else if(days>=15)up15++;else if(days>=7)up7++;else upOk++;}
@@ -1578,7 +1579,7 @@ function buildPOV(){
     metricWithBar('ti-user-off','Not Assigned',notAssigned,`${totalProjects?Math.round(notAssigned/totalProjects*100):0}% of projects`,'#e74c3c',totalProjects?notAssigned/totalProjects*100:0,'#e74c3c')+
     metricWithBar('ti-circle-check','Completed',completed,`${totalProjects?Math.round(completed/totalProjects*100):0}% of projects`,'#34c98a',totalProjects?completed/totalProjects*100:0,'#34c98a')+
     metricWithBar('ti-loader','In Process',inProcess,`${totalProjects?Math.round(inProcess/totalProjects*100):0}% of projects`,'#f5a623',totalProjects?inProcess/totalProjects*100:0,'#f5a623')+
-    metricWithBar('ti-clock','Pending',pending,`${totalProjects?Math.round(pending/totalProjects*100):0}% of projects`,'#e74c3c',totalProjects?pending/totalProjects*100:0,'#e74c3c');
+    metricWithBar('ti-clock','Pending',pending,`${pendingAssigned} actual (assigned) · ${pendingNotAssigned} not assigned`,'#e74c3c',totalProjects?pending/totalProjects*100:0,'#e74c3c');
 
   // Left: compact city-wise table (count + size in numbers)
   document.getElementById('pov-city-table').innerHTML=povCityTable(cityCount,citySize);
