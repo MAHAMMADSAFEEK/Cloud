@@ -139,6 +139,7 @@ tr:hover td{background:var(--surface2);}
     <button class="tab" onclick="switchTab('att',this)"><i class="ti ti-calendar-check"></i> Attendance</button>
     <button class="tab" onclick="switchTab('tbt',this)"><i class="ti ti-clipboard-list"></i> TBT</button>
     <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
+    <button class="tab" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
     <button class="tab" onclick="switchTab('proj',this)"><i class="ti ti-building-skyscraper"></i> Project Summary</button>
   </div>
 
@@ -239,6 +240,49 @@ tr:hover td{background:var(--surface2);}
     <div class="card">
       <div class="card-title"><i class="ti ti-list-details"></i> DPR Log</div>
       <div class="table-wrap"><table><thead id="dpr-head"></thead><tbody id="dpr-body"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- PROJECT OVERVIEW TAB -->
+  <div id="tab-pov" class="tab-content">
+    <div class="pe-filter-bar">
+      <div class="pe-filter-group">
+        <label>City</label>
+        <select id="pov-f-city" onchange="buildPOV()"><option value="">All Cities</option></select>
+      </div>
+      <div class="pe-filter-group">
+        <label>Cluster Head</label>
+        <select id="pov-f-cluster" onchange="buildPOV()"><option value="">All Clusters</option></select>
+      </div>
+      <div class="pe-filter-group">
+        <label>City Manager</label>
+        <select id="pov-f-citymgr" onchange="buildPOV()"><option value="">All City Mgrs</option></select>
+      </div>
+      <div class="pe-filter-group">
+        <label>PE</label>
+        <select id="pov-f-pe" onchange="buildPOV()"><option value="">All PEs</option></select>
+      </div>
+      <div class="pe-fdivider"></div>
+      <div class="pe-filter-actions">
+        <span class="spacer"></span>
+        <button class="pe-clr-btn" onclick="clearPOVFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button>
+      </div>
+      <span id="pov-filter-tag" class="pe-active-tag" style="display:none;"></span>
+    </div>
+    <div style="padding:20px 24px 0;">
+      <div class="section-title">Project Overview</div>
+      <div class="metrics" id="pov-metrics"></div>
+    </div>
+    <div style="padding:0 24px 20px;">
+      <div class="charts-grid">
+        <div class="card"><div class="card-title"><i class="ti ti-building"></i> City-wise Project Count</div><div id="pov-city-count"></div></div>
+        <div class="card"><div class="card-title"><i class="ti ti-ruler-2"></i> City-wise Project Size</div><div id="pov-city-size"></div></div>
+        <div class="card"><div class="card-title"><i class="ti ti-user-check"></i> PE Assignment Status</div><div id="pov-assign"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-table"></i> Project Master</div>
+        <div class="table-wrap"><table><thead id="pov-head"></thead><tbody id="pov-body"></tbody></table></div>
+      </div>
     </div>
   </div>
 
@@ -418,8 +462,10 @@ async function loadAll(){
     }
     // Global filters removed
     // Fill PE filters and project filters
+    _povCache={};
     populatePEFilters();
     buildProjFilters();
+    populatePOVFilters();
     buildAll();
     document.getElementById('main').style.display='block';
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
@@ -432,7 +478,7 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();}
+function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
@@ -1081,6 +1127,238 @@ function renderProjectSummary(projId,projName){
 
   document.getElementById('proj-summary-area').style.display='block';
   document.getElementById('proj-empty').style.display='none';
+}
+
+// ── PROJECT OVERVIEW ──────────────────────────────────────────
+// Lead Tracker fixed column indices (letters → 0-based index)
+const LEAD_COL={TOTAL:0,PID:1,CITY:2,PNAME:3,SIZE:5,CLUSTER:30,CITYMGR:32,PE:34};
+let _povCache={};
+
+// Safe Lead-row cell getter by fixed index
+function lv(row,i){return (i>=0 && row[i]!=null)?String(row[i]).trim():'';}
+
+// Parse a size/capacity value, stripping any non-numeric characters
+function povNum(s){if(!s)return 0;const n=parseFloat(String(s).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
+
+function populatePOVFilters(){
+  const r=D.lead.r;
+  const cities=[],clusters=[],citymgrs=[],pes=[];
+  r.forEach(x=>{
+    if(!lv(x,LEAD_COL.PID))return;
+    const c=lv(x,LEAD_COL.CITY); if(c)cities.push(c);
+    const ch=lv(x,LEAD_COL.CLUSTER); if(ch)clusters.push(ch);
+    const cm=lv(x,LEAD_COL.CITYMGR); if(cm)citymgrs.push(cm);
+    const pe=lv(x,LEAD_COL.PE); if(pe)pes.push(pe);
+  });
+  fillSel('pov-f-city',cities);
+  fillSel('pov-f-cluster',clusters);
+  fillSel('pov-f-citymgr',citymgrs);
+  fillSel('pov-f-pe',pes);
+}
+
+function clearPOVFilters(){
+  ['pov-f-city','pov-f-cluster','pov-f-citymgr','pov-f-pe'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  buildPOV();
+}
+
+// Compute per-project metrics from DPR (same matching logic as Project Summary), cached.
+function computeProjectMetrics(projId){
+  if(!projId)return{dprCount:0,startDate:null,endDate:null,tat:null,finalStage:'—',weightedPct:0,status:'pending',lastDate:null};
+  if(_povCache[projId])return _povCache[projId];
+
+  // Attendance rows for this project → unique IDs
+  const ah=D.att.h,ar=D.att.r;
+  const A_UID=ci(ah,'UniqueID','unique id'),A_PID=ci(ah,'ProjectID','project id');
+  const uniqueIds=new Set(ar.filter(x=>v(x,A_PID)===projId).map(x=>v(x,A_UID)).filter(Boolean));
+
+  // DPR rows matching by unique id OR child id starting with projId
+  const dh=D.dpr.h,dr=D.dpr.r;
+  const D_CID=ci(dh,'ChildID','child'),D_PLAN=ci(dh,'WorkPlan','plan','work'),D_TASK=ci(dh,'CompletedTask','completed task'),D_PCT=ci(dh,'%','completion','percent'),D_TS=ci(dh,'Timestamp','time'),D_UID=ci(dh,'UniqueID','unique');
+  const dprRows=dr.filter(x=>{const uid=v(x,D_UID),cid=v(x,D_CID);return uniqueIds.has(uid)||cid.startsWith(projId);});
+
+  // Timeline from DPR timestamps
+  const dates=dprRows.map(x=>parseDate(v(x,D_TS))).filter(Boolean).sort((a,b)=>a-b);
+  const startDate=dates.length?dates[0]:null;
+  const endDate=dates.length?dates[dates.length-1]:null;
+  const today=new Date();today.setHours(0,0,0,0);
+  const tat=startDate?Math.ceil((today-startDate)/(1000*60*60*24))+1:null;
+
+  // Final update stage = last DPR entry's completed task or work plan
+  const dprSorted=[...dprRows].sort((a,b)=>{const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;return da-db;});
+  const lastEntry=dprSorted.length?dprSorted[dprSorted.length-1]:null;
+  const finalStage=lastEntry?(v(lastEntry,D_TASK)||v(lastEntry,D_PLAN)||'—'):'—';
+  const lastDate=lastEntry?parseDate(v(lastEntry,D_TS)):null;
+
+  // Weighted completion vs global workplan template
+  const wr=D.workplan.r;
+  const tmpl=wr.filter(x=>(x[0]||'').trim()).map(x=>({plan:(x[0]||'').trim(),expectedPct:parseFloat((x[1]||'').trim())||0}));
+  const norm=s=>s.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
+  let weightedCompleted=0,totalWeight=0;
+  tmpl.forEach(({plan,expectedPct})=>{
+    const pn=norm(plan);
+    const matched=dprRows.filter(x=>{const dp=norm(v(x,D_PLAN));return dp===pn||dp.includes(pn)||pn.includes(dp);});
+    totalWeight+=expectedPct;
+    if(!matched.length)return;
+    const sorted=[...matched].sort((a,b)=>{const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;return da-db;});
+    const latest=sorted[sorted.length-1];
+    const latestPct=parseFloat(v(latest,D_PCT))||0;
+    const latestTask=v(latest,D_TASK).toLowerCase();
+    if(latestTask.includes('complet')||latestPct>=100)weightedCompleted+=expectedPct;
+    else weightedCompleted+=expectedPct*(latestPct/100);
+  });
+  const weightedPct=totalWeight>0?Math.round(weightedCompleted/totalWeight*100):0;
+
+  // Status: no DPR → pending; >=100 → done; >0 → wip; else pending
+  let status;
+  if(!dprRows.length)status='pending';
+  else if(weightedPct>=100)status='done';
+  else if(weightedPct>0)status='wip';
+  else status='pending';
+
+  const res={dprCount:dprRows.length,startDate,endDate,tat,finalStage,weightedPct,status,lastDate};
+  _povCache[projId]=res;
+  return res;
+}
+
+// Donut (conic-gradient) for assigned vs not-assigned
+function povDonut(assigned,notAssigned){
+  const total=assigned+notAssigned;
+  if(!total)return'<div class="empty">No data</div>';
+  const aPct=Math.round(assigned/total*100);
+  const deg=total?(assigned/total*360):0;
+  return `<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;padding:8px 0;">
+    <div style="position:relative;width:140px;height:140px;border-radius:50%;background:conic-gradient(#34c98a 0deg ${deg}deg,#e74c3c ${deg}deg 360deg);">
+      <div style="position:absolute;inset:22px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span style="font-size:24px;font-weight:600;color:#34c98a;">${aPct}%</span>
+        <span style="font-size:10px;color:var(--muted);">Assigned</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:3px;background:#34c98a;display:inline-block;"></span><span style="font-size:12px;">Assigned <strong>${assigned}</strong></span></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:3px;background:#e74c3c;display:inline-block;"></span><span style="font-size:12px;">Not Assigned <strong>${notAssigned}</strong></span></div>
+    </div>
+  </div>`;
+}
+
+function buildPOV(){
+  const r=D.lead.r;
+  const fCity=(document.getElementById('pov-f-city')||{}).value||'';
+  const fCluster=(document.getElementById('pov-f-cluster')||{}).value||'';
+  const fCityMgr=(document.getElementById('pov-f-citymgr')||{}).value||'';
+  const fPE=(document.getElementById('pov-f-pe')||{}).value||'';
+
+  // Filter lead rows; gate on a real project (Project ID non-empty)
+  const rows=r.filter(x=>{
+    if(!lv(x,LEAD_COL.PID))return false;
+    if(fCity&&lv(x,LEAD_COL.CITY)!==fCity)return false;
+    if(fCluster&&lv(x,LEAD_COL.CLUSTER)!==fCluster)return false;
+    if(fCityMgr&&lv(x,LEAD_COL.CITYMGR)!==fCityMgr)return false;
+    if(fPE&&lv(x,LEAD_COL.PE)!==fPE)return false;
+    return true;
+  });
+
+  // Filter indicator tag
+  const activeFilters=[fCity,fCluster,fCityMgr,fPE].filter(Boolean).length;
+  const tag=document.getElementById('pov-filter-tag');
+  if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
+
+  // Cards
+  const totalProjects=rows.length;
+  let totalSize=0,assigned=0,notAssigned=0,completed=0,inProcess=0,pending=0;
+  const cityCount={},citySize={};
+  rows.forEach(x=>{
+    const projId=lv(x,LEAD_COL.PID);
+    const city=lv(x,LEAD_COL.CITY)||'Unknown';
+    const size=povNum(lv(x,LEAD_COL.SIZE));
+    totalSize+=size;
+    if(lv(x,LEAD_COL.PE))assigned++;else notAssigned++;
+    cityCount[city]=(cityCount[city]||0)+1;
+    citySize[city]=(citySize[city]||0)+size;
+    const m=computeProjectMetrics(projId);
+    if(m.status==='done')completed++;
+    else if(m.status==='wip')inProcess++;
+    else pending++;
+  });
+
+  document.getElementById('pov-metrics').innerHTML=
+    metric('ti-building-skyscraper','Total Projects',totalProjects,'From Lead Tracker','#4f8ef7')+
+    metric('ti-ruler-2','Total Project Size',Math.round(totalSize).toLocaleString(),'Sum of capacity','#9b6dff')+
+    metricWithBar('ti-circle-check','Completed',completed,`${totalProjects?Math.round(completed/totalProjects*100):0}% of projects`,'#34c98a',totalProjects?completed/totalProjects*100:0,'#34c98a')+
+    metricWithBar('ti-loader','In Process',inProcess,`${totalProjects?Math.round(inProcess/totalProjects*100):0}% of projects`,'#f5a623',totalProjects?inProcess/totalProjects*100:0,'#f5a623')+
+    metricWithBar('ti-clock','Pending',pending,`${totalProjects?Math.round(pending/totalProjects*100):0}% of projects`,'#e74c3c',totalProjects?pending/totalProjects*100:0,'#e74c3c');
+
+  // Charts: city-wise count & size (top 12)
+  document.getElementById('pov-city-count').innerHTML=bars(Object.entries(cityCount).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
+  document.getElementById('pov-city-size').innerHTML=bars(Object.entries(citySize).map(([c,s])=>[c,Math.round(s)]).sort((a,b)=>b[1]-a[1]).slice(0,12),'#9b6dff');
+  // Assignment donut
+  document.getElementById('pov-assign').innerHTML=povDonut(assigned,notAssigned);
+
+  // Master table
+  document.getElementById('pov-head').innerHTML='<tr><th>#</th><th>City</th><th>Project ID</th><th>Project Name</th><th>Capacity</th><th>PE</th><th>Assignment</th><th>Process Start</th><th>Process End</th><th>TAT</th><th>Completion %</th><th>Final Update Stage</th><th>Remarks</th><th>Report</th></tr>';
+  const tbody=document.getElementById('pov-body');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="14" class="empty">No projects match the selected filters</td></tr>';return;}
+
+  // Sort by City then Project Name
+  const sortedRows=[...rows].sort((a,b)=>{
+    const c=lv(a,LEAD_COL.CITY).localeCompare(lv(b,LEAD_COL.CITY));
+    if(c!==0)return c;
+    return lv(a,LEAD_COL.PNAME).localeCompare(lv(b,LEAD_COL.PNAME));
+  });
+
+  tbody.innerHTML=sortedRows.map((x,i)=>{
+    const city=lv(x,LEAD_COL.CITY)||'—';
+    const projId=lv(x,LEAD_COL.PID);
+    const projName=lv(x,LEAD_COL.PNAME)||'—';
+    const cap=lv(x,LEAD_COL.SIZE)||'—';
+    const peVal=lv(x,LEAD_COL.PE);
+    const assignBadge=peVal?'<span class="badge bg">Assigned</span>':'<span class="badge br">Not Assigned</span>';
+    const m=computeProjectMetrics(projId);
+    let stageBadge;
+    if(m.status==='done')stageBadge='<span class="badge bg">✓ Completed</span>';
+    else if(m.status==='wip')stageBadge='<span class="badge bo">⟳ In Process</span>';
+    else stageBadge='<span class="badge bgr">— Pending</span>';
+    const finalStageTxt=m.finalStage&&m.finalStage!=='—'?`<div style="font-size:11px;color:var(--muted);margin-top:4px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${m.finalStage.replace(/"/g,'&quot;')}">${m.finalStage}</div>`:'';
+    const escId=projId.replace(/'/g,"\\'");
+    const escName=projName.replace(/'/g,"\\'");
+    const pct=m.weightedPct;
+    const pctColor=pct>=100?'#34c98a':pct>0?'#f5a623':'#e74c3c';
+    const pctCell=`<div style="display:flex;align-items:center;gap:8px;min-width:90px;">
+      <div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;"><div style="width:${Math.min(pct,100)}%;height:100%;background:${pctColor};border-radius:3px;"></div></div>
+      <span style="font-size:12px;font-weight:600;color:${pctColor};min-width:30px;text-align:right;">${pct}%</span>
+    </div>`;
+    const reportLink=`<a onclick="openProjectSummaryFor('${escId}','${escName}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-external-link" style="font-size:12px;"></i>View Summary</a>`;
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-size:12px">${city}</td>
+      <td><span class="badge bp">${projId}</span></td>
+      <td style="font-weight:500;font-size:13px">${projName}</td>
+      <td style="font-size:12px">${cap}</td>
+      <td style="font-size:12px">${peVal||'—'}</td>
+      <td>${assignBadge}</td>
+      <td style="font-size:11px;white-space:nowrap">${m.startDate?fmtDate(m.startDate):'—'}</td>
+      <td style="font-size:11px;white-space:nowrap">${m.endDate?fmtDate(m.endDate):'—'}</td>
+      <td style="font-size:12px;font-weight:500">${m.tat!==null?m.tat+'d':'—'}</td>
+      <td>${pctCell}</td>
+      <td>${stageBadge}${finalStageTxt}</td>
+      <td style="font-size:11px;color:var(--muted)">—</td>
+      <td>${reportLink}</td>
+    </tr>`;
+  }).join('');
+}
+
+// Open a project in the existing Project Summary tab
+function openProjectSummaryFor(projId,projName){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  const projBtn=[...document.querySelectorAll('.tab')].find(b=>(b.getAttribute('onclick')||'').includes("'proj'"));
+  if(projBtn)projBtn.classList.add('active');
+  document.getElementById('tab-proj').classList.add('active');
+  const nameInput=document.getElementById('proj-name-input');
+  const idInput=document.getElementById('proj-id-input');
+  if(nameInput)nameInput.value=projName;
+  if(idInput)idInput.value=projId;
+  renderProjectSummary(projId,projName);
+  window.scrollTo({top:0,behavior:'smooth'});
 }
 
 loadAll();
