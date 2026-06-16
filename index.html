@@ -364,7 +364,31 @@ tr:hover td{background:var(--surface2);}
       </div>
 
       <div class="card">
-        <div class="card-title"><i class="ti ti-calendar"></i> DPR Activity Log</div>
+        <div class="card-title"><i class="ti ti-clipboard-list"></i> TBT Log</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>I&amp;C Vendor Name</th>
+                <th>Topic of TBT</th>
+                <th>Technicians</th>
+                <th>Helpers</th>
+                <th>Attendees Name</th>
+                <th>Remarks</th>
+                <th>TBT Report</th>
+                <th>DPR Report</th>
+                <th>DPR Summary</th>
+              </tr>
+            </thead>
+            <tbody id="proj-tbt-log-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-calendar"></i> DPR Activity Log <span id="proj-dpr-log-filter" style="display:none;"></span></div>
         <div class="table-wrap">
           <table>
             <thead>
@@ -1118,25 +1142,41 @@ function renderProjectSummary(projId,projName){
     tatCard+
     lastUpdatedCard;
 
-  // ── DPR Activity Log
-  const logBody=document.getElementById('proj-dpr-log-body');
-  logBody.innerHTML=dprSorted.map((r,i)=>{
-    const pct=parseFloat(v(r,D_PCT))||0,pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br';
-    const iss=v(r,D_ISS),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';
-    const ts=parseDate(v(r,D_TS));
+  // ── DPR Activity Log (filterable by TBT "DPR Summary" link; match on column A)
+  _projDPRSorted=dprSorted;
+  _projDPRCols={D_PLAN,D_TASK,D_PCT,D_MP,D_ISS,D_REM,D_TS};
+  _dprLogFilterUid=null;
+  renderProjDPRLog();
+
+  // ── TBT Log (TBT sheet, fixed columns; scoped to this project's unique IDs via col A)
+  const th=D.tbt.h,tr=D.tbt.r;
+  const T_UID=0,T_VENDOR=1,T_TOPIC=2,T_TECH=3,T_HELP=4,T_ATTEND=5,T_REMARK=6,T_DATE=8,T_TBTREP=12,T_DPRREP=13;
+  const tbtForProj=tr.filter(x=>uniqueIdsForProj.has(v(x,T_UID)));
+  const tbtBody=document.getElementById('proj-tbt-log-body');
+  const tbtLink=(url,label,color)=>{
+    if(!url||!url.trim().startsWith('http'))return '<span style="color:var(--muted);font-size:11px;">—</span>';
+    return `<a href="${url.trim()}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:${color}22;color:${color};border:1px solid ${color}55;border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;"><i class="ti ti-folder-open" style="font-size:12px;"></i>${label}</a>`;
+  };
+  tbtBody.innerHTML=tbtForProj.map((x,i)=>{
+    const uid=v(x,T_UID);
+    const dt=parseDate(v(x,T_DATE));
+    const escUid=uid.replace(/'/g,"\\'");
+    const dprSumLink=`<a onclick="dprLogFilterById('${escUid}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-filter" style="font-size:12px;"></i>DPR Summary</a>`;
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td style="font-size:11px;white-space:nowrap">${ts?fmtDate(ts):v(r,D_TS)||'—'}</td>
-      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(r,D_PLAN)||'—'}</td>
-      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(r,D_TASK)||'—'}</td>
-      <td><span class="badge ${pc}">${pct}%</span></td>
-      <td>${v(r,D_MP)||'—'}</td>
-      <td>${hasIss?'<span class="badge br">⚠ Yes</span>':'<span class="badge bg">None</span>'}</td>
-      <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${v(r,D_REM)||'—'}</td>
+      <td style="font-size:11px;white-space:nowrap">${dt?fmtDate(dt):v(x,T_DATE)||'—'}</td>
+      <td style="font-size:12px">${v(x,T_VENDOR)||'—'}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${v(x,T_TOPIC).replace(/"/g,'&quot;')}">${v(x,T_TOPIC)||'—'}</td>
+      <td>${v(x,T_TECH)||'—'}</td>
+      <td>${v(x,T_HELP)||'—'}</td>
+      <td style="font-size:11px;max-width:160px;overflow:hidden;text-overflow:ellipsis" title="${v(x,T_ATTEND).replace(/"/g,'&quot;')}">${v(x,T_ATTEND)||'—'}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${v(x,T_REMARK)||'—'}</td>
+      <td>${tbtLink(v(x,T_TBTREP),'TBT Report','#34c98a')}</td>
+      <td>${tbtLink(v(x,T_DPRREP),'DPR Report','#9b6dff')}</td>
+      <td>${dprSumLink}</td>
     </tr>`;
   }).join('');
-
-  if(!dprSorted.length){logBody.innerHTML='<tr><td colspan="8" class="empty">No DPR entries found for this project</td></tr>';}
+  if(!tbtForProj.length){tbtBody.innerHTML='<tr><td colspan="11" class="empty">No TBT entries found for this project</td></tr>';}
 
   // ── Info bar
   const infoBar=document.getElementById('proj-info-bar');
@@ -1151,6 +1191,53 @@ function renderProjectSummary(projId,projName){
 
   document.getElementById('proj-summary-area').style.display='block';
   document.getElementById('proj-empty').style.display='none';
+}
+
+// ── DPR Activity Log render + filter (driven by TBT "DPR Summary" link; matches column A)
+let _projDPRSorted=[], _projDPRCols=null, _dprLogFilterUid=null;
+
+function renderProjDPRLog(){
+  const logBody=document.getElementById('proj-dpr-log-body');
+  if(!logBody||!_projDPRCols)return;
+  const {D_PLAN,D_TASK,D_PCT,D_MP,D_ISS,D_REM,D_TS}=_projDPRCols;
+  // Filter on column A (index 0) when a TBT unique ID is active
+  const rows=_dprLogFilterUid?_projDPRSorted.filter(r=>v(r,0)===_dprLogFilterUid):_projDPRSorted;
+
+  // Filter indicator next to the card title
+  const tag=document.getElementById('proj-dpr-log-filter');
+  if(tag){
+    if(_dprLogFilterUid){tag.style.display='inline-flex';tag.innerHTML=`<span class="pe-active-tag" style="cursor:pointer;align-self:center;" onclick="clearDPRLogFilter()"><i class="ti ti-filter" style="font-size:11px;"></i> ID: ${_dprLogFilterUid} · clear ✕</span>`;}
+    else {tag.style.display='none';tag.innerHTML='';}
+  }
+
+  logBody.innerHTML=rows.map((r,i)=>{
+    const pct=parseFloat(v(r,D_PCT))||0,pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br';
+    const iss=v(r,D_ISS),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';
+    const ts=parseDate(v(r,D_TS));
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td style="font-size:11px;white-space:nowrap">${ts?fmtDate(ts):v(r,D_TS)||'—'}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(r,D_PLAN)||'—'}</td>
+      <td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(r,D_TASK)||'—'}</td>
+      <td><span class="badge ${pc}">${pct}%</span></td>
+      <td>${v(r,D_MP)||'—'}</td>
+      <td>${hasIss?'<span class="badge br">⚠ Yes</span>':'<span class="badge bg">None</span>'}</td>
+      <td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${v(r,D_REM)||'—'}</td>
+    </tr>`;
+  }).join('');
+  if(!rows.length){logBody.innerHTML=`<tr><td colspan="8" class="empty">${_dprLogFilterUid?'No DPR entries for ID '+_dprLogFilterUid:'No DPR entries found for this project'}</td></tr>`;}
+}
+
+function dprLogFilterById(uid){
+  _dprLogFilterUid=uid;
+  renderProjDPRLog();
+  const el=document.getElementById('proj-dpr-log-body');
+  if(el)el.closest('.card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function clearDPRLogFilter(){
+  _dprLogFilterUid=null;
+  renderProjDPRLog();
 }
 
 // ── PROJECT OVERVIEW ──────────────────────────────────────────
