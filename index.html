@@ -301,9 +301,7 @@ tr:hover td{background:var(--surface2);}
     </div>
     <div style="padding:0 24px 20px;">
       <div class="charts-grid">
-        <div class="card"><div class="card-title"><i class="ti ti-building"></i> City-wise Project Count</div><div id="pov-city-count"></div></div>
-        <div class="card"><div class="card-title"><i class="ti ti-ruler-2"></i> City-wise Project Size</div><div id="pov-city-size"></div></div>
-        <div class="card"><div class="card-title"><i class="ti ti-user-check"></i> PE Assignment Status</div><div id="pov-assign"></div></div>
+        <div class="card"><div class="card-title"><i class="ti ti-chart-bar"></i> City-wise Projects — Count &amp; Size</div><div id="pov-city-combo"></div></div>
       </div>
       <div class="card">
         <div class="card-title"><i class="ti ti-table"></i> Project Master</div>
@@ -1335,24 +1333,29 @@ function computeProjectMetrics(projId){
   return res;
 }
 
-// Donut (conic-gradient) for assigned vs not-assigned
-function povDonut(assigned,notAssigned){
-  const total=assigned+notAssigned;
-  if(!total)return'<div class="empty">No data</div>';
-  const aPct=Math.round(assigned/total*100);
-  const deg=total?(assigned/total*360):0;
-  return `<div style="display:flex;align-items:center;gap:24px;flex-wrap:wrap;justify-content:center;padding:8px 0;">
-    <div style="position:relative;width:140px;height:140px;border-radius:50%;background:conic-gradient(#34c98a 0deg ${deg}deg,#e74c3c ${deg}deg 360deg);">
-      <div style="position:absolute;inset:22px;border-radius:50%;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;">
-        <span style="font-size:24px;font-weight:600;color:#34c98a;">${aPct}%</span>
-        <span style="font-size:10px;color:var(--muted);">Assigned</span>
-      </div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:10px;">
-      <div style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:3px;background:#34c98a;display:inline-block;"></span><span style="font-size:12px;">Assigned <strong>${assigned}</strong></span></div>
-      <div style="display:flex;align-items:center;gap:8px;"><span style="width:12px;height:12px;border-radius:3px;background:#e74c3c;display:inline-block;"></span><span style="font-size:12px;">Not Assigned <strong>${notAssigned}</strong></span></div>
-    </div>
+// Combined city-wise chart: per-city Count (blue) + Size (purple) bars on one chart
+function povCityCombo(cityCount,citySize){
+  const cities=Object.keys(cityCount);
+  if(!cities.length)return'<div class="empty">No data</div>';
+  // Order by project count desc, take top 12
+  const ordered=cities.sort((a,b)=>(cityCount[b]||0)-(cityCount[a]||0)).slice(0,12);
+  const maxCount=Math.max(...ordered.map(c=>cityCount[c]||0))||1;
+  const maxSize=Math.max(...ordered.map(c=>Math.round(citySize[c]||0)))||1;
+  const legend=`<div style="display:flex;gap:18px;justify-content:flex-end;margin-bottom:12px;font-size:11px;color:var(--muted);">
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:#4f8ef7;display:inline-block;"></span>Count</span>
+    <span style="display:flex;align-items:center;gap:6px;"><span style="width:12px;height:12px;border-radius:3px;background:#9b6dff;display:inline-block;"></span>Size</span>
   </div>`;
+  const rows=ordered.map(c=>{
+    const cnt=cityCount[c]||0, sz=Math.round(citySize[c]||0);
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="font-size:12px;min-width:110px;max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c}">${c}</div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:${Math.round(cnt/maxCount*100)}%;height:100%;background:#4f8ef7;border-radius:4px;"></div></div><span style="font-size:11px;color:var(--muted);min-width:48px;text-align:right;">${cnt}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:8px;background:var(--bg);border-radius:4px;overflow:hidden;"><div style="width:${Math.round(sz/maxSize*100)}%;height:100%;background:#9b6dff;border-radius:4px;"></div></div><span style="font-size:11px;color:var(--muted);min-width:48px;text-align:right;">${sz.toLocaleString()}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+  return legend+rows;
 }
 
 function buildPOV(){
@@ -1395,15 +1398,13 @@ function buildPOV(){
   document.getElementById('pov-metrics').innerHTML=
     metric('ti-building-skyscraper','Total Projects',totalProjects,'From Lead Tracker','#4f8ef7')+
     metric('ti-ruler-2','Total Project Size',Math.round(totalSize).toLocaleString(),'Sum of capacity','#9b6dff')+
+    metricWithBar('ti-user-off','Not Assigned',notAssigned,`${totalProjects?Math.round(notAssigned/totalProjects*100):0}% of projects`,'#e74c3c',totalProjects?notAssigned/totalProjects*100:0,'#e74c3c')+
     metricWithBar('ti-circle-check','Completed',completed,`${totalProjects?Math.round(completed/totalProjects*100):0}% of projects`,'#34c98a',totalProjects?completed/totalProjects*100:0,'#34c98a')+
     metricWithBar('ti-loader','In Process',inProcess,`${totalProjects?Math.round(inProcess/totalProjects*100):0}% of projects`,'#f5a623',totalProjects?inProcess/totalProjects*100:0,'#f5a623')+
     metricWithBar('ti-clock','Pending',pending,`${totalProjects?Math.round(pending/totalProjects*100):0}% of projects`,'#e74c3c',totalProjects?pending/totalProjects*100:0,'#e74c3c');
 
-  // Charts: city-wise count & size (top 12)
-  document.getElementById('pov-city-count').innerHTML=bars(Object.entries(cityCount).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
-  document.getElementById('pov-city-size').innerHTML=bars(Object.entries(citySize).map(([c,s])=>[c,Math.round(s)]).sort((a,b)=>b[1]-a[1]).slice(0,12),'#9b6dff');
-  // Assignment donut
-  document.getElementById('pov-assign').innerHTML=povDonut(assigned,notAssigned);
+  // Combined city-wise chart: count + size on one chart (top 12 by count)
+  document.getElementById('pov-city-combo').innerHTML=povCityCombo(cityCount,citySize);
 
   // Master table
   document.getElementById('pov-head').innerHTML='<tr><th>#</th><th>City</th><th>Project ID</th><th>Project Name</th><th>Capacity</th><th>PE</th><th>Process Start</th><th>Process End</th><th>TAT</th><th>Completion %</th><th>Final Update Stage</th><th>Remarks</th><th>Report</th></tr>';
