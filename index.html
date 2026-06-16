@@ -1468,12 +1468,11 @@ function computeProjectMetrics(projId){
   });
   const weightedPct=totalWeight>0?Math.round(weightedCompleted/totalWeight*100):0;
 
-  // Status: no DPR → pending; >=100 → done; >0 → wip; else pending
+  // Status (Project Overview): no DPR → pending; any DPR entry → in process; weighted 100% → completed
   let status;
   if(!dprRows.length)status='pending';
   else if(weightedPct>=100)status='done';
-  else if(weightedPct>0)status='wip';
-  else status='pending';
+  else status='wip';
 
   const res={dprCount:dprRows.length,startDate,endDate,tat,finalStage,lastStatus,weightedPct,status,lastDate};
   _povCache[projId]=res;
