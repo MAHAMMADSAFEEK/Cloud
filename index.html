@@ -325,6 +325,30 @@ tr:hover td{background:var(--surface2);}
 
   <!-- REPORTS TAB -->
   <div id="tab-rpt" class="tab-content">
+    <div class="pe-filter-bar">
+      <div class="pe-filter-group">
+        <label>City</label>
+        <div class="pov-ms rpt-ms" id="rpt-ms-city"></div>
+      </div>
+      <div class="pe-filter-group">
+        <label>Cluster Head</label>
+        <div class="pov-ms rpt-ms" id="rpt-ms-cluster"></div>
+      </div>
+      <div class="pe-filter-group">
+        <label>City Manager</label>
+        <div class="pov-ms rpt-ms" id="rpt-ms-citymgr"></div>
+      </div>
+      <div class="pe-filter-group">
+        <label>PE</label>
+        <div class="pov-ms rpt-ms" id="rpt-ms-pe"></div>
+      </div>
+      <div class="pe-fdivider"></div>
+      <div class="pe-filter-actions">
+        <span class="spacer"></span>
+        <button class="pe-clr-btn" onclick="clearRPTFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button>
+      </div>
+      <span id="rpt-filter-tag" class="pe-active-tag" style="display:none;"></span>
+    </div>
     <div style="padding:20px 24px 0;">
       <div class="section-title">Reports &amp; Analytics</div>
       <div class="metrics" id="rpt-metrics"></div>
@@ -332,7 +356,7 @@ tr:hover td{background:var(--surface2);}
     <div style="padding:0 24px 20px;">
       <div class="rpt-dim-bar" id="rpt-dim-bar"></div>
       <div class="card">
-        <div class="card-title"><i class="ti ti-table"></i> <span id="rpt-table-title">City-wise Report</span></div>
+        <div class="card-title"><i class="ti ti-table"></i> <span id="rpt-table-title">City-wise Report</span> <span style="font-size:11px;color:var(--muted);font-weight:400;">· click a row to filter</span></div>
         <div class="table-wrap"><table><thead id="rpt-head"></thead><tbody id="rpt-body"></tbody></table></div>
       </div>
     </div>
@@ -542,6 +566,7 @@ async function loadAll(){
     populatePEFilters();
     buildProjFilters();
     populatePOVFilters();
+    populateRPTFilters();
     buildAll();
     document.getElementById('main').style.display='block';
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
@@ -1674,6 +1699,142 @@ function openProjectSummaryFor(projId,projName){
 }
 
 // ── REPORTS TAB ───────────────────────────────────────────────
+// Reports filter bar: dependent multi-selects with counts + search (mirrors POV, separate state)
+const RPT_MS_CFG={
+  city:    {col:'CITY',    all:'All Cities',    ph:'Search cities…'},
+  cluster: {col:'CLUSTER', all:'All Clusters',  ph:'Search clusters…'},
+  citymgr: {col:'CITYMGR', all:'All City Mgrs', ph:'Search city managers…'},
+  pe:      {col:'PE',      all:'All PEs',        ph:'Search PEs…'}
+};
+let _rptMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
+let _rptMSAll={city:[],cluster:[],citymgr:[],pe:[]};
+let _rptMSCounts={city:{},cluster:{},citymgr:{},pe:{}};
+
+function populateRPTFilters(){
+  const r=D.lead.r;
+  const sets={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
+  r.forEach(x=>{
+    if(!lv(x,LEAD_COL.PID))return;
+    const c=lv(x,LEAD_COL.CITY); if(c)sets.city.add(c);
+    const ch=lv(x,LEAD_COL.CLUSTER); if(ch)sets.cluster.add(ch);
+    const cm=lv(x,LEAD_COL.CITYMGR); if(cm)sets.citymgr.add(cm);
+    const pe=lv(x,LEAD_COL.PE); if(pe)sets.pe.add(pe);
+  });
+  Object.keys(sets).forEach(k=>{
+    _rptMSAll[k]=[...sets[k]].sort((a,b)=>a.localeCompare(b));
+    _rptMS[k]=new Set([..._rptMS[k]].filter(v=>sets[k].has(v)));
+  });
+  Object.keys(RPT_MS_CFG).forEach(buildRPTMSWidget);
+  recomputeRPTOptions();
+}
+
+function buildRPTMSWidget(key){
+  const host=document.getElementById('rpt-ms-'+key);
+  if(!host)return;
+  const cfg=RPT_MS_CFG[key];
+  host.innerHTML=`
+    <div class="pov-ms-control" onclick="toggleRPTMS('${key}')">
+      <span class="pov-ms-text placeholder" id="rpt-ms-text-${key}">${cfg.all}</span>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <div class="pov-ms-panel">
+      <input type="text" class="pov-ms-search" id="rpt-ms-search-${key}" placeholder="${cfg.ph}" oninput="renderRPTMSOptions('${key}')" onclick="event.stopPropagation()"/>
+      <div class="pov-ms-actions">
+        <button onclick="event.stopPropagation();selectAllRPTMS('${key}')">Select all</button>
+        <button onclick="event.stopPropagation();clearRPTMS('${key}')">Clear</button>
+      </div>
+      <div class="pov-ms-options" id="rpt-ms-options-${key}"></div>
+    </div>`;
+  renderRPTMSOptions(key);
+  updateRPTMSControl(key);
+}
+
+function renderRPTMSOptions(key){
+  const box=document.getElementById('rpt-ms-options-'+key);
+  if(!box)return;
+  const q=((document.getElementById('rpt-ms-search-'+key)||{}).value||'').trim().toLowerCase();
+  const opts=_rptMSAll[key].filter(o=>!q||o.toLowerCase().includes(q));
+  if(!opts.length){box.innerHTML='<div class="pov-ms-empty">No matches</div>';return;}
+  const counts=_rptMSCounts[key]||{};
+  const hl=(t)=>{if(!q)return t;const i=t.toLowerCase().indexOf(q);return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);};
+  box.innerHTML=opts.map(o=>{
+    const checked=_rptMS[key].has(o)?'checked':'';
+    const safe=o.replace(/"/g,'&quot;').replace(/'/g,"\\'");
+    const cnt=counts[o]||0;
+    return `<label class="pov-ms-opt" onclick="event.stopPropagation()"><input type="checkbox" ${checked} onchange="toggleRPTMSOption('${key}','${safe}')"/><span class="lbl" title="${o.replace(/"/g,'&quot;')}">${hl(o)}</span><span class="pov-ms-cnt">${cnt}</span></label>`;
+  }).join('');
+}
+
+function toggleRPTMSOption(key,val){
+  if(_rptMS[key].has(val))_rptMS[key].delete(val); else _rptMS[key].add(val);
+  updateRPTMSControl(key); recomputeRPTOptions(); buildRPT();
+}
+
+// Click a report row to drill down (toggle that value into the dimension's filter)
+function rptDrill(dimKey,val){
+  if(_rptMS[dimKey].has(val))_rptMS[dimKey].delete(val); else _rptMS[dimKey].add(val);
+  updateRPTMSControl(dimKey); recomputeRPTOptions(); buildRPT();
+}
+
+function rptRowPasses(x){
+  if(!lv(x,LEAD_COL.PID))return false;
+  if(_rptMS.city.size&&!_rptMS.city.has(lv(x,LEAD_COL.CITY)))return false;
+  if(_rptMS.cluster.size&&!_rptMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+  if(_rptMS.citymgr.size&&!_rptMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+  if(_rptMS.pe.size&&!_rptMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  return true;
+}
+function rptRowPassesExcept(x,exceptKey){
+  if(!lv(x,LEAD_COL.PID))return false;
+  if(exceptKey!=='city'    && _rptMS.city.size    && !_rptMS.city.has(lv(x,LEAD_COL.CITY)))return false;
+  if(exceptKey!=='cluster' && _rptMS.cluster.size && !_rptMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+  if(exceptKey!=='citymgr' && _rptMS.citymgr.size && !_rptMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+  if(exceptKey!=='pe'      && _rptMS.pe.size      && !_rptMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  return true;
+}
+
+function recomputeRPTOptions(){
+  const r=D.lead.r;
+  Object.keys(RPT_MS_CFG).forEach(key=>{
+    const counts={}; const colIdx=LEAD_COL[RPT_MS_CFG[key].col];
+    r.forEach(x=>{ if(rptRowPassesExcept(x,key)){ const val=lv(x,colIdx); if(val)counts[val]=(counts[val]||0)+1; } });
+    const set=new Set(Object.keys(counts));
+    _rptMS[key].forEach(v=>set.add(v));
+    _rptMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));
+    _rptMSCounts[key]=counts;
+    renderRPTMSOptions(key);
+  });
+}
+
+function selectAllRPTMS(key){
+  const q=((document.getElementById('rpt-ms-search-'+key)||{}).value||'').trim().toLowerCase();
+  _rptMSAll[key].filter(o=>!q||o.toLowerCase().includes(q)).forEach(o=>_rptMS[key].add(o));
+  updateRPTMSControl(key); recomputeRPTOptions(); buildRPT();
+}
+function clearRPTMS(key){ _rptMS[key].clear(); updateRPTMSControl(key); recomputeRPTOptions(); buildRPT(); }
+function updateRPTMSControl(key){
+  const txt=document.getElementById('rpt-ms-text-'+key);
+  if(!txt)return;
+  const sel=_rptMS[key];
+  if(!sel.size){txt.textContent=RPT_MS_CFG[key].all;txt.classList.add('placeholder');}
+  else if(sel.size===1){txt.textContent=[...sel][0];txt.classList.remove('placeholder');}
+  else {txt.textContent=`${sel.size} selected`;txt.classList.remove('placeholder');}
+}
+function toggleRPTMS(key){
+  const host=document.getElementById('rpt-ms-'+key);
+  if(!host)return;
+  const wasOpen=host.classList.contains('open');
+  document.querySelectorAll('.pov-ms.open,.rpt-ms.open').forEach(el=>el.classList.remove('open'));
+  if(!wasOpen){host.classList.add('open');const s=document.getElementById('rpt-ms-search-'+key);if(s){s.value='';renderRPTMSOptions(key);setTimeout(()=>s.focus(),0);}}
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.rpt-ms'))document.querySelectorAll('.rpt-ms.open').forEach(el=>el.classList.remove('open'));
+});
+function clearRPTFilters(){
+  Object.keys(_rptMS).forEach(k=>{_rptMS[k].clear();updateRPTMSControl(k);});
+  recomputeRPTOptions(); buildRPT();
+}
+
 const RPT_DIMS=[
   {key:'city',    label:'City',         col:'CITY',    icon:'ti-building'},
   {key:'cluster', label:'Cluster Head', col:'CLUSTER', icon:'ti-users-group'},
@@ -1690,11 +1851,16 @@ function buildRPT(){
   const titleEl=document.getElementById('rpt-table-title');
   if(titleEl)titleEl.textContent=dim.label+'-wise Report';
 
+  // Active-filter indicator
+  const activeFilters=[_rptMS.city,_rptMS.cluster,_rptMS.citymgr,_rptMS.pe].filter(s=>s.size).length;
+  const ftag=document.getElementById('rpt-filter-tag');
+  if(ftag){ftag.style.display=activeFilters?'inline':'none';if(activeFilters)ftag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
+
   const r=D.lead.r;
   const groups={};
   let tProjects=0,tSize=0,tCompleted=0,tInProcess=0,tPending=0,tNotAssigned=0;
   r.forEach(x=>{
-    if(!lv(x,LEAD_COL.PID))return;
+    if(!rptRowPasses(x))return;
     let g=lv(x,LEAD_COL[dim.col]);
     if(!g)g=(dim.key==='pe')?'— Not Assigned':'(Blank)';
     if(!groups[g])groups[g]={count:0,size:0,completed:0,inProcess:0,pending:0,notAssigned:0};
@@ -1725,9 +1891,14 @@ function buildRPT(){
     const pct=G.count?Math.round(G.completed/G.count*100):0;
     const col=pct>=75?'#34c98a':pct>=40?'#f5a623':'#e74c3c';
     const bar=`<div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden;"><div style="width:${pct}%;height:100%;background:${col};border-radius:3px;"></div></div><span style="font-size:11px;font-weight:600;color:${col};min-width:32px;text-align:right;">${pct}%</span></div>`;
+    const synthetic=(g==='— Not Assigned'||g==='(Blank)');
+    const active=_rptMS[dim.key].has(g);
+    const nameCell=synthetic
+      ? `<td style="font-size:13px;font-weight:500">${g}</td>`
+      : `<td style="font-size:13px;font-weight:500;cursor:pointer;color:${active?'#4f8ef7':'var(--text)'}" onclick="rptDrill('${dim.key}','${g.replace(/'/g,"\\'")}')" title="Click to filter by ${g.replace(/"/g,'&quot;')}">${g} <i class="ti ti-filter" style="font-size:11px;opacity:0.55;"></i></td>`;
     return `<tr>
       <td style="color:var(--muted)">${i+1}</td>
-      <td style="font-size:13px;font-weight:500">${g}</td>
+      ${nameCell}
       <td style="text-align:right;font-weight:600">${G.count}</td>
       <td style="text-align:right;color:var(--muted)">${Math.round(G.size).toLocaleString()}</td>
       <td style="text-align:right;"><span class="badge bg">${G.completed}</span></td>
