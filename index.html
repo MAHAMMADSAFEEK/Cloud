@@ -2035,7 +2035,11 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
     }
     return {cls:'pmr-green',label:'Onsite Visit',sub:'(Other task)',tags:''};
   }
-  if(mNorm==='without visit update')return {cls:'pmr-teal',label:'Without Visit Update',sub:'(TBT & DPR)',tags:''};
+  if(mNorm==='without visit update'){
+    const t=tbtInfo||{tbt:false,dpr:false};
+    const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-grey'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-grey'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
+    return {cls:'pmr-teal',label:'Without Visit Update',sub:'(TBT & DPR)',tags};
+  }
   // any other value → show raw
   return {cls:'pmr-grey',label:v(chosen,ATT_COL.M),sub:'',tags:''};
 }
