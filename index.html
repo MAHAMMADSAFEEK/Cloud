@@ -166,6 +166,8 @@ tr:hover td{background:var(--surface2);}
 .pmr-green{background:rgba(52,201,138,.16);color:#34c98a;}
 .pmr-teal{background:rgba(56,178,210,.16);color:#3bc0d8;}
 .pmr-grey{background:rgba(139,146,176,.14);color:#8b92b0;}
+.pmr-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
+.pmr-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;max-width:440px;width:100%;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
@@ -1980,7 +1982,7 @@ function buildRPT(){
 
 // ── PROJECT MONTHLY REPORT ────────────────────────────────────
 // Attendance fixed cols: A=UniqueID(0) B=Date(1) C=ProjName(2) D=ProjID(3) L=flag(11) M=visitStatus(12)
-const ATT_COL={UID:0,DATE:1,PNAME:2,PID:3,L:11,M:12};
+const ATT_COL={UID:0,DATE:1,PNAME:2,PID:3,L:11,M:12,REMARK:13};
 // TBT fixed cols already: A=UID(0) I=Date(8) M=TBT Report(12) N=DPR Report(13)
 const PMR_TBT={UID:0,DATE:8,TBTREP:12,DPRREP:13};
 
@@ -2096,7 +2098,7 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
   const lVal=v(chosen,ATT_COL.L).toLowerCase();
 
   if(!mNorm)return future?{cls:'pmr-grey',label:'—',sub:'',tags:''}:{cls:'pmr-red',label:'No Update today',sub:'',tags:''};
-  if(mNorm==='no activity')return {cls:'pmr-orange',label:'No Activity',sub:'',tags:''};
+  if(mNorm==='no activity')return {cls:'pmr-orange',label:'No Activity',sub:'',tags:'',remark:v(chosen,ATT_COL.REMARK)};
   if(mNorm==='onsite visit'){
     if(lVal==='yes'){
       const t=tbtInfo||{tbt:false,dpr:false};
@@ -2113,6 +2115,24 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
   // any other value → show raw
   return {cls:'pmr-grey',label:v(chosen,ATT_COL.M),sub:'',tags:''};
 }
+
+let _pmrRemarks={};
+function pmrShowRemark(rk){
+  const data=_pmrRemarks[rk]||{remark:'No remark available',proj:'',date:''};
+  const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let ov=document.getElementById('pmr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pmr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pmrCloseRemark();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;">
+      <div><div style="font-size:14px;font-weight:600;color:var(--text);">No Activity — Remarks</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${esc(data.proj)}${data.proj&&data.date?' · ':''}${esc(data.date)}</div></div>
+      <button onclick="pmrCloseRemark()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div style="font-size:13px;color:var(--text);line-height:1.55;white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:50vh;overflow:auto;">${esc(data.remark)||'—'}</div>
+  </div>`;
+  ov.style.display='flex';
+}
+function pmrCloseRemark(){const ov=document.getElementById('pmr-modal-ov');if(ov)ov.style.display='none';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')pmrCloseRemark();});
 
 function buildPMR(){
   const msel=document.getElementById('pmr-f-month');
@@ -2172,6 +2192,7 @@ function buildPMR(){
 
   if(!projRows.length){body.innerHTML=`<tr><td class="empty" colspan="${4+days.length}">No projects match the selected filters</td></tr>`;return;}
 
+  _pmrRemarks={};
   body.innerHTML=projRows.map(x=>{
     const pid=lv(x,LEAD_COL.PID);
     const city=lv(x,LEAD_COL.CITY)||'—';
@@ -2181,7 +2202,13 @@ function buildPMR(){
     const cells=days.map(d=>{
       const k=pid+'|'+pmrKey(d);
       const c=pmrEvalCell(attIdx[k],tbtIdx[k],d,today);
-      return `<td><div class="pmr-cell ${c.cls}">${c.label}${c.sub?`<span class="pmr-sub">${c.sub}</span>`:''}${c.tags||''}</div></td>`;
+      let labelHtml=c.label;
+      if(c.remark){
+        const rk=(pid+'|'+pmrKey(d)).replace(/'/g,"\\'");
+        _pmrRemarks[pid+'|'+pmrKey(d)]={remark:c.remark,proj:pname,date:fmtDate(d)};
+        labelHtml=`<a onclick="event.stopPropagation();pmrShowRemark('${rk}')" style="color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;">${c.label}</a>`;
+      }
+      return `<td><div class="pmr-cell ${c.cls}">${labelHtml}${c.sub?`<span class="pmr-sub">${c.sub}</span>`:''}${c.tags||''}</div></td>`;
     }).join('');
     return `<tr>
       <td class="pmr-c0" style="font-size:11px;">${city}</td>
