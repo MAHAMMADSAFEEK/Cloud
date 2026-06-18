@@ -404,10 +404,10 @@ tr:hover td{background:var(--surface2);}
           <option value="5">Week 5 (29–end)</option>
         </select>
       </div>
-      <div class="pe-filter-group"><label>City</label><select id="pmr-f-city" onchange="buildPMR()"><option value="">All Cities</option></select></div>
-      <div class="pe-filter-group"><label>Cluster Head</label><select id="pmr-f-cluster" onchange="buildPMR()"><option value="">All Clusters</option></select></div>
-      <div class="pe-filter-group"><label>City Manager</label><select id="pmr-f-citymgr" onchange="buildPMR()"><option value="">All City Mgrs</option></select></div>
-      <div class="pe-filter-group"><label>PE</label><select id="pmr-f-pe" onchange="buildPMR()"><option value="">All PEs</option></select></div>
+      <div class="pe-filter-group"><label>City</label><div class="pov-ms pmr-ms" id="pmr-ms-city"></div></div>
+      <div class="pe-filter-group"><label>Cluster Head</label><div class="pov-ms pmr-ms" id="pmr-ms-cluster"></div></div>
+      <div class="pe-filter-group"><label>City Manager</label><div class="pov-ms pmr-ms" id="pmr-ms-citymgr"></div></div>
+      <div class="pe-filter-group"><label>PE</label><div class="pov-ms pmr-ms" id="pmr-ms-pe"></div></div>
       <div class="pe-fdivider"></div>
       <div class="pe-filter-actions"><span class="spacer"></span><button class="pe-clr-btn" onclick="clearPMRFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button></div>
     </div>
@@ -1986,6 +1986,17 @@ const PMR_TBT={UID:0,DATE:8,TBTREP:12,DPRREP:13};
 
 function pmrKey(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 
+// PMR filter multi-selects (dependent, with counts + search) — same pattern as Reports
+const PMR_MS_CFG={
+  city:    {col:'CITY',    all:'All Cities',    ph:'Search cities…'},
+  cluster: {col:'CLUSTER', all:'All Clusters',  ph:'Search clusters…'},
+  citymgr: {col:'CITYMGR', all:'All City Mgrs', ph:'Search city managers…'},
+  pe:      {col:'PE',      all:'All PEs',        ph:'Search PEs…'}
+};
+let _pmrMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
+let _pmrMSAll={city:[],cluster:[],citymgr:[],pe:[]};
+let _pmrMSCounts={city:{},cluster:{},citymgr:{},pe:{}};
+
 function populatePMRFilters(){
   // Month options from attendance dates
   const months={};
@@ -1999,18 +2010,77 @@ function populatePMRFilters(){
     if(cur&&keys.includes(cur))msel.value=cur; else if(keys.length)msel.value=keys[0];
     if(!keys.length){const o=document.createElement('option');o.value='';o.textContent='No data';msel.appendChild(o);}
   }
-  // City / Cluster / CM / PE from Lead Tracker
-  const cities=[],clusters=[],cms=[],pes=[];
+  // City / Cluster / CM / PE multi-selects
+  const sets={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
   D.lead.r.forEach(x=>{if(!lv(x,LEAD_COL.PID))return;
-    const c=lv(x,LEAD_COL.CITY);if(c)cities.push(c);
-    const ch=lv(x,LEAD_COL.CLUSTER);if(ch)clusters.push(ch);
-    const cm=lv(x,LEAD_COL.CITYMGR);if(cm)cms.push(cm);
-    const pe=lv(x,LEAD_COL.PE);if(pe)pes.push(pe);});
-  fillSel('pmr-f-city',cities);fillSel('pmr-f-cluster',clusters);fillSel('pmr-f-citymgr',cms);fillSel('pmr-f-pe',pes);
+    const c=lv(x,LEAD_COL.CITY);if(c)sets.city.add(c);
+    const ch=lv(x,LEAD_COL.CLUSTER);if(ch)sets.cluster.add(ch);
+    const cm=lv(x,LEAD_COL.CITYMGR);if(cm)sets.citymgr.add(cm);
+    const pe=lv(x,LEAD_COL.PE);if(pe)sets.pe.add(pe);});
+  Object.keys(sets).forEach(k=>{_pmrMSAll[k]=[...sets[k]].sort((a,b)=>a.localeCompare(b));_pmrMS[k]=new Set([..._pmrMS[k]].filter(v=>sets[k].has(v)));});
+  Object.keys(PMR_MS_CFG).forEach(buildPMRMSWidget);
+  recomputePMROptions();
 }
 
+function buildPMRMSWidget(key){
+  const host=document.getElementById('pmr-ms-'+key);if(!host)return;
+  const cfg=PMR_MS_CFG[key];
+  host.innerHTML=`
+    <div class="pov-ms-control" onclick="togglePMRMS('${key}')">
+      <span class="pov-ms-text placeholder" id="pmr-ms-text-${key}">${cfg.all}</span>
+      <i class="ti ti-chevron-down"></i>
+    </div>
+    <div class="pov-ms-panel">
+      <input type="text" class="pov-ms-search" id="pmr-ms-search-${key}" placeholder="${cfg.ph}" oninput="renderPMRMSOptions('${key}')" onclick="event.stopPropagation()"/>
+      <div class="pov-ms-actions">
+        <button onclick="event.stopPropagation();selectAllPMRMS('${key}')">Select all</button>
+        <button onclick="event.stopPropagation();clearPMRMS('${key}')">Clear</button>
+      </div>
+      <div class="pov-ms-options" id="pmr-ms-options-${key}"></div>
+    </div>`;
+  renderPMRMSOptions(key);updatePMRMSControl(key);
+}
+
+function renderPMRMSOptions(key){
+  const box=document.getElementById('pmr-ms-options-'+key);if(!box)return;
+  const q=((document.getElementById('pmr-ms-search-'+key)||{}).value||'').trim().toLowerCase();
+  const opts=_pmrMSAll[key].filter(o=>!q||o.toLowerCase().includes(q));
+  if(!opts.length){box.innerHTML='<div class="pov-ms-empty">No matches</div>';return;}
+  const counts=_pmrMSCounts[key]||{};
+  const hl=(t)=>{if(!q)return t;const i=t.toLowerCase().indexOf(q);return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);};
+  box.innerHTML=opts.map(o=>{const checked=_pmrMS[key].has(o)?'checked':'';const safe=o.replace(/"/g,'&quot;').replace(/'/g,"\\'");const cnt=counts[o]||0;
+    return `<label class="pov-ms-opt" onclick="event.stopPropagation()"><input type="checkbox" ${checked} onchange="togglePMRMSOption('${key}','${safe}')"/><span class="lbl" title="${o.replace(/"/g,'&quot;')}">${hl(o)}</span><span class="pov-ms-cnt">${cnt}</span></label>`;}).join('');
+}
+
+function togglePMRMSOption(key,val){if(_pmrMS[key].has(val))_pmrMS[key].delete(val);else _pmrMS[key].add(val);updatePMRMSControl(key);recomputePMROptions();buildPMR();}
+
+function pmrRowPassesExcept(x,exceptKey){
+  if(!lv(x,LEAD_COL.PID))return false;
+  if(exceptKey!=='city'    && _pmrMS.city.size    && !_pmrMS.city.has(lv(x,LEAD_COL.CITY)))return false;
+  if(exceptKey!=='cluster' && _pmrMS.cluster.size && !_pmrMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+  if(exceptKey!=='citymgr' && _pmrMS.citymgr.size && !_pmrMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+  if(exceptKey!=='pe'      && _pmrMS.pe.size      && !_pmrMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  return true;
+}
+function recomputePMROptions(){
+  const r=D.lead.r;
+  Object.keys(PMR_MS_CFG).forEach(key=>{
+    const counts={};const colIdx=LEAD_COL[PMR_MS_CFG[key].col];
+    r.forEach(x=>{if(pmrRowPassesExcept(x,key)){const val=lv(x,colIdx);if(val)counts[val]=(counts[val]||0)+1;}});
+    const set=new Set(Object.keys(counts));_pmrMS[key].forEach(v=>set.add(v));
+    _pmrMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));_pmrMSCounts[key]=counts;renderPMRMSOptions(key);
+  });
+}
+function selectAllPMRMS(key){const q=((document.getElementById('pmr-ms-search-'+key)||{}).value||'').trim().toLowerCase();_pmrMSAll[key].filter(o=>!q||o.toLowerCase().includes(q)).forEach(o=>_pmrMS[key].add(o));updatePMRMSControl(key);recomputePMROptions();buildPMR();}
+function clearPMRMS(key){_pmrMS[key].clear();updatePMRMSControl(key);recomputePMROptions();buildPMR();}
+function updatePMRMSControl(key){const txt=document.getElementById('pmr-ms-text-'+key);if(!txt)return;const sel=_pmrMS[key];if(!sel.size){txt.textContent=PMR_MS_CFG[key].all;txt.classList.add('placeholder');}else if(sel.size===1){txt.textContent=[...sel][0];txt.classList.remove('placeholder');}else{txt.textContent=`${sel.size} selected`;txt.classList.remove('placeholder');}}
+function togglePMRMS(key){const host=document.getElementById('pmr-ms-'+key);if(!host)return;const wasOpen=host.classList.contains('open');document.querySelectorAll('.pov-ms.open,.rpt-ms.open,.pmr-ms.open').forEach(el=>el.classList.remove('open'));if(!wasOpen){host.classList.add('open');const s=document.getElementById('pmr-ms-search-'+key);if(s){s.value='';renderPMRMSOptions(key);setTimeout(()=>s.focus(),0);}}}
+document.addEventListener('click',e=>{if(!e.target.closest('.pmr-ms'))document.querySelectorAll('.pmr-ms.open').forEach(el=>el.classList.remove('open'));});
+
 function clearPMRFilters(){
-  ['pmr-f-week','pmr-f-city','pmr-f-cluster','pmr-f-citymgr','pmr-f-pe'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  const w=document.getElementById('pmr-f-week');if(w)w.value='';
+  Object.keys(_pmrMS).forEach(k=>{_pmrMS[k].clear();updatePMRMSControl(k);});
+  recomputePMROptions();
   buildPMR();
 }
 
@@ -2048,10 +2118,7 @@ function buildPMR(){
   const msel=document.getElementById('pmr-f-month');
   const monthVal=msel?msel.value:'';
   const weekVal=(document.getElementById('pmr-f-week')||{}).value||'';
-  const fCity=(document.getElementById('pmr-f-city')||{}).value||'';
-  const fCluster=(document.getElementById('pmr-f-cluster')||{}).value||'';
-  const fCityMgr=(document.getElementById('pmr-f-citymgr')||{}).value||'';
-  const fPE=(document.getElementById('pmr-f-pe')||{}).value||'';
+  const fCity=_pmrMS.city, fCluster=_pmrMS.cluster, fCityMgr=_pmrMS.citymgr, fPE=_pmrMS.pe;
 
   const head=document.getElementById('pmr-head'),body=document.getElementById('pmr-body');
   const legend=document.getElementById('pmr-legend');
@@ -2089,10 +2156,10 @@ function buildPMR(){
   // Project rows from Lead Tracker (filtered)
   const projRows=D.lead.r.filter(x=>{
     if(!lv(x,LEAD_COL.PID))return false;
-    if(fCity&&lv(x,LEAD_COL.CITY)!==fCity)return false;
-    if(fCluster&&lv(x,LEAD_COL.CLUSTER)!==fCluster)return false;
-    if(fCityMgr&&lv(x,LEAD_COL.CITYMGR)!==fCityMgr)return false;
-    if(fPE&&lv(x,LEAD_COL.PE)!==fPE)return false;
+    if(fCity.size&&!fCity.has(lv(x,LEAD_COL.CITY)))return false;
+    if(fCluster.size&&!fCluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+    if(fCityMgr.size&&!fCityMgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+    if(fPE.size&&!fPE.has(lv(x,LEAD_COL.PE)))return false;
     return true;
   }).sort((a,b)=>{const c=lv(a,LEAD_COL.CITY).localeCompare(lv(b,LEAD_COL.CITY));return c!==0?c:lv(a,LEAD_COL.PNAME).localeCompare(lv(b,LEAD_COL.PNAME));});
 
