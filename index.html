@@ -139,6 +139,33 @@ tr:hover td{background:var(--surface2);}
 .rpt-dim{font-size:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s;}
 .rpt-dim:hover{color:var(--text);border-color:var(--accent);}
 .rpt-dim.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+/* ── Project Monthly Report matrix ── */
+.pmr-legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:14px;font-size:11px;color:var(--muted);align-items:center;}
+.pmr-legend .lg{display:inline-flex;align-items:center;gap:6px;}
+.pmr-legend .sw{width:12px;height:12px;border-radius:3px;display:inline-block;}
+.pmr-wrap{max-height:72vh;overflow:auto;}
+.pmr-table{border-collapse:separate;border-spacing:0;font-size:11px;min-width:max-content;}
+.pmr-table th,.pmr-table td{padding:7px 8px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.pmr-table thead th{position:sticky;top:0;z-index:5;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;}
+.pmr-table thead th.dcol{text-align:center;min-width:118px;}
+.pmr-table thead th.dcol .dn{font-size:13px;color:var(--text);}
+.pmr-table thead th.dcol .dw{font-size:9px;opacity:.7;}
+/* sticky info columns */
+.pmr-c0{position:sticky;left:0;z-index:4;background:var(--surface);width:90px;min-width:90px;max-width:90px;overflow:hidden;text-overflow:ellipsis;}
+.pmr-c1{position:sticky;left:90px;z-index:4;background:var(--surface);width:150px;min-width:150px;max-width:150px;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text);}
+.pmr-c2{position:sticky;left:240px;z-index:4;background:var(--surface);width:64px;min-width:64px;max-width:64px;text-align:right;color:var(--muted);}
+.pmr-c3{position:sticky;left:304px;z-index:4;background:var(--surface);width:120px;min-width:120px;max-width:120px;overflow:hidden;text-overflow:ellipsis;border-right:2px solid var(--border2);}
+.pmr-table thead th.pmr-c0,.pmr-table thead th.pmr-c1,.pmr-table thead th.pmr-c2,.pmr-table thead th.pmr-c3{z-index:6;background:var(--surface2);}
+.pmr-cell{display:flex;flex-direction:column;gap:3px;align-items:center;text-align:center;border-radius:6px;padding:4px 5px;font-size:10px;line-height:1.25;min-height:30px;justify-content:center;}
+.pmr-cell .pmr-sub{font-size:9px;opacity:.85;}
+.pmr-cell .pmr-tags{display:flex;gap:3px;margin-top:1px;}
+.pmr-cell .pmr-tg{font-size:8px;font-weight:700;padding:1px 4px;border-radius:4px;}
+.pmr-red{background:rgba(231,76,60,.16);color:#ff7a6b;}
+.pmr-orange{background:rgba(245,166,35,.16);color:#f5a623;}
+.pmr-green{background:rgba(52,201,138,.16);color:#34c98a;}
+.pmr-teal{background:rgba(56,178,210,.16);color:#3bc0d8;}
+.pmr-grey{background:rgba(139,146,176,.14);color:#8b92b0;}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
@@ -174,6 +201,7 @@ tr:hover td{background:var(--surface2);}
     <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
     <button class="tab" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
     <button class="tab" onclick="switchTab('rpt',this)"><i class="ti ti-chart-pie"></i> Reports</button>
+    <button class="tab" onclick="switchTab('pmr',this)"><i class="ti ti-calendar-month"></i> Monthly Report</button>
     <button class="tab" onclick="switchTab('proj',this)"><i class="ti ti-building-skyscraper"></i> Project Summary</button>
   </div>
 
@@ -358,6 +386,36 @@ tr:hover td{background:var(--surface2);}
       <div class="card">
         <div class="card-title"><i class="ti ti-table"></i> <span id="rpt-table-title">City-wise Report</span> <span style="font-size:11px;color:var(--muted);font-weight:400;">· click a row to filter</span></div>
         <div class="table-wrap"><table><thead id="rpt-head"></thead><tbody id="rpt-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECT MONTHLY REPORT TAB -->
+  <div id="tab-pmr" class="tab-content">
+    <div class="pe-filter-bar">
+      <div class="pe-filter-group"><label>Month</label><select id="pmr-f-month" onchange="buildPMR()"></select></div>
+      <div class="pe-filter-group"><label>Week</label>
+        <select id="pmr-f-week" onchange="buildPMR()">
+          <option value="">All Weeks</option>
+          <option value="1">Week 1 (1–7)</option>
+          <option value="2">Week 2 (8–14)</option>
+          <option value="3">Week 3 (15–21)</option>
+          <option value="4">Week 4 (22–28)</option>
+          <option value="5">Week 5 (29–end)</option>
+        </select>
+      </div>
+      <div class="pe-filter-group"><label>City</label><select id="pmr-f-city" onchange="buildPMR()"><option value="">All Cities</option></select></div>
+      <div class="pe-filter-group"><label>Cluster Head</label><select id="pmr-f-cluster" onchange="buildPMR()"><option value="">All Clusters</option></select></div>
+      <div class="pe-filter-group"><label>City Manager</label><select id="pmr-f-citymgr" onchange="buildPMR()"><option value="">All City Mgrs</option></select></div>
+      <div class="pe-filter-group"><label>PE</label><select id="pmr-f-pe" onchange="buildPMR()"><option value="">All PEs</option></select></div>
+      <div class="pe-fdivider"></div>
+      <div class="pe-filter-actions"><span class="spacer"></span><button class="pe-clr-btn" onclick="clearPMRFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button></div>
+    </div>
+    <div style="padding:16px 24px 24px;">
+      <div class="section-title">Project Monthly Report</div>
+      <div class="pmr-legend" id="pmr-legend"></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap pmr-wrap"><table class="pmr-table"><thead id="pmr-head"></thead><tbody id="pmr-body"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -567,6 +625,7 @@ async function loadAll(){
     buildProjFilters();
     populatePOVFilters();
     populateRPTFilters();
+    populatePMRFilters();
     buildAll();
     document.getElementById('main').style.display='block';
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
@@ -579,7 +638,7 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();}
+function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();buildPMR();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
@@ -1917,6 +1976,150 @@ function buildRPT(){
     <td style="text-align:right;font-weight:700;color:#e74c3c;">${tNotAssigned}</td>
     <td style="font-weight:700;">${tProjects?Math.round(tCompleted/tProjects*100):0}%</td>
   </tr>`;
+}
+
+// ── PROJECT MONTHLY REPORT ────────────────────────────────────
+// Attendance fixed cols: A=UniqueID(0) B=Date(1) C=ProjName(2) D=ProjID(3) L=flag(11) M=visitStatus(12)
+const ATT_COL={UID:0,DATE:1,PNAME:2,PID:3,L:11,M:12};
+// TBT fixed cols already: A=UID(0) I=Date(8) M=TBT Report(12) N=DPR Report(13)
+const PMR_TBT={UID:0,DATE:8,TBTREP:12,DPRREP:13};
+
+function pmrKey(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+
+function populatePMRFilters(){
+  // Month options from attendance dates
+  const months={};
+  D.att.r.forEach(x=>{const d=parseDate(v(x,ATT_COL.DATE));if(d){const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=d;}});
+  const msel=document.getElementById('pmr-f-month');
+  if(msel){
+    const cur=msel.value;
+    msel.innerHTML='';
+    const keys=Object.keys(months).sort().reverse();
+    keys.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=months[k].toLocaleDateString('en-IN',{month:'long',year:'numeric'});msel.appendChild(o);});
+    if(cur&&keys.includes(cur))msel.value=cur; else if(keys.length)msel.value=keys[0];
+    if(!keys.length){const o=document.createElement('option');o.value='';o.textContent='No data';msel.appendChild(o);}
+  }
+  // City / Cluster / CM / PE from Lead Tracker
+  const cities=[],clusters=[],cms=[],pes=[];
+  D.lead.r.forEach(x=>{if(!lv(x,LEAD_COL.PID))return;
+    const c=lv(x,LEAD_COL.CITY);if(c)cities.push(c);
+    const ch=lv(x,LEAD_COL.CLUSTER);if(ch)clusters.push(ch);
+    const cm=lv(x,LEAD_COL.CITYMGR);if(cm)cms.push(cm);
+    const pe=lv(x,LEAD_COL.PE);if(pe)pes.push(pe);});
+  fillSel('pmr-f-city',cities);fillSel('pmr-f-cluster',clusters);fillSel('pmr-f-citymgr',cms);fillSel('pmr-f-pe',pes);
+}
+
+function clearPMRFilters(){
+  ['pmr-f-week','pmr-f-city','pmr-f-cluster','pmr-f-citymgr','pmr-f-pe'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  buildPMR();
+}
+
+function pmrEvalCell(rows,tbtInfo,dateObj,today){
+  const future=dateObj>today;
+  if(!rows||!rows.length){
+    return future?{cls:'pmr-grey',label:'—',sub:'',tags:''}:{cls:'pmr-red',label:'No Update today',sub:'',tags:''};
+  }
+  const pr=m=>({'onsite visit':4,'without visit update':3,'no activity':2})[m]||(m?1:0);
+  let chosen=null,mNorm='';
+  rows.forEach(r=>{const m=v(r,ATT_COL.M).toLowerCase();if(!chosen||pr(m)>pr(mNorm)){chosen=r;mNorm=m;}});
+  if(mNorm==='onsite visit'){const yes=rows.find(r=>v(r,ATT_COL.M).toLowerCase()==='onsite visit'&&v(r,ATT_COL.L).toLowerCase()==='yes');if(yes)chosen=yes;}
+  const lVal=v(chosen,ATT_COL.L).toLowerCase();
+
+  if(!mNorm)return future?{cls:'pmr-grey',label:'—',sub:'',tags:''}:{cls:'pmr-red',label:'No Update today',sub:'',tags:''};
+  if(mNorm==='no activity')return {cls:'pmr-orange',label:'No Activity',sub:'',tags:''};
+  if(mNorm==='onsite visit'){
+    if(lVal==='yes'){
+      const t=tbtInfo||{tbt:false,dpr:false};
+      const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-grey'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-grey'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
+      return {cls:'pmr-green',label:'Onsite Visit',sub:'(TBT - DPR)',tags};
+    }
+    return {cls:'pmr-green',label:'Onsite Visit',sub:'(Other task)',tags:''};
+  }
+  if(mNorm==='without visit update')return {cls:'pmr-teal',label:'Without Visit Update',sub:'(TBT & DPR)',tags:''};
+  // any other value → show raw
+  return {cls:'pmr-grey',label:v(chosen,ATT_COL.M),sub:'',tags:''};
+}
+
+function buildPMR(){
+  const msel=document.getElementById('pmr-f-month');
+  const monthVal=msel?msel.value:'';
+  const weekVal=(document.getElementById('pmr-f-week')||{}).value||'';
+  const fCity=(document.getElementById('pmr-f-city')||{}).value||'';
+  const fCluster=(document.getElementById('pmr-f-cluster')||{}).value||'';
+  const fCityMgr=(document.getElementById('pmr-f-citymgr')||{}).value||'';
+  const fPE=(document.getElementById('pmr-f-pe')||{}).value||'';
+
+  const head=document.getElementById('pmr-head'),body=document.getElementById('pmr-body');
+  const legend=document.getElementById('pmr-legend');
+  if(legend)legend.innerHTML=[
+    ['pmr-green','Onsite Visit'],['pmr-teal','Without Visit Update'],['pmr-orange','No Activity'],
+    ['pmr-red','No Update'],['pmr-grey','No data / future']
+  ].map(([c,t])=>`<span class="lg"><span class="sw ${c}"></span>${t}</span>`).join('')+
+    '<span class="lg" style="margin-left:auto;">TBT/DPR ✓ = report present in TBT sheet (cols M & N)</span>';
+
+  if(!monthVal){head.innerHTML='';body.innerHTML='<tr><td class="empty">No attendance data available</td></tr>';return;}
+
+  const [yy,mm]=monthVal.split('-').map(Number);
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  let dayStart=1,dayEnd=daysInMonth;
+  if(weekVal){const w=Number(weekVal);dayStart=(w-1)*7+1;dayEnd=Math.min(w*7,daysInMonth);if(dayStart>daysInMonth){head.innerHTML='';body.innerHTML='<tr><td class="empty">No days in this week</td></tr>';return;}}
+  const days=[];for(let d=dayStart;d<=dayEnd;d++)days.push(new Date(yy,mm-1,d));
+  const today=new Date();today.setHours(0,0,0,0);
+
+  // Index attendance + TBT for the selected month
+  const attIdx={},uidToProj={};
+  D.att.r.forEach(x=>{
+    const pid=v(x,ATT_COL.PID),uid=v(x,ATT_COL.UID),d=parseDate(v(x,ATT_COL.DATE));
+    if(uid&&pid)uidToProj[uid]=pid;
+    if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    const k=pid+'|'+pmrKey(d);(attIdx[k]=attIdx[k]||[]).push(x);
+  });
+  const tbtIdx={};
+  D.tbt.r.forEach(x=>{
+    const uid=v(x,PMR_TBT.UID),pid=uidToProj[uid],d=parseDate(v(x,PMR_TBT.DATE));
+    if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    const k=pid+'|'+pmrKey(d);const cur=tbtIdx[k]||{tbt:false,dpr:false};
+    if(v(x,PMR_TBT.TBTREP))cur.tbt=true; if(v(x,PMR_TBT.DPRREP))cur.dpr=true; tbtIdx[k]=cur;
+  });
+
+  // Project rows from Lead Tracker (filtered)
+  const projRows=D.lead.r.filter(x=>{
+    if(!lv(x,LEAD_COL.PID))return false;
+    if(fCity&&lv(x,LEAD_COL.CITY)!==fCity)return false;
+    if(fCluster&&lv(x,LEAD_COL.CLUSTER)!==fCluster)return false;
+    if(fCityMgr&&lv(x,LEAD_COL.CITYMGR)!==fCityMgr)return false;
+    if(fPE&&lv(x,LEAD_COL.PE)!==fPE)return false;
+    return true;
+  }).sort((a,b)=>{const c=lv(a,LEAD_COL.CITY).localeCompare(lv(b,LEAD_COL.CITY));return c!==0?c:lv(a,LEAD_COL.PNAME).localeCompare(lv(b,LEAD_COL.PNAME));});
+
+  // Header
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  head.innerHTML='<tr>'+
+    '<th class="pmr-c0">City</th><th class="pmr-c1">Project</th><th class="pmr-c2">Size</th><th class="pmr-c3">PE</th>'+
+    days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+
+    '</tr>';
+
+  if(!projRows.length){body.innerHTML=`<tr><td class="empty" colspan="${4+days.length}">No projects match the selected filters</td></tr>`;return;}
+
+  body.innerHTML=projRows.map(x=>{
+    const pid=lv(x,LEAD_COL.PID);
+    const city=lv(x,LEAD_COL.CITY)||'—';
+    const pname=lv(x,LEAD_COL.PNAME)||'—';
+    const size=lv(x,LEAD_COL.SIZE)||'—';
+    const pe=lv(x,LEAD_COL.PE)||'<span style="color:#e74c3c;">Not Assigned</span>';
+    const cells=days.map(d=>{
+      const k=pid+'|'+pmrKey(d);
+      const c=pmrEvalCell(attIdx[k],tbtIdx[k],d,today);
+      return `<td><div class="pmr-cell ${c.cls}">${c.label}${c.sub?`<span class="pmr-sub">${c.sub}</span>`:''}${c.tags||''}</div></td>`;
+    }).join('');
+    return `<tr>
+      <td class="pmr-c0" style="font-size:11px;">${city}</td>
+      <td class="pmr-c1" title="${pname.replace(/"/g,'&quot;')}">${pname}<div style="font-size:9px;color:var(--muted);font-weight:400;">${pid}</div></td>
+      <td class="pmr-c2">${size}</td>
+      <td class="pmr-c3" style="font-size:11px;">${pe}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
 }
 
 loadAll();
