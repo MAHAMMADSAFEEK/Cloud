@@ -2105,7 +2105,7 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
       const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-grey'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-grey'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
       return {cls:'pmr-green',label:'Onsite Visit',sub:'(TBT - DPR)',tags};
     }
-    return {cls:'pmr-green',label:'Onsite Visit',sub:'(Other task)',tags:''};
+    return {cls:'pmr-green',label:'Onsite Visit',sub:'(Other task)',tags:'',remark:v(chosen,ATT_COL.REMARK)};
   }
   if(mNorm==='without visit update'){
     const t=tbtInfo||{tbt:false,dpr:false};
@@ -2118,13 +2118,13 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
 
 let _pmrRemarks={};
 function pmrShowRemark(rk){
-  const data=_pmrRemarks[rk]||{remark:'No remark available',proj:'',date:''};
+  const data=_pmrRemarks[rk]||{remark:'No remark available',proj:'',date:'',title:'Remarks'};
   const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   let ov=document.getElementById('pmr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pmr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pmrCloseRemark();};document.body.appendChild(ov);}
   ov.innerHTML=`<div class="pmr-modal">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;">
-      <div><div style="font-size:14px;font-weight:600;color:var(--text);">No Activity — Remarks</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${esc(data.proj)}${data.proj&&data.date?' · ':''}${esc(data.date)}</div></div>
+      <div><div style="font-size:14px;font-weight:600;color:var(--text);">${esc(data.title||'Remarks')} — Remarks</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${esc(data.proj)}${data.proj&&data.date?' · ':''}${esc(data.date)}</div></div>
       <button onclick="pmrCloseRemark()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     <div style="font-size:13px;color:var(--text);line-height:1.55;white-space:pre-wrap;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;max-height:50vh;overflow:auto;">${esc(data.remark)||'—'}</div>
@@ -2205,7 +2205,7 @@ function buildPMR(){
       let labelHtml=c.label;
       if(c.remark){
         const rk=(pid+'|'+pmrKey(d)).replace(/'/g,"\\'");
-        _pmrRemarks[pid+'|'+pmrKey(d)]={remark:c.remark,proj:pname,date:fmtDate(d)};
+        _pmrRemarks[pid+'|'+pmrKey(d)]={remark:c.remark,proj:pname,date:fmtDate(d),title:(c.label+(c.sub?' '+c.sub:''))};
         labelHtml=`<a onclick="event.stopPropagation();pmrShowRemark('${rk}')" style="color:inherit;text-decoration:underline;text-underline-offset:2px;cursor:pointer;">${c.label}</a>`;
       }
       return `<td><div class="pmr-cell ${c.cls}">${labelHtml}${c.sub?`<span class="pmr-sub">${c.sub}</span>`:''}${c.tags||''}</div></td>`;
