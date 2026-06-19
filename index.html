@@ -2951,6 +2951,14 @@ function vmrShowVendor(vendorName){
   ov.style.display='flex';
 }
 
+function vmrToggleSub(gi){
+  const rows=document.querySelectorAll('.vmr-grp-'+gi);
+  if(!rows.length)return;
+  const show=rows[0].style.display==='none';
+  rows.forEach(r=>{r.style.display=show?'':'none';});
+  const btn=document.getElementById('vmr-tg-'+gi);if(btn)btn.textContent=show?'−':'+';
+}
+
 function vmrShowDateSummary(dk){
   const ctx=_vmrCtx;if(!ctx||!ctx.tbtByVD)return;
   const [y,m,d]=dk.split('-').map(Number);
@@ -2961,17 +2969,34 @@ function vmrShowDateSummary(dk){
     const info=ctx.tbtByVD[vn.name+'|'+dk];
     if(!info||!info.sites.size)return;
     worked++;totalMp+=info.mp;info.sites.forEach(s=>allSites.add(s));
-    let tbtUrl='',dprUrl='';info.items.forEach(it=>{if(!tbtUrl&&it.tbtRep&&String(it.tbtRep).trim().startsWith('http'))tbtUrl=String(it.tbtRep).trim();if(!dprUrl&&it.dprRep&&String(it.dprRep).trim().startsWith('http'))dprUrl=String(it.dprRep).trim();});
-    rows.push({name:vn.name,city:vn.city,sites:info.sites.size,mp:info.mp,tbtUrl,dprUrl});
+    // per-project breakdown (manpower + report links)
+    const byProj={};
+    info.items.forEach(it=>{const key=it.pid||it.projName;if(!byProj[key])byProj[key]={name:it.projName,pid:it.pid,pe:it.pe,mp:0,tbtUrl:'',dprUrl:''};const p=byProj[key];p.mp+=it.tech+it.help;if(!p.tbtUrl&&it.tbtRep&&String(it.tbtRep).trim().startsWith('http'))p.tbtUrl=String(it.tbtRep).trim();if(!p.dprUrl&&it.dprRep&&String(it.dprRep).trim().startsWith('http'))p.dprUrl=String(it.dprRep).trim();});
+    const projects=Object.values(byProj).sort((a,b)=>b.mp-a.mp);
+    let tbtUrl='',dprUrl='';projects.forEach(p=>{if(!tbtUrl&&p.tbtUrl)tbtUrl=p.tbtUrl;if(!dprUrl&&p.dprUrl)dprUrl=p.dprUrl;});
+    rows.push({name:vn.name,city:vn.city,sites:info.sites.size,mp:info.mp,tbtUrl,dprUrl,projects});
   });
   rows.sort((a,b)=>b.mp-a.mp);
   const cards=
     metric('ti-building-store','Vendors Worked',worked,`of ${vendors.length} in view`,'#4f8ef7')+
     metric('ti-map-pin','Total Sites',allSites.size,'Distinct projects','#34c98a')+
     metric('ti-users','Total Manpower',totalMp,'Tech + Helpers','#f5a623');
+  const tl=(url)=>url?`<a href="${url}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">TBT ↗</a>`:'<span class="badge br">—</span>';
+  const dl=(url)=>url?`<a href="${url}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">DPR ↗</a>`:'<span class="badge br">—</span>';
+  let bodyHtml='';
+  rows.forEach((r,gi)=>{
+    const multi=r.projects.length>1;
+    const toggle=multi?`<button onclick="vmrToggleSub(${gi})" id="vmr-tg-${gi}" style="background:var(--surface);border:1px solid var(--border2);border-radius:4px;color:var(--accent);cursor:pointer;width:18px;height:18px;line-height:1;font-size:12px;padding:0;margin-right:6px;vertical-align:middle;">+</button>`:'<span style="display:inline-block;width:24px;"></span>';
+    bodyHtml+=`<tr><td style="font-weight:500;">${toggle}${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;">${tl(r.tbtUrl)}</td><td style="text-align:center;">${dl(r.dprUrl)}</td></tr>`;
+    if(multi){
+      r.projects.forEach(p=>{
+        bodyHtml+=`<tr class="vmr-grp-${gi}" style="display:none;background:rgba(255,255,255,0.025);"><td style="padding-left:30px;color:var(--muted);font-size:11px;">↳ ${pemrEsc(p.name)}${p.pe?`<span style="opacity:.7;"> · ${pemrEsc(p.pe)}</span>`:''}</td><td></td><td style="text-align:right;color:var(--muted);">1</td><td style="text-align:right;">${p.mp}</td><td style="text-align:center;">${tl(p.tbtUrl)}</td><td style="text-align:center;">${dl(p.dprUrl)}</td></tr>`;
+      });
+    }
+  });
   const table=rows.length?`<div class="table-wrap" style="margin-top:14px;max-height:46vh;overflow:auto;"><table style="font-size:12px;">
     <thead><tr><th>Vendor</th><th>City</th><th style="text-align:right;">Sites</th><th style="text-align:right;">Manpower</th><th style="text-align:center;">TBT</th><th style="text-align:center;">DPR</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr><td style="font-weight:500;">${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;">${r.tbtUrl?`<a href="${r.tbtUrl}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">TBT ↗</a>`:'<span class="badge br">—</span>'}</td><td style="text-align:center;">${r.dprUrl?`<a href="${r.dprUrl}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">DPR ↗</a>`:'<span class="badge br">—</span>'}</td></tr>`).join('')}</tbody>
+    <tbody>${bodyHtml}</tbody>
   </table></div>`:'<div class="empty" style="margin-top:12px;">No vendor activity on this day.</div>';
   let ov=document.getElementById('pemr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
