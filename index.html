@@ -2981,6 +2981,58 @@ function vmrShowDateSummary(dk){
       <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     <div class="metrics" style="margin-top:8px;">${cards}</div>
+    <div style="margin-top:12px;"><button class="pe-clr-btn" onclick="vmrShowDatePivot('${dk}')"><i class="ti ti-table" style="font-size:12px;"></i> Project Pivot (grouped by vendor)</button></div>
+    ${table}
+  </div>`;
+  ov.style.display='flex';
+}
+
+function vmrShowDatePivot(dk){
+  const ctx=_vmrCtx;if(!ctx||!ctx.tbtByVD)return;
+  const [y,m,d]=dk.split('-').map(Number);
+  const dateLabel=new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+  const vendors=ctx.vendors||[];
+  const groups=[];let grandMp=0,grandSites=0;
+  vendors.forEach(vn=>{
+    const info=ctx.tbtByVD[vn.name+'|'+dk];
+    if(!info||!info.sites.size)return;
+    const byProj={};
+    info.items.forEach(it=>{const key=it.pid||it.projName;if(!byProj[key])byProj[key]={name:it.projName,pid:it.pid,pe:it.pe,mp:0};byProj[key].mp+=it.tech+it.help;});
+    const projects=Object.values(byProj).sort((a,b)=>b.mp-a.mp);
+    const totalMp=projects.reduce((s,p)=>s+p.mp,0);
+    groups.push({vendor:vn.name,city:vn.city,projects,totalMp});
+    grandMp+=totalMp;grandSites+=projects.length;
+  });
+  groups.sort((a,b)=>b.totalMp-a.totalMp);
+  let bodyRows='';
+  groups.forEach(g=>{
+    bodyRows+=`<tr style="background:var(--surface2);"><td colspan="4" style="font-weight:600;font-size:12px;">${pemrEsc(g.vendor)} <span style="color:var(--muted);font-weight:400;">· ${pemrEsc(g.city)} · ${g.projects.length} site(s) · ${g.totalMp} MP</span></td></tr>`;
+    g.projects.forEach(p=>{
+      bodyRows+=`<tr>
+        <td style="font-size:12px;padding-left:16px;">${pemrEsc(p.name)}${p.pid?`<span style="font-size:9px;color:var(--muted);"> · ${pemrEsc(p.pid)}</span>`:''}</td>
+        <td style="font-size:11px;color:var(--muted);">${pemrEsc(g.vendor)}</td>
+        <td style="font-size:11px;">${pemrEsc(p.pe)||'—'}</td>
+        <td style="text-align:right;font-weight:600;font-size:12px;">${p.mp}</td>
+      </tr>`;
+    });
+  });
+  const table=groups.length
+    ? `<div class="table-wrap" style="margin-top:10px;max-height:60vh;overflow:auto;"><table style="font-size:12px;">
+        <thead><tr><th>Project</th><th>Vendor</th><th>PE</th><th style="text-align:right;">Manpower</th></tr></thead>
+        <tbody>${bodyRows}</tbody>
+        <tfoot><tr style="border-top:2px solid var(--border2);"><td style="font-weight:700;">Total</td><td></td><td style="font-weight:700;">${grandSites} site(s)</td><td style="text-align:right;font-weight:700;">${grandMp}</td></tr></tfoot>
+      </table></div>`
+    : '<div class="empty" style="margin-top:10px;">No vendor activity on this day.</div>';
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:720px;max-height:88vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="vmrShowDateSummary('${dk}')" title="Back" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;padding:3px 8px;font-size:12px;"><i class="ti ti-arrow-left"></i></button>
+        <div><div style="font-size:15px;font-weight:600;color:var(--text);">Project Pivot — by Vendor</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${dateLabel}</div></div>
+      </div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
     ${table}
   </div>`;
   ov.style.display='flex';
