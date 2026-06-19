@@ -2941,13 +2941,24 @@ function vmrShowVendor(vendorName){
   const ctx=_vmrCtx;if(!ctx||!ctx.tbtByVD)return;
   const yy=ctx.yy,mm=ctx.mm;const vi=ctx.vendorInfo[vendorName]||{};
   const monthLabel=new Date(yy,mm-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-  let activeDays=0,totalMp=0;const allSites=new Set();
-  Object.keys(ctx.tbtByVD).forEach(k=>{const [vn,dk]=k.split('|');if(vn!==vendorName)return;const info=ctx.tbtByVD[k];if(info.sites.size){activeDays++;totalMp+=info.mp;info.sites.forEach(s=>allSites.add(s));}});
+  let activeDays=0,totalMp=0;const allSites=new Set();const sitePE={};const siteDays={},siteMp={};
+  Object.keys(ctx.tbtByVD).forEach(k=>{
+    const vn=k.slice(0,k.lastIndexOf('|'));if(vn!==vendorName)return;
+    const dk=k.slice(k.lastIndexOf('|')+1);
+    const info=ctx.tbtByVD[k];if(!info.sites.size)return;
+    activeDays++;totalMp+=info.mp;
+    info.sites.forEach(s=>{allSites.add(s);(siteDays[s]=siteDays[s]||new Set()).add(dk);});
+    info.items.forEach(it=>{if(!it.pid)return;if(!sitePE[it.pid])sitePE[it.pid]=it.pe||'';siteMp[it.pid]=(siteMp[it.pid]||0)+it.tech+it.help;});
+  });
+  const sitesCard=`<div class="metric" style="--mc:#34c98a;cursor:pointer;" onclick="vmrShowVendorSites('${vendorName.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')"><div class="micon"><i class="ti ti-map-pin"></i></div><div class="mlbl">SITES WORKED</div><div class="mval">${allSites.size}</div><div class="msub">Click to view projects ↗</div></div>`;
   const cards=
     metric('ti-building-store','Vendor Status',pemrEsc(vi.status)||'—',pemrEsc(vi.city)||'','#4f8ef7')+
     metric('ti-calendar-stats','Active Days',activeDays,`Days worked · ${monthLabel}`,'#9b6dff')+
-    metric('ti-map-pin','Sites Worked',allSites.size,'Distinct projects','#34c98a')+
+    sitesCard+
     metric('ti-users','Total Manpower',totalMp,'Tech + Helpers (month)','#f5a623');
+  // Stash sites for drill-down
+  _vmrCtx._vendorSites=_vmrCtx._vendorSites||{};
+  _vmrCtx._vendorSites[vendorName]={sites:[...allSites].map(p=>({pid:p,name:ctx.projName[p]||p,pe:sitePE[p]||ctx.projPE[p]||'',days:(siteDays[p]&&siteDays[p].size)||0,mp:siteMp[p]||0})).sort((a,b)=>{if(b.days!==a.days)return b.days-a.days;if(b.mp!==a.mp)return b.mp-a.mp;return a.name.localeCompare(b.name);}),monthLabel};
   let ov=document.getElementById('pemr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
   ov.innerHTML=`<div class="pmr-modal" style="max-width:620px;">
@@ -2956,6 +2967,33 @@ function vmrShowVendor(vendorName){
       <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     <div class="metrics" style="margin-top:8px;">${cards}</div>
+  </div>`;
+  ov.style.display='flex';
+}
+
+function vmrShowVendorSites(vendorName){
+  const ctx=_vmrCtx;const stash=(ctx._vendorSites||{})[vendorName];if(!stash)return;
+  const sites=stash.sites||[];
+  const rows=sites.length
+    ? sites.map((s,i)=>`<tr><td style="color:var(--muted);text-align:right;width:32px;">${i+1}</td><td style="font-weight:500;">${pemrEsc(s.name)}${s.pid?`<div style="font-size:9px;color:var(--muted);font-weight:400;">${pemrEsc(s.pid)}</div>`:''}</td><td>${pemrEsc(s.pe)||'<span style="color:#e74c3c;">Not Assigned</span>'}</td><td style="text-align:right;"><span class="badge bp">${s.days}</span></td><td style="text-align:right;font-weight:600;">${s.mp}</td></tr>`).join('')
+    : '<tr><td colspan="5" class="empty" style="padding:18px;">No sites worked.</td></tr>';
+  const totalDays=sites.reduce((a,s)=>a+s.days,0),totalMp=sites.reduce((a,s)=>a+s.mp,0);
+  const tfoot=sites.length?`<tfoot><tr style="border-top:2px solid var(--border2);"><td></td><td style="font-weight:700;">Total</td><td></td><td style="text-align:right;font-weight:700;">${totalDays}</td><td style="text-align:right;font-weight:700;">${totalMp}</td></tr></tfoot>`:'';
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:580px;max-height:84vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:8px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button onclick="vmrShowVendor('${vendorName.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" title="Back" style="background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--muted);cursor:pointer;padding:3px 8px;font-size:12px;"><i class="ti ti-arrow-left"></i></button>
+        <div><div style="font-size:15px;font-weight:600;color:var(--text);">Sites Worked — ${pemrEsc(vendorName)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${pemrEsc(stash.monthLabel||'')} · ${sites.length} project(s)</div></div>
+      </div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="table-wrap" style="margin-top:6px;overflow:auto;"><table style="font-size:12px;width:100%;">
+      <thead><tr><th style="text-align:right;">#</th><th>Project</th><th>PE</th><th style="text-align:right;">Days</th><th style="text-align:right;">Manpower</th></tr></thead>
+      <tbody>${rows}</tbody>
+      ${tfoot}
+    </table></div>
   </div>`;
   ov.style.display='flex';
 }
