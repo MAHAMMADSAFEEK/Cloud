@@ -205,11 +205,7 @@ tr:hover td{background:var(--surface2);}
 
 <div class="main" id="main" style="display:none;">
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('pe',this)"><i class="ti ti-users"></i> PE Overview</button>
-    <button class="tab" onclick="switchTab('att',this)"><i class="ti ti-calendar-check"></i> Attendance</button>
-    <button class="tab" onclick="switchTab('tbt',this)"><i class="ti ti-clipboard-list"></i> TBT</button>
-    <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
-    <button class="tab" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
+    <button class="tab active" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
     <button class="tab" onclick="switchTab('rpt',this)"><i class="ti ti-chart-pie"></i> Reports</button>
     <button class="tab" onclick="switchTab('pmr',this)"><i class="ti ti-calendar-month"></i> Project wise Monthly report</button>
     <button class="tab" onclick="switchTab('pemr',this)"><i class="ti ti-user-check"></i> PE Monthly Report</button>
@@ -217,108 +213,8 @@ tr:hover td{background:var(--surface2);}
     <button class="tab" onclick="switchTab('proj',this)"><i class="ti ti-building-skyscraper"></i> Project Summary</button>
   </div>
 
-  <!-- PE TAB -->
-  <div id="tab-pe" class="tab-content active">
-    <!-- PE Filter Bar — sticky below topbar -->
-      <div class="pe-filter-bar">
-        <div class="pe-filter-group">
-          <label>Cluster Head</label>
-          <select id="pe-f-cluster" onchange="buildPE()"><option value="">All Clusters</option></select>
-        </div>
-        <div class="pe-filter-group">
-          <label>City Manager</label>
-          <select id="pe-f-city" onchange="buildPE()"><option value="">All City Mgrs</option></select>
-        </div>
-        <div class="pe-fdivider"></div>
-        <div class="pe-filter-group">
-          <label>Attendance</label>
-          <select id="pe-f-att" onchange="buildPE()">
-            <option value="">All Status</option>
-            <option value="full">Full (In+Out)</option>
-            <option value="in">Check-in Only</option>
-            <option value="absent">Absent</option>
-          </select>
-        </div>
-        <div class="pe-filter-group">
-          <label>Visit Status</label>
-          <select id="pe-f-vstatus" onchange="buildPE()"><option value="">All Visits</option></select>
-        </div>
-        <div class="pe-fdivider"></div>
-        <div class="pe-filter-group">
-          <label>Month</label>
-          <select id="pe-f-month" onchange="onPEMonthChange()"><option value="">All Months</option></select>
-        </div>
-        <div class="pe-filter-group">
-          <label>Week</label>
-          <select id="pe-f-week" onchange="onPEWeekChange()"><option value="">All Weeks</option></select>
-        </div>
-        <div class="pe-filter-group">
-          <label>Date</label>
-          <select id="pe-f-date" onchange="onPEDateChange()"><option value="">All Dates</option></select>
-        </div>
-        <div class="pe-fdivider"></div>
-        <div class="pe-filter-actions">
-          <span class="spacer"></span>
-          <button class="pe-clr-btn" onclick="clearPEFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button>
-        </div>
-        <span id="pe-filter-tag" class="pe-active-tag" style="display:none;"></span>
-      </div>
-    <div style="padding:20px 24px 0;">
-      <div class="section-title">PE Summary</div>
-      <div class="metrics" id="pe-metrics"></div>
-    </div>
-    <div style="padding:0 24px 20px;">
-      <div class="card">
-        <div class="card-title"><i class="ti ti-table"></i> All Project Engineers</div>
-        <div class="table-wrap"><table><thead id="pe-head"></thead><tbody id="pe-body"></tbody></table></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ATTENDANCE TAB -->
-  <div id="tab-att" class="tab-content">
-    <div class="section-title">Attendance Summary</div>
-    <div class="metrics" id="att-metrics"></div>
-    <div class="charts-grid">
-      <div class="card"><div class="card-title"><i class="ti ti-building"></i> Project-wise Visits</div><div id="proj-bars"></div></div>
-      <div class="card"><div class="card-title"><i class="ti ti-user-check"></i> PE Visit Count</div><div id="pe-visit-bars"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-list-details"></i> Attendance Log</div>
-      <div class="table-wrap"><table><thead id="att-head"></thead><tbody id="att-body"></tbody></table></div>
-    </div>
-  </div>
-
-  <!-- TBT TAB -->
-  <div id="tab-tbt" class="tab-content">
-    <div class="section-title">TBT Summary</div>
-    <div class="metrics" id="tbt-metrics"></div>
-    <div class="charts-grid">
-      <div class="card"><div class="card-title"><i class="ti ti-users-group"></i> Vendor-wise TBT</div><div id="tbt-bars"></div></div>
-      <div class="card"><div class="card-title"><i class="ti ti-mail"></i> Mail Status</div><div id="tbt-mail-bars"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-list-details"></i> TBT Log</div>
-      <div class="table-wrap"><table><thead id="tbt-head"></thead><tbody id="tbt-body"></tbody></table></div>
-    </div>
-  </div>
-
-  <!-- DPR TAB -->
-  <div id="tab-dpr" class="tab-content">
-    <div class="section-title">DPR Summary</div>
-    <div class="metrics" id="dpr-metrics"></div>
-    <div class="charts-grid">
-      <div class="card"><div class="card-title"><i class="ti ti-chart-bar"></i> Completion Buckets</div><div id="dpr-bars"></div></div>
-      <div class="card"><div class="card-title"><i class="ti ti-alert-triangle"></i> Issues Reported</div><div id="dpr-issue-bars"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-title"><i class="ti ti-list-details"></i> DPR Log</div>
-      <div class="table-wrap"><table><thead id="dpr-head"></thead><tbody id="dpr-body"></tbody></table></div>
-    </div>
-  </div>
-
   <!-- PROJECT OVERVIEW TAB -->
-  <div id="tab-pov" class="tab-content">
+  <div id="tab-pov" class="tab-content active">
     <div class="pe-filter-bar">
       <div class="pe-filter-group">
         <label>City</label>
@@ -693,7 +589,6 @@ async function loadAll(){
     // Global filters removed
     // Fill PE filters and project filters
     _povCache={};
-    populatePEFilters();
     buildProjFilters();
     populatePOVFilters();
     populateRPTFilters();
@@ -712,7 +607,7 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();buildPMR();buildPEMR();buildVMR();}
+function buildAll(){buildPOV();buildRPT();buildPMR();buildPEMR();buildVMR();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
