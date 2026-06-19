@@ -2229,13 +2229,13 @@ function buildPMR(){
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
     const k=pid+'|'+pmrKey(d);const cur=tbtIdx[k]||{tbt:false,dpr:false,items:[]};
     if(v(x,PMR_TBT.TBTREP))cur.tbt=true; if(v(x,PMR_TBT.DPRREP))cur.dpr=true;
-    cur.items.push({topic:v(x,2),tech:v(x,3),help:v(x,4),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
+    cur.items.push({vendor:v(x,1),topic:v(x,2),tech:v(x,3),help:v(x,4),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
     tbtIdx[k]=cur;
   });
   D.dpr.r.forEach(x=>{
     const uid=v(x,Dp_UID),pid=uidToProj[uid],d=parseDate(v(x,Dp_TS));
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
-    const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,Dp_PLAN),task:v(x,Dp_TASK),pct:v(x,Dp_PCT),mp:v(x,Dp_MP)});
+    const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,1),mp:v(x,2),status:v(x,3),pct:v(x,4)});
   });
   D.lead.r.forEach(x=>{const pid=lv(x,LEAD_COL.PID);if(pid)projName[pid]=lv(x,LEAD_COL.PNAME)||pid;});
   const projDates={};Object.keys(projDatesSet).forEach(p=>{projDates[p]=[...projDatesSet[p]].sort((a,b)=>a-b);});
@@ -2408,9 +2408,19 @@ function pemrProjectCard(ctx,pid,dk){
     if(!tbtInfo.items||!tbtInfo.items.length)return '';
     return tbtInfo.items.map(it=>`<div style="font-size:11px;color:var(--muted);">TBT: ${pemrEsc(it.topic)||'—'} · Technicians ${pemrEsc(it.tech)||'0'} · Helpers ${pemrEsc(it.help)||'0'}</div>`).join('');
   };
+  const vendorCard=()=>{
+    const items=tbtInfo.items||[];
+    if(!items.length)return '';
+    const vendor=(items.find(i=>i.vendor)||{}).vendor||'—';
+    let tech=0,help=0;items.forEach(i=>{tech+=parseFloat(i.tech)||0;help+=parseFloat(i.help)||0;});
+    return `<div style="display:flex;gap:14px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--border2);border-radius:8px;padding:8px 10px;margin:6px 0;font-size:11px;">
+      <div><span style="color:var(--muted);">Vendor</span> <b style="color:var(--text);">${pemrEsc(vendor)}</b></div>
+      <div><span style="color:var(--muted);">Total Manpower</span> <b style="color:var(--text);">${tech+help}</b> <span style="color:var(--muted);">(Tech ${tech} · Helpers ${help})</span></div>
+    </div>`;
+  };
   const dprWorkplans=()=>{
     if(!dprList.length)return '<div style="font-size:11px;color:var(--muted);">No DPR workplan entries.</div>';
-    return '<div style="margin-top:4px;">'+dprList.map(it=>`<div style="font-size:11px;display:flex;gap:6px;align-items:center;"><span style="color:var(--text);">${pemrEsc(it.plan)||'—'}</span>${it.task?`<span style="color:var(--muted);">· ${pemrEsc(it.task)}</span>`:''}${it.pct?`<span class="badge bb">${pemrEsc(it.pct)}%</span>`:''}${it.mp?`<span style="color:var(--muted);">· MP ${pemrEsc(it.mp)}</span>`:''}</div>`).join('')+'</div>';
+    return '<div style="margin-top:4px;display:flex;flex-direction:column;gap:3px;">'+dprList.map(it=>`<div style="font-size:11px;color:var(--text);">${pemrEsc(it.plan)||'—'} <span style="color:var(--muted);">(${pemrEsc(it.status)||'—'} - ${pemrEsc(it.pct)||'0'}${/^\d+(\.\d+)?$/.test(String(it.pct).trim())?'%':''})</span> · Manpower ${pemrEsc(it.mp)||'0'}</div>`).join('')+'</div>';
   };
   const timesRow=()=>`<div style="font-size:11px;color:var(--text);margin:4px 0;">⏱ Check-in <b>${pemrEsc(cin)||'—'}</b> · Check-out <b>${pemrEsc(cout)||'—'}</b> · Duration <b>${pemrDur(cin,cout)||'—'}</b></div>${loc?`<div style="font-size:11px;color:var(--muted);">📍 ${pemrEsc(loc)}</div>`:''}`;
   const remarkRow=()=>rem?`<div style="font-size:11px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-top:4px;white-space:pre-wrap;">📝 ${pemrEsc(rem)}</div>`:'<div style="font-size:11px;color:var(--muted);">No remarks.</div>';
@@ -2420,14 +2430,14 @@ function pemrProjectCard(ctx,pid,dk){
     border='#34c98a';
     if(l==='yes'){
       badge='<span class="badge bg">Onsite Visit (TBT - DPR)</span>';
-      body=timesRow()+tbtDprBadges()+tbtDprLinks()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
+      body=timesRow()+tbtDprBadges()+tbtDprLinks()+vendorCard()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
     }else{
       badge='<span class="badge bg">Onsite Visit (Other task)</span>';
       body=timesRow()+remarkRow();
     }
   }else if(mNorm==='without visit update'){
     border='#3bc0d8';badge='<span class="badge bb">Without Visit Update (TBT & DPR)</span>';
-    body=tbtDprBadges()+tbtDprLinks()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
+    body=tbtDprBadges()+tbtDprLinks()+vendorCard()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
   }else if(mNorm==='no activity'){
     border='#f5a623';badge='<span class="badge bo">No Activity</span>';body=remarkRow();
   }else{
@@ -2569,13 +2579,13 @@ function buildPEMR(){
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
     const k=pid+'|'+pmrKey(d);const cur=tbtByPD[k]||{tbt:false,dpr:false,items:[]};
     if(v(x,PMR_TBT.TBTREP))cur.tbt=true;if(v(x,PMR_TBT.DPRREP))cur.dpr=true;
-    cur.items.push({topic:v(x,2),tech:v(x,3),help:v(x,4),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
+    cur.items.push({vendor:v(x,1),topic:v(x,2),tech:v(x,3),help:v(x,4),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
     tbtByPD[k]=cur;
   });
   D.dpr.r.forEach(x=>{
     const uid=v(x,Dp_UID),pid=uidToProj[uid],d=parseDate(v(x,Dp_TS));
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
-    const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,Dp_PLAN),task:v(x,Dp_TASK),pct:v(x,Dp_PCT),mp:v(x,Dp_MP)});
+    const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,1),mp:v(x,2),status:v(x,3),pct:v(x,4)});
   });
   const tbtIdx=tbtByPD; // cell rendering uses tbt/dpr booleans
   const attProjDate={has:k=>!!attByPD[k]};
