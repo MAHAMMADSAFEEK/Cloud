@@ -2961,8 +2961,8 @@ function vmrShowDateSummary(dk){
     const info=ctx.tbtByVD[vn.name+'|'+dk];
     if(!info||!info.sites.size)return;
     worked++;totalMp+=info.mp;info.sites.forEach(s=>allSites.add(s));
-    let tbt=false,dpr=false;info.items.forEach(it=>{if(it.tbtRep&&String(it.tbtRep).trim().startsWith('http'))tbt=true;if(it.dprRep&&String(it.dprRep).trim().startsWith('http'))dpr=true;});
-    rows.push({name:vn.name,city:vn.city,sites:info.sites.size,mp:info.mp,tbt,dpr});
+    let tbtUrl='',dprUrl='';info.items.forEach(it=>{if(!tbtUrl&&it.tbtRep&&String(it.tbtRep).trim().startsWith('http'))tbtUrl=String(it.tbtRep).trim();if(!dprUrl&&it.dprRep&&String(it.dprRep).trim().startsWith('http'))dprUrl=String(it.dprRep).trim();});
+    rows.push({name:vn.name,city:vn.city,sites:info.sites.size,mp:info.mp,tbtUrl,dprUrl});
   });
   rows.sort((a,b)=>b.mp-a.mp);
   const cards=
@@ -2971,7 +2971,7 @@ function vmrShowDateSummary(dk){
     metric('ti-users','Total Manpower',totalMp,'Tech + Helpers','#f5a623');
   const table=rows.length?`<div class="table-wrap" style="margin-top:14px;max-height:46vh;overflow:auto;"><table style="font-size:12px;">
     <thead><tr><th>Vendor</th><th>City</th><th style="text-align:right;">Sites</th><th style="text-align:right;">Manpower</th><th style="text-align:center;">TBT</th><th style="text-align:center;">DPR</th></tr></thead>
-    <tbody>${rows.map(r=>`<tr><td style="font-weight:500;">${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;"><span class="badge ${r.tbt?'bg':'br'}">${r.tbt?'✓':'—'}</span></td><td style="text-align:center;"><span class="badge ${r.dpr?'bg':'br'}">${r.dpr?'✓':'—'}</span></td></tr>`).join('')}</tbody>
+    <tbody>${rows.map(r=>`<tr><td style="font-weight:500;">${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;">${r.tbtUrl?`<a href="${r.tbtUrl}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">TBT ↗</a>`:'<span class="badge br">—</span>'}</td><td style="text-align:center;">${r.dprUrl?`<a href="${r.dprUrl}" target="_blank" rel="noopener" class="badge bg" style="text-decoration:none;">DPR ↗</a>`:'<span class="badge br">—</span>'}</td></tr>`).join('')}</tbody>
   </table></div>`:'<div class="empty" style="margin-top:12px;">No vendor activity on this day.</div>';
   let ov=document.getElementById('pemr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
