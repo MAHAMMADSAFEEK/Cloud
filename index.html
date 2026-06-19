@@ -2139,14 +2139,14 @@ function pmrEvalCell(rows,tbtInfo,dateObj,today){
   if(mNorm==='onsite visit'){
     if(lVal==='yes'){
       const t=tbtInfo||{tbt:false,dpr:false};
-      const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-grey'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-grey'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
+      const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-red'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-red'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
       return {cls:'pmr-green',label:'Onsite Visit',sub:'(TBT - DPR)',tags};
     }
     return {cls:'pmr-green',label:'Onsite Visit',sub:'(Other task)',tags:'',remark:v(chosen,ATT_COL.REMARK)};
   }
   if(mNorm==='without visit update'){
     const t=tbtInfo||{tbt:false,dpr:false};
-    const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-grey'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-grey'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
+    const tags=`<div class="pmr-tags"><span class="pmr-tg ${t.tbt?'pmr-green':'pmr-red'}">TBT ${t.tbt?'✓':'—'}</span><span class="pmr-tg ${t.dpr?'pmr-green':'pmr-red'}">DPR ${t.dpr?'✓':'—'}</span></div>`;
     return {cls:'pmr-teal',label:'Without Visit Update',sub:'(TBT & DPR)',tags};
   }
   // any other value → show raw
@@ -2345,12 +2345,18 @@ function pemrShowDay(peName,dk){
   let marked=0;
   const pr=mm=>({'onsite visit':4,'without visit update':3,'no activity':2})[mm]||(mm?1:0);
 
-  const cards=pids.map(pid=>{
+  const sortedPids=[...pids].sort((a,b)=>{
+    const ha=(_pemrCtx.attByPD[a+'|'+dk]&&_pemrCtx.attByPD[a+'|'+dk].length)?0:1;
+    const hb=(_pemrCtx.attByPD[b+'|'+dk]&&_pemrCtx.attByPD[b+'|'+dk].length)?0:1;
+    if(ha!==hb)return ha-hb;
+    return (ctx.projName[a]||a).localeCompare(ctx.projName[b]||b);
+  });
+  const cards=sortedPids.map(pid=>{
     const nm=ctx.projName[pid]||pid;
     const rows=ctx.attByPD[pid+'|'+dk];
     const head=(badge)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-weight:600;font-size:13px;color:var(--text);">${pemrEsc(nm)}</span><span style="font-size:10px;color:var(--muted);">${pemrEsc(pid)}</span><span style="margin-left:auto;">${badge}</span></div>`;
     if(!rows||!rows.length){
-      return `<div class="pemr-card" style="border-left:3px solid #8b92b0;">${head('<span class="badge bgr">No update</span>')}</div>`;
+      return `<div class="pemr-card" style="border-left:3px solid #e74c3c;">${head('<span class="badge br">No update</span>')}</div>`;
     }
     marked++;
     let chosen=null,mNorm='';
@@ -2364,8 +2370,8 @@ function pemrShowDay(peName,dk){
     const dprList=ctx.dprByPD[key]||[];
 
     const tbtDprBadges=()=>`<div style="display:flex;gap:6px;margin:6px 0;">
-      <span class="badge ${tbtInfo.tbt?'bg':'bgr'}">TBT ${tbtInfo.tbt?'✓ Updated':'— Pending'}</span>
-      <span class="badge ${tbtInfo.dpr?'bg':'bgr'}">DPR ${tbtInfo.dpr?'✓ Updated':'— Pending'}</span></div>`;
+      <span class="badge ${tbtInfo.tbt?'bg':'br'}">TBT ${tbtInfo.tbt?'✓ Updated':'— Pending'}</span>
+      <span class="badge ${tbtInfo.dpr?'bg':'br'}">DPR ${tbtInfo.dpr?'✓ Updated':'— Pending'}</span></div>`;
     const tbtManpower=()=>{
       if(!tbtInfo.items||!tbtInfo.items.length)return '';
       return tbtInfo.items.map(it=>`<div style="font-size:11px;color:var(--muted);">TBT: ${pemrEsc(it.topic)||'—'} · Technicians ${pemrEsc(it.tech)||'0'} · Helpers ${pemrEsc(it.help)||'0'}</div>`).join('');
@@ -2517,7 +2523,7 @@ function buildPEMR(){
       let cls,label;
       if(updated===0){cls=future?'pmr-grey':'pmr-red';label=future?'—':'Absent';}
       else{cls=(updated>=total)?'pmr-green':'pmr-orange';label=`${updated}/${total} updated`;}
-      const tags=(updated>0)?`<div class="pmr-tags"><span class="pmr-tg ${tbt?'pmr-green':'pmr-grey'}">TBT ${tbt?'✓':'—'}</span><span class="pmr-tg ${dpr?'pmr-green':'pmr-grey'}">DPR ${dpr?'✓':'—'}</span></div>`:'';
+      const tags=(updated>0)?`<div class="pmr-tags"><span class="pmr-tg ${tbt?'pmr-green':'pmr-red'}">TBT ${tbt?'✓':'—'}</span><span class="pmr-tg ${dpr?'pmr-green':'pmr-red'}">DPR ${dpr?'✓':'—'}</span></div>`:'';
       const click=future?'':` onclick="pemrShowDay('${peEsc}','${dk}')" style="cursor:pointer;"`;
       return `<td><div class="pmr-cell ${cls}"${click}>${label}${tags}</div></td>`;
     }).join('');
