@@ -194,6 +194,7 @@ tr:hover td{background:var(--surface2);}
     <span style="font-size:11px;color:var(--muted);">PE · Attendance · TBT · DPR · Projects</span>
   </div>
   <div class="topbar-right">
+    <span id="acl-user-badge" style="display:none;font-size:12px;color:var(--text);background:var(--surface2);border:1px solid var(--border2);padding:6px 12px;border-radius:8px;line-height:1.2;align-items:center;gap:8px;"></span>
     <span id="status-badge">Loading…</span>
     <span id="last-updated"></span>
     <button class="btn-refresh" onclick="loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
@@ -577,19 +578,126 @@ function applyFilters(){buildAll();}
 function clearFilters(){buildAll();}
 function updateFilterIndicator(){}
 
+// ── ACL (role-based row access) ───────────────────────────────
+// Admin emails (lowercase). Adjust as needed.
+const ADMIN_EMAILS=new Set(['safeek.m@solarsquare.in']);
+let _userEmail='',_userName='',_userRole='none'; // role: admin|cluster|citymgr|pe|none
+let _aclLeadAll=null; // backup of D.lead.r before ACL filtering
+
+function aclDetectEmail(){
+  const p=new URLSearchParams(location.search).get('email');
+  if(p){try{localStorage.setItem('ops_email',p);}catch(e){}_userEmail=p;return;}
+  try{_userEmail=localStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
+  if(!_userEmail){
+    const inp=prompt('Enter your work email to access the dashboard:');
+    if(inp){_userEmail=inp.trim();try{localStorage.setItem('ops_email',_userEmail);}catch(e){}}
+  }
+}
+function aclSwitchUser(){
+  try{localStorage.removeItem('ops_email');}catch(e){}
+  _userEmail='';aclDetectEmail();loadAll();
+}
+function aclResolveRole(){
+  const em=(_userEmail||'').toLowerCase().trim();
+  _userName='';_userRole='none';
+  if(!em)return;
+  if(ADMIN_EMAILS.has(em)){_userRole='admin';_userName='Admin';return;}
+  const emIdx=ci(D.pe.h,'email','mail');
+  let row=null;
+  if(emIdx>=0)row=D.pe.r.find(x=>v(x,emIdx).toLowerCase().trim()===em);
+  if(!row){_userRole='none';return;}
+  _userName=v(row,1);
+  const src=_aclLeadAll||D.lead.r;
+  if(src.some(x=>lv(x,LEAD_COL.CLUSTER)===_userName)){_userRole='cluster';return;}
+  if(src.some(x=>lv(x,LEAD_COL.CITYMGR)===_userName)){_userRole='citymgr';return;}
+  if(src.some(x=>lv(x,LEAD_COL.PE)===_userName)){_userRole='pe';return;}
+  _userRole='pe'; // present in PE Master but unassigned
+}
+function aclProjectPass(x){
+  if(_userRole==='admin')return true;
+  if(_userRole==='none')return false;
+  if(_userRole==='cluster')return lv(x,LEAD_COL.CLUSTER)===_userName;
+  if(_userRole==='citymgr')return lv(x,LEAD_COL.CITYMGR)===_userName;
+  if(_userRole==='pe')return lv(x,LEAD_COL.PE)===_userName;
+  return false;
+}
+function aclApply(){
+  // Filter D.lead.r in place (keeping backup). Downstream pop/build use filtered set.
+  if(!_aclLeadAll)_aclLeadAll=D.lead.r;
+  D.lead.r=_aclLeadAll.filter(aclProjectPass);
+  // Build set of allowed project IDs for attendance/TBT/DPR filtering
+  const okPid=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PID)).filter(Boolean));
+  // Attendance has project ID in col D — filter directly
+  if(!D.att._all)D.att._all=D.att.r;
+  D.att.r=_userRole==='admin'?D.att._all:D.att._all.filter(x=>okPid.has(v(x,ATT_COL.PID)));
+  // TBT/DPR — map uid→pid via attendance
+  const uidToProj={};D.att._all.forEach(x=>{const uid=v(x,ATT_COL.UID),pid=v(x,ATT_COL.PID);if(uid&&pid)uidToProj[uid]=pid;});
+  if(!D.tbt._all)D.tbt._all=D.tbt.r;
+  D.tbt.r=_userRole==='admin'?D.tbt._all:D.tbt._all.filter(x=>{const pid=uidToProj[v(x,0)];return pid&&okPid.has(pid);});
+  if(!D.dpr._all)D.dpr._all=D.dpr.r;
+  D.dpr.r=_userRole==='admin'?D.dpr._all:D.dpr._all.filter(x=>{const pid=uidToProj[v(x,0)];return pid&&okPid.has(pid);});
+  // Vendor data — filter by city for non-admin roles
+  if(!D.vendor._all)D.vendor._all=D.vendor.r;
+  if(_userRole==='admin')D.vendor.r=D.vendor._all;
+  else{const okCity=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.CITY)).filter(Boolean));D.vendor.r=D.vendor._all.filter(x=>okCity.has(v(x,4)));}
+  // PE Master — for PE role show only themselves; otherwise show PEs visible in their scope
+  if(!D.pe._all)D.pe._all=D.pe.r;
+  if(_userRole==='admin')D.pe.r=D.pe._all;
+  else if(_userRole==='pe')D.pe.r=D.pe._all.filter(x=>v(x,1)===_userName);
+  else{const okPE=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PE)).filter(Boolean));D.pe.r=D.pe._all.filter(x=>okPE.has(v(x,1)));}
+}
+function aclRenderBadge(){
+  const el=document.getElementById('acl-user-badge');if(!el)return;
+  if(!_userEmail){el.style.display='none';return;}
+  const roleLabel={admin:'Admin',cluster:'Cluster Head',citymgr:'City Manager',pe:'PE',none:'No Access'}[_userRole]||_userRole;
+  const color={admin:'#9b6dff',cluster:'#4f8ef7',citymgr:'#f5a623',pe:'#34c98a',none:'#e74c3c'}[_userRole]||'#8b92b0';
+  const name=(_userName||_userEmail);
+  const initials=(name.match(/\b[A-Za-z]/g)||['?']).slice(0,2).join('').toUpperCase();
+  el.style.display='inline-flex';
+  el.innerHTML=`<span style="width:24px;height:24px;border-radius:50%;background:${color}22;border:1px solid ${color}66;color:${color};display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${initials}</span><span style="display:flex;flex-direction:column;line-height:1.2;"><b style="font-size:12px;color:var(--text);">${name.replace(/</g,'&lt;')}</b><span style="font-size:10px;color:${color};font-weight:500;">${roleLabel}</span></span><a onclick="aclSwitchUser()" title="Switch user" style="color:var(--muted);cursor:pointer;margin-left:2px;font-size:14px;" onmouseover="this.style.color='var(--accent)';" onmouseout="this.style.color='var(--muted)';"><i class="ti ti-switch-horizontal"></i></a>`;
+}
+
+function aclShowWelcome(){
+  const role=_userRole;
+  const roleMap={admin:{label:'Admin Access',sub:'You have full access to all data across all clusters, cities, and PEs.',color:'#9b6dff',icon:'ti-shield-check'},cluster:{label:'Cluster Head Access',sub:`You'll see only projects under your cluster.`,color:'#4f8ef7',icon:'ti-users-group'},citymgr:{label:'City Manager Access',sub:`You'll see only projects in your city.`,color:'#f5a623',icon:'ti-building-skyscraper'},pe:{label:'PE Access',sub:`You'll see only the projects assigned to you.`,color:'#34c98a',icon:'ti-user'},none:{label:'No Access',sub:`Your email isn't registered in PE Master. Please contact the admin to be granted access, or switch to a registered email.`,color:'#e74c3c',icon:'ti-lock-x'}};
+  const info=roleMap[role]||roleMap.none;
+  const isNone=role==='none';
+  const display=_userName||_userEmail||'there';
+  let ov=document.getElementById('acl-welcome-ov');
+  if(!ov){ov=document.createElement('div');ov.id='acl-welcome-ov';ov.className='pmr-modal-ov';document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:460px;text-align:center;padding:28px 24px;">
+    <div style="width:60px;height:60px;border-radius:50%;background:${info.color}22;border:2px solid ${info.color}66;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i class="ti ${info.icon}" style="color:${info.color};font-size:30px;"></i></div>
+    <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px;">Hi ${pemrEsc(display)} 👋</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${pemrEsc(_userEmail)}</div>
+    <div style="font-size:14px;font-weight:600;color:${info.color};margin-bottom:8px;">${info.label}</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:20px;">${info.sub}</div>
+    <div style="display:flex;gap:8px;justify-content:center;">
+      ${isNone?'':`<button onclick="aclCloseWelcome()" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:8px 22px;font-size:13px;font-weight:600;cursor:pointer;">OK, Continue</button>`}
+      <button onclick="aclSwitchUser()" style="background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:8px 18px;font-size:13px;cursor:pointer;">${isNone?'Try Another Email':'Switch User'}</button>
+    </div>
+  </div>`;
+  ov.style.display='flex';
+  // Hide main content until OK
+  const main=document.getElementById('main');if(main&&!isNone)main.style.opacity='0.25';
+}
+function aclCloseWelcome(){const ov=document.getElementById('acl-welcome-ov');if(ov)ov.style.display='none';const main=document.getElementById('main');if(main)main.style.opacity='1';}
+
 // ── Load ──────────────────────────────────────────────────────
 async function loadAll(){
+  aclDetectEmail();
   document.getElementById('overlay').classList.remove('hidden');
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
+    _aclLeadAll=null;['att','tbt','dpr','vendor','pe'].forEach(k=>{if(D[k])delete D[k]._all;});
     for(const [key,gid] of Object.entries(SHEETS)){
       const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data',daily:'Daily Activity'};
       setOverlay(`Loading ${labels[key]}…`);
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
     }
-    // Global filters removed
-    // Fill PE filters and project filters
+    aclResolveRole();
+    aclApply();
+    aclRenderBadge();
     _povCache={};
     buildProjFilters();
     populatePOVFilters();
@@ -599,6 +707,7 @@ async function loadAll(){
     populateVMRFilters();
     buildAll();
     document.getElementById('main').style.display='block';
+    aclShowWelcome();
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
     document.getElementById('status-badge').style.cssText='font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);';
     document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
