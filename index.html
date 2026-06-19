@@ -168,6 +168,7 @@ tr:hover td{background:var(--surface2);}
 .pmr-grey{background:rgba(139,146,176,.14);color:#8b92b0;}
 .pmr-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .pmr-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;max-width:440px;width:100%;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.pemr-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
 /* PE monthly report sticky cols */
 .pemr-c0{position:sticky;left:0;z-index:4;background:var(--surface);width:180px;min-width:180px;max-width:180px;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text);}
 .pemr-c1{position:sticky;left:180px;z-index:4;background:var(--surface);width:80px;min-width:80px;max-width:80px;text-align:center;border-right:2px solid var(--border2);}
@@ -2331,6 +2332,93 @@ function togglePEMRMS(key){const host=document.getElementById('pemr-ms-'+key);if
 document.addEventListener('click',e=>{if(!e.target.closest('.pemr-ms'))document.querySelectorAll('.pemr-ms.open').forEach(el=>el.classList.remove('open'));});
 function clearPEMRFilters(){const w=document.getElementById('pemr-f-week');if(w)w.value='';Object.keys(_pemrMS).forEach(k=>{_pemrMS[k].clear();updatePEMRMSControl(k);});recomputePEMROptions();buildPEMR();}
 
+let _pemrCtx={};
+function pemrTimeP(t){if(!t)return null;const d=new Date('1970/01/01 '+t);return isNaN(d)?null:d;}
+function pemrDur(cin,cout){const a=pemrTimeP(cin),b=pemrTimeP(cout);if(!a||!b)return '';let mins=Math.round((b-a)/60000);if(mins<0)mins+=1440;const h=Math.floor(mins/60),m=mins%60;return (h?h+'h ':'')+m+'m';}
+function pemrEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function pemrShowDay(peName,dk){
+  const ctx=_pemrCtx;if(!ctx||!ctx.attByPD)return;
+  const pids=ctx.peProjects[peName]||[];
+  const [y,m,d]=dk.split('-').map(Number);
+  const dateLabel=new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+  let marked=0;
+  const pr=mm=>({'onsite visit':4,'without visit update':3,'no activity':2})[mm]||(mm?1:0);
+
+  const cards=pids.map(pid=>{
+    const nm=ctx.projName[pid]||pid;
+    const rows=ctx.attByPD[pid+'|'+dk];
+    const head=(badge)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-weight:600;font-size:13px;color:var(--text);">${pemrEsc(nm)}</span><span style="font-size:10px;color:var(--muted);">${pemrEsc(pid)}</span><span style="margin-left:auto;">${badge}</span></div>`;
+    if(!rows||!rows.length){
+      return `<div class="pemr-card" style="border-left:3px solid #8b92b0;">${head('<span class="badge bgr">No update</span>')}</div>`;
+    }
+    marked++;
+    let chosen=null,mNorm='';
+    rows.forEach(r=>{const mm=v(r,ATT_COL.M).toLowerCase();if(!chosen||pr(mm)>pr(mNorm)){chosen=r;mNorm=mm;}});
+    if(mNorm==='onsite visit'){const yes=rows.find(r=>v(r,ATT_COL.M).toLowerCase()==='onsite visit'&&v(r,ATT_COL.L).toLowerCase()==='yes');if(yes)chosen=yes;}
+    const l=v(chosen,ATT_COL.L).toLowerCase();
+    const rem=v(chosen,ATT_COL.REMARK);
+    const cin=v(chosen,ctx.A_CI),cout=v(chosen,ctx.A_CO),loc=v(chosen,ctx.A_LOC);
+    const key=pid+'|'+dk;
+    const tbtInfo=ctx.tbtByPD[key]||{tbt:false,dpr:false,items:[]};
+    const dprList=ctx.dprByPD[key]||[];
+
+    const tbtDprBadges=()=>`<div style="display:flex;gap:6px;margin:6px 0;">
+      <span class="badge ${tbtInfo.tbt?'bg':'bgr'}">TBT ${tbtInfo.tbt?'✓ Updated':'— Pending'}</span>
+      <span class="badge ${tbtInfo.dpr?'bg':'bgr'}">DPR ${tbtInfo.dpr?'✓ Updated':'— Pending'}</span></div>`;
+    const tbtManpower=()=>{
+      if(!tbtInfo.items||!tbtInfo.items.length)return '';
+      return tbtInfo.items.map(it=>`<div style="font-size:11px;color:var(--muted);">TBT: ${pemrEsc(it.topic)||'—'} · Technicians ${pemrEsc(it.tech)||'0'} · Helpers ${pemrEsc(it.help)||'0'}</div>`).join('');
+    };
+    const dprWorkplans=()=>{
+      if(!dprList.length)return '<div style="font-size:11px;color:var(--muted);">No DPR workplan entries.</div>';
+      return '<div style="margin-top:4px;">'+dprList.map(it=>`<div style="font-size:11px;display:flex;gap:6px;align-items:center;"><span style="color:var(--text);">${pemrEsc(it.plan)||'—'}</span>${it.task?`<span style="color:var(--muted);">· ${pemrEsc(it.task)}</span>`:''}${it.pct?`<span class="badge bb">${pemrEsc(it.pct)}%</span>`:''}${it.mp?`<span style="color:var(--muted);">· MP ${pemrEsc(it.mp)}</span>`:''}</div>`).join('')+'</div>';
+    };
+    const timesRow=()=>`<div style="font-size:11px;color:var(--text);margin:4px 0;">⏱ Check-in <b>${pemrEsc(cin)||'—'}</b> · Check-out <b>${pemrEsc(cout)||'—'}</b> · Duration <b>${pemrDur(cin,cout)||'—'}</b></div>${loc?`<div style="font-size:11px;color:var(--muted);">📍 ${pemrEsc(loc)}</div>`:''}`;
+    const remarkRow=()=>rem?`<div style="font-size:11px;color:var(--text);background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-top:4px;white-space:pre-wrap;">📝 ${pemrEsc(rem)}</div>`:'<div style="font-size:11px;color:var(--muted);">No remarks.</div>';
+
+    let badge,border,body='';
+    if(mNorm==='onsite visit'){
+      border='#34c98a';
+      if(l==='yes'){
+        badge='<span class="badge bg">Onsite Visit (TBT - DPR)</span>';
+        body=timesRow()+tbtDprBadges()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
+      }else{
+        badge='<span class="badge bg">Onsite Visit (Other task)</span>';
+        body=timesRow()+remarkRow();
+      }
+    }else if(mNorm==='without visit update'){
+      border='#3bc0d8';badge='<span class="badge bb">Without Visit Update (TBT & DPR)</span>';
+      body=tbtDprBadges()+tbtManpower()+'<div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:6px;">DPR Workplans</div>'+dprWorkplans();
+    }else if(mNorm==='no activity'){
+      border='#f5a623';badge='<span class="badge bo">No Activity</span>';body=remarkRow();
+    }else{
+      border='#8b92b0';badge=`<span class="badge bgr">${pemrEsc(v(chosen,ATT_COL.M))||'Update'}</span>`;body=remarkRow();
+    }
+    return `<div class="pemr-card" style="border-left:3px solid ${border};">${head(badge)}${body}</div>`;
+  }).join('');
+
+  const summary=`<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px;">
+    <span>Total Projects: <b style="color:var(--text);">${pids.length}</b></span>
+    <span>Marked (attendance): <b style="color:#34c98a;">${marked}</b></span>
+    <span>Not marked: <b style="color:#e74c3c;">${pids.length-marked}</b></span>
+  </div>`;
+
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:640px;max-height:84vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:10px;">
+      <div><div style="font-size:15px;font-weight:600;color:var(--text);">${pemrEsc(peName)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${dateLabel}</div></div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    ${summary}
+    <div style="overflow:auto;display:flex;flex-direction:column;gap:10px;">${pids.length?cards:'<div class="empty">No projects assigned to this PE.</div>'}</div>
+  </div>`;
+  ov.style.display='flex';
+}
+function pemrCloseDay(){const ov=document.getElementById('pemr-modal-ov');if(ov)ov.style.display='none';}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')pemrCloseDay();});
+
 function buildPEMR(){
   const msel=document.getElementById('pemr-f-month');
   const monthVal=msel?msel.value:'';
@@ -2350,45 +2438,77 @@ function buildPEMR(){
   const days=[];for(let d=dayStart;d<=dayEnd;d++)days.push(new Date(yy,mm-1,d));
   const today=new Date();today.setHours(0,0,0,0);
 
-  // Index: which projects have attendance per day; TBT/DPR per project per day
-  const attProjDate=new Set(),uidToProj={};
+  // Attendance detail columns (header-matched)
+  const A_CI=ci(D.att.h,'CheckinTime','checkin'),A_CO=ci(D.att.h,'CheckoutTime','checkout'),A_LOC=ci(D.att.h,'CheckinLocation','location');
+  // DPR columns
+  const dh=D.dpr.h;
+  const Dp_UID=ci(dh,'UniqueID','unique'),Dp_PLAN=ci(dh,'WorkPlan','plan','work'),Dp_TASK=ci(dh,'CompletedTask','completed task'),Dp_PCT=ci(dh,'%','completion','percent'),Dp_MP=ci(dh,'Manpower'),Dp_TS=ci(dh,'Timestamp','time');
+
+  // Index per project per day: attendance rows, TBT detail, DPR entries
+  const attByPD={},tbtByPD={},dprByPD={},uidToProj={};
   D.att.r.forEach(x=>{
     const pid=v(x,ATT_COL.PID),uid=v(x,ATT_COL.UID),d=parseDate(v(x,ATT_COL.DATE));
     if(uid&&pid)uidToProj[uid]=pid;
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
-    attProjDate.add(pid+'|'+pmrKey(d));
+    const k=pid+'|'+pmrKey(d);(attByPD[k]=attByPD[k]||[]).push(x);
   });
-  const tbtIdx={};
   D.tbt.r.forEach(x=>{
     const uid=v(x,PMR_TBT.UID),pid=uidToProj[uid],d=parseDate(v(x,PMR_TBT.DATE));
     if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
-    const k=pid+'|'+pmrKey(d);const cur=tbtIdx[k]||{tbt:false,dpr:false};
-    if(v(x,PMR_TBT.TBTREP))cur.tbt=true;if(v(x,PMR_TBT.DPRREP))cur.dpr=true;tbtIdx[k]=cur;
+    const k=pid+'|'+pmrKey(d);const cur=tbtByPD[k]||{tbt:false,dpr:false,items:[]};
+    if(v(x,PMR_TBT.TBTREP))cur.tbt=true;if(v(x,PMR_TBT.DPRREP))cur.dpr=true;
+    cur.items.push({topic:v(x,2),tech:v(x,3),help:v(x,4),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
+    tbtByPD[k]=cur;
   });
+  D.dpr.r.forEach(x=>{
+    const uid=v(x,Dp_UID),pid=uidToProj[uid],d=parseDate(v(x,Dp_TS));
+    if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,Dp_PLAN),task:v(x,Dp_TASK),pct:v(x,Dp_PCT),mp:v(x,Dp_MP)});
+  });
+  const tbtIdx=tbtByPD; // cell rendering uses tbt/dpr booleans
+  const attProjDate={has:k=>!!attByPD[k]};
 
-  // Group projects by PE (filtered by city/cluster/cm); PE filter limits which PEs show
-  const peMap={};
+  // Projects assigned per PE (Lead Tracker PE = col AI), with city/cluster/cm filters
+  const peProjects={},peAssignedAny={},projName={};
   D.lead.r.forEach(x=>{
-    if(!lv(x,LEAD_COL.PID))return;
-    const pe=lv(x,LEAD_COL.PE);if(!pe)return; // PE report = assigned PEs only
+    const pid=lv(x,LEAD_COL.PID);if(!pid)return;
+    projName[pid]=lv(x,LEAD_COL.PNAME)||pid;
+    const pe=lv(x,LEAD_COL.PE);if(!pe)return;
+    peAssignedAny[pe]=(peAssignedAny[pe]||0)+1;
     if(fCity.size&&!fCity.has(lv(x,LEAD_COL.CITY)))return;
     if(fCluster.size&&!fCluster.has(lv(x,LEAD_COL.CLUSTER)))return;
     if(fCityMgr.size&&!fCityMgr.has(lv(x,LEAD_COL.CITYMGR)))return;
-    if(fPE.size&&!fPE.has(pe))return;
-    (peMap[pe]=peMap[pe]||[]).push(lv(x,LEAD_COL.PID));
+    (peProjects[pe]=peProjects[pe]||[]).push(pid);
   });
+
+  // All PE names come from PE Master (col B)
+  const allPEs=[...new Set(D.pe.r.map(x=>v(x,1)).filter(Boolean))];
+  // Also include any PE present in Lead Tracker but missing from master (so nothing is lost)
+  Object.keys(peAssignedAny).forEach(p=>{if(!allPEs.includes(p))allPEs.push(p);});
+
+  const cityCMfilterActive=fCity.size||fCluster.size||fCityMgr.size;
+  let peNames=allPEs.filter(pe=>{
+    if(fPE.size&&!fPE.has(pe))return false;
+    if(cityCMfilterActive&&!(peProjects[pe]&&peProjects[pe].length))return false; // scoped out
+    return true;
+  }).sort((a,b)=>a.localeCompare(b));
+
+  // Save context for the day-detail popup
+  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,A_CI,A_CO,A_LOC};
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   head.innerHTML='<tr><th class="pemr-c0">PE Name</th><th class="pemr-c1">Projects</th>'+
     days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
 
-  const peNames=Object.keys(peMap).sort((a,b)=>a.localeCompare(b));
   if(!peNames.length){body.innerHTML=`<tr><td class="empty" colspan="${2+days.length}">No PEs match the selected filters</td></tr>`;return;}
 
   body.innerHTML=peNames.map(pe=>{
-    const pids=peMap[pe];const total=pids.length;
+    const pids=peProjects[pe]||[];const total=pids.length;
+    const leadNotAssigned=!peAssignedAny[pe];
+    const peEsc=pe.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const cells=days.map(d=>{
       const dk=pmrKey(d);const future=d>today;
+      if(leadNotAssigned)return `<td><div class="pmr-cell pmr-red">Absent</div></td>`;
       let updated=0,tbt=false,dpr=false;
       pids.forEach(pid=>{
         if(attProjDate.has(pid+'|'+dk))updated++;
@@ -2398,11 +2518,15 @@ function buildPEMR(){
       if(updated===0){cls=future?'pmr-grey':'pmr-red';label=future?'—':'Absent';}
       else{cls=(updated>=total)?'pmr-green':'pmr-orange';label=`${updated}/${total} updated`;}
       const tags=(updated>0)?`<div class="pmr-tags"><span class="pmr-tg ${tbt?'pmr-green':'pmr-grey'}">TBT ${tbt?'✓':'—'}</span><span class="pmr-tg ${dpr?'pmr-green':'pmr-grey'}">DPR ${dpr?'✓':'—'}</span></div>`:'';
-      return `<td><div class="pmr-cell ${cls}">${label}${tags}</div></td>`;
+      const click=future?'':` onclick="pemrShowDay('${peEsc}','${dk}')" style="cursor:pointer;"`;
+      return `<td><div class="pmr-cell ${cls}"${click}>${label}${tags}</div></td>`;
     }).join('');
+    const projCell=leadNotAssigned
+      ? '<span class="badge br">Lead not assigned</span>'
+      : `<span class="badge bp">${total}</span>`;
     return `<tr>
       <td class="pemr-c0" title="${pe.replace(/"/g,'&quot;')}">${pe}</td>
-      <td class="pemr-c1"><span class="badge bp">${total}</span></td>
+      <td class="pemr-c1">${projCell}</td>
       ${cells}
     </tr>`;
   }).join('');
