@@ -494,6 +494,7 @@ tr:hover td{background:var(--surface2);}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 // ── Config ────────────────────────────────────────────────────
 const SID='1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA';
@@ -581,21 +582,94 @@ function updateFilterIndicator(){}
 // ── ACL (role-based row access) ───────────────────────────────
 // Admin emails (lowercase). Adjust as needed.
 const ADMIN_EMAILS=new Set(['safeek.m@solarsquare.in']);
+// ▼ Google Sign-In: set GOOGLE_CLIENT_ID to enforce real Google identity.
+//   Create one at https://console.cloud.google.com/apis/credentials (OAuth Client ID, type "Web application").
+//   Add this page's URL to "Authorized JavaScript origins".
+//   When set, manual email entry is disabled; users MUST sign in with Google.
+const GOOGLE_CLIENT_ID=''; // e.g. '123-abc.apps.googleusercontent.com'
+const HOSTED_DOMAIN='solarsquare.in'; // restrict to workspace domain ('' to allow any Google account)
 let _userEmail='',_userName='',_userRole='none'; // role: admin|cluster|citymgr|pe|none
 let _aclLeadAll=null; // backup of D.lead.r before ACL filtering
 
+function aclDecodeJWT(token){try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');const j=decodeURIComponent(atob(b).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));return JSON.parse(j);}catch(e){return null;}}
+
+function aclHandleGoogleCredential(resp){
+  const payload=aclDecodeJWT(resp.credential);
+  if(!payload||!payload.email_verified||!payload.email){alert('Sign-in failed — email not verified.');return;}
+  if(HOSTED_DOMAIN&&payload.hd!==HOSTED_DOMAIN&&!ADMIN_EMAILS.has(payload.email.toLowerCase())){alert(`Please sign in with your @${HOSTED_DOMAIN} Google account.`);return;}
+  _userEmail=payload.email;
+  if(payload.name)_userGoogleName=payload.name;
+  try{sessionStorage.setItem('ops_email',_userEmail);}catch(e){}
+  aclCloseSignIn();
+  loadAll();
+}
+let _userGoogleName='';
+
+function aclInitGoogleSignIn(){
+  if(!GOOGLE_CLIENT_ID)return false;
+  if(typeof google==='undefined'||!google.accounts||!google.accounts.id){
+    // GIS script not yet ready — retry shortly
+    setTimeout(aclInitGoogleSignIn,200);return true;
+  }
+  try{
+    google.accounts.id.initialize({
+      client_id:GOOGLE_CLIENT_ID,
+      callback:aclHandleGoogleCredential,
+      auto_select:true,
+      hd:HOSTED_DOMAIN||undefined
+    });
+    const btn=document.getElementById('google-signin-btn');
+    if(btn){btn.innerHTML='';google.accounts.id.renderButton(btn,{theme:'filled_blue',size:'large',type:'standard',text:'signin_with',shape:'pill',width:240});}
+    google.accounts.id.prompt(); // One Tap
+  }catch(e){console.warn('GIS init failed',e);}
+  return true;
+}
+
+function aclShowSignIn(){
+  let ov=document.getElementById('acl-signin-ov');
+  if(!ov){ov=document.createElement('div');ov.id='acl-signin-ov';ov.className='pmr-modal-ov';document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:420px;text-align:center;padding:32px 24px;">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;"><i class="ti ti-bolt" style="color:var(--accent);"></i> Ops Dashboard</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Please sign in with your Google account to continue.</div>
+    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    ${HOSTED_DOMAIN?`<div style="font-size:11px;color:var(--muted);margin-top:18px;">Use your <b>@${HOSTED_DOMAIN}</b> account</div>`:''}
+  </div>`;
+  ov.style.display='flex';
+  aclInitGoogleSignIn();
+}
+function aclCloseSignIn(){const ov=document.getElementById('acl-signin-ov');if(ov)ov.style.display='none';}
+
 function aclDetectEmail(){
+  // URL override (kept for testing only — works regardless of Google config)
   const p=new URLSearchParams(location.search).get('email');
-  if(p){try{localStorage.setItem('ops_email',p);}catch(e){}_userEmail=p;return;}
+  if(p){_userEmail=p;return true;}
+  if(GOOGLE_CLIENT_ID){
+    // Google mode: only session-scoped email is honoured (signed in this session)
+    try{_userEmail=sessionStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
+    if(!_userEmail){aclShowSignIn();return false;}
+    return true;
+  }
+  // Fallback (no Google client configured) — manual entry. ⚠ Easily spoofable.
   try{_userEmail=localStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
   if(!_userEmail){
-    const inp=prompt('Enter your work email to access the dashboard:');
+    const inp=prompt('⚠ DEV MODE — enter any email (real Google sign-in is not configured):');
     if(inp){_userEmail=inp.trim();try{localStorage.setItem('ops_email',_userEmail);}catch(e){}}
   }
+  return !!_userEmail;
 }
+
 function aclSwitchUser(){
-  try{localStorage.removeItem('ops_email');}catch(e){}
-  _userEmail='';aclDetectEmail();loadAll();
+  if(GOOGLE_CLIENT_ID){
+    try{sessionStorage.removeItem('ops_email');}catch(e){}
+    if(typeof google!=='undefined'&&google.accounts&&google.accounts.id){
+      try{google.accounts.id.disableAutoSelect();}catch(e){}
+    }
+    _userEmail='';_userGoogleName='';
+    aclShowSignIn();
+  }else{
+    try{localStorage.removeItem('ops_email');}catch(e){}
+    _userEmail='';aclDetectEmail();loadAll();
+  }
 }
 function aclResolveRole(){
   const em=(_userEmail||'').toLowerCase().trim();
@@ -684,7 +758,7 @@ function aclCloseWelcome(){const ov=document.getElementById('acl-welcome-ov');if
 
 // ── Load ──────────────────────────────────────────────────────
 async function loadAll(){
-  aclDetectEmail();
+  if(!aclDetectEmail())return; // Sign-in screen shown; bail out
   document.getElementById('overlay').classList.remove('hidden');
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
