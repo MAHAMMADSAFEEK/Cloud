@@ -2843,7 +2843,11 @@ function buildVMR(){
     tbtByVD[key]=cur;
   });
 
-  // Vendor rows from master (filtered)
+  // Per-vendor activity this month (for ordering: most active on top)
+  const vendorAct={};
+  Object.keys(tbtByVD).forEach(k=>{const vn=k.slice(0,k.lastIndexOf('|'));const info=tbtByVD[k];if(info&&info.sites.size){const a=vendorAct[vn]=vendorAct[vn]||{days:0,mp:0};a.days++;a.mp+=info.mp;}});
+
+  // Vendor rows from master (filtered), ordered by activity
   const vendorInfo={};
   const vendors=D.vendor.r.filter(row=>{
     if(!v(row,VENDOR_COL.NAME))return false;
@@ -2851,7 +2855,12 @@ function buildVMR(){
     if(_vmrMS.vendor.size&&!_vmrMS.vendor.has(v(row,VENDOR_COL.NAME)))return false;
     return true;
   }).map(row=>{const o={name:v(row,VENDOR_COL.NAME),city:v(row,VENDOR_COL.LOC)||'—',spoc:v(row,VENDOR_COL.SPOC),status:v(row,VENDOR_COL.STATUS)};vendorInfo[o.name]=o;return o;})
-    .sort((a,b)=>{const c=a.city.localeCompare(b.city);return c!==0?c:a.name.localeCompare(b.name);});
+    .sort((a,b)=>{
+      const aa=vendorAct[a.name]||{days:0,mp:0},bb=vendorAct[b.name]||{days:0,mp:0};
+      if(bb.days!==aa.days)return bb.days-aa.days;
+      if(bb.mp!==aa.mp)return bb.mp-aa.mp;
+      return a.name.localeCompare(b.name);
+    });
 
   _vmrCtx={tbtByVD,projName,projPE,dprByUid,vendorInfo,vendors,yy,mm};
 
