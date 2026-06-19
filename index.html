@@ -503,7 +503,8 @@ const SHEETS={
   tbt:'1641565259',
   dpr:'351032265',
   workplan:'204658067',
-  vendor:'2088990270' // Vendor data
+  vendor:'2088990270', // Vendor data
+  daily:'1404385043'   // Daily Activity (leave tracker)
 };
 
 let D={
@@ -513,7 +514,8 @@ let D={
   tbt:{h:[],r:[]},
   dpr:{h:[],r:[]},
   workplan:{h:[],r:[]},
-  vendor:{h:[],r:[]}
+  vendor:{h:[],r:[]},
+  daily:{h:[],r:[]}
 };
 
 // ── Helpers ───────────────────────────────────────────────────
@@ -581,7 +583,7 @@ async function loadAll(){
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
     for(const [key,gid] of Object.entries(SHEETS)){
-      const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data'};
+      const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data',daily:'Daily Activity'};
       setOverlay(`Loading ${labels[key]}…`);
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
@@ -2431,10 +2433,12 @@ function pemrShowDay(peName,dk){
   const marked=sortedPids.filter(pid=>{const r=ctx.attByPD[pid+'|'+dk];return r&&r.length;}).length;
   const cards=sortedPids.map(pid=>pemrProjectCard(ctx,pid,dk)).join('');
 
-  const summary=`<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px;">
+  const onLeave=!!(ctx.leavesByPE&&ctx.leavesByPE[peName]&&ctx.leavesByPE[peName].has(dk));
+  const summary=`<div style="display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-bottom:12px;align-items:center;">
     <span>Total Projects: <b style="color:var(--text);">${pids.length}</b></span>
     <span>Activity updated: <b style="color:#34c98a;">${marked}</b></span>
     <span>Not marked: <b style="color:#e74c3c;">${pids.length-marked}</b></span>
+    ${onLeave?'<span class="badge bb" style="margin-left:auto;">🏖 On Leave</span>':''}
   </div>`;
 
   let ov=document.getElementById('pemr-modal-ov');
@@ -2464,10 +2468,12 @@ function pemrShowPE(peName){
   else if(yy===today.getFullYear()&&(mm-1)===today.getMonth())expectedDays=Math.min(today.getDate(),daysInMonth);
   else expectedDays=daysInMonth;
 
-  let daysUpdated=0,projUpdates=0,tbtCnt=0,dprCnt=0;
-  const missed=[];
+  const leavesSet=(ctx.leavesByPE&&ctx.leavesByPE[peName])||new Set();
+  let daysUpdated=0,projUpdates=0,tbtCnt=0,dprCnt=0,leaveCount=0;
+  const missed=[],leaveDates=[];
   for(let dd=1;dd<=expectedDays;dd++){
     const dk=yy+'-'+mm+'-'+dd;
+    if(leavesSet.has(dk)){leaveCount++;leaveDates.push(dd);continue;}
     let anyToday=false;
     pids.forEach(pid=>{
       const key=pid+'|'+dk;
@@ -2476,25 +2482,32 @@ function pemrShowPE(peName){
     });
     if(anyToday)daysUpdated++; else missed.push(dd);
   }
+  // Effective expected days = elapsed - leaves
+  const effExpected=Math.max(0,expectedDays-leaveCount);
   const total=pids.length;
-  const expectedProjUpdates=expectedDays*total;
-  const attPct=expectedDays?Math.round(daysUpdated/expectedDays*100):0;
+  const expectedProjUpdates=effExpected*total;
+  const attPct=effExpected?Math.round(daysUpdated/effExpected*100):0;
   const updPct=expectedProjUpdates?Math.round(projUpdates/expectedProjUpdates*100):0;
 
   const cards=
     metric('ti-briefcase','Total Projects',total,'Assigned to PE','#4f8ef7')+
-    metric('ti-calendar','Expected Days',expectedDays,`Till today · ${monthLabel}`,'#9b6dff')+
+    metric('ti-calendar','Expected Days',effExpected,`${expectedDays} elapsed − ${leaveCount} leave · ${monthLabel}`,'#9b6dff')+
     metricWithBar('ti-calendar-check','Days Updated',daysUpdated,`${attPct}% of expected days`,'#34c98a',attPct,'#34c98a')+
-    metricWithBar('ti-calendar-x','Not Updated',missed.length,`${expectedDays?Math.round(missed.length/expectedDays*100):0}% of expected days`,'#e74c3c',expectedDays?missed.length/expectedDays*100:0,'#e74c3c')+
+    metricWithBar('ti-calendar-x','Not Updated',missed.length,`${effExpected?Math.round(missed.length/effExpected*100):0}% of expected days`,'#e74c3c',effExpected?missed.length/effExpected*100:0,'#e74c3c')+
+    metric('ti-beach','Total Leave Days',leaveCount,leaveCount?'Approved leaves':'No leaves','#3bc0d8')+
     metricWithBar('ti-checklist','Project Updates',projUpdates,`of ${expectedProjUpdates} expected · ${updPct}%`,'#f5a623',updPct,'#f5a623')+
     metric('ti-clipboard-check','TBT Updated',tbtCnt,`of ${expectedProjUpdates} expected`,'#34c98a')+
     metric('ti-file-report','DPR Updated',dprCnt,`of ${expectedProjUpdates} expected`,'#3bc0d8');
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const missedChips=missed.map(dd=>{const dt=new Date(yy,mm-1,dd);return `<span style="font-size:11px;background:rgba(231,76,60,.14);color:#ff7a6b;border:1px solid rgba(231,76,60,.3);border-radius:6px;padding:3px 8px;">${dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · ${wd[dt.getDay()]}</span>`;}).join('');
+  const leaveChips=leaveDates.map(dd=>{const dt=new Date(yy,mm-1,dd);return `<span style="font-size:11px;background:rgba(56,178,210,.14);color:#3bc0d8;border:1px solid rgba(56,178,210,.3);border-radius:6px;padding:3px 8px;">${dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · ${wd[dt.getDay()]}</span>`;}).join('');
   const missedSection=missed.length
     ? `<div style="margin-top:16px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;">Not Updated Dates (${missed.length})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${missedChips}</div></div>`
-    : `<div style="margin-top:16px;font-size:12px;color:#34c98a;">✓ All ${expectedDays} expected day(s) updated.</div>`;
+    : (effExpected?`<div style="margin-top:16px;font-size:12px;color:#34c98a;">✓ All ${effExpected} expected day(s) updated.</div>`:'');
+  const leaveSection=leaveDates.length
+    ? `<div style="margin-top:14px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;">Leave Dates (${leaveDates.length})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${leaveChips}</div></div>`
+    : '';
 
   let ov=document.getElementById('pemr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
@@ -2505,7 +2518,8 @@ function pemrShowPE(peName){
     </div>
     ${total?`<div class="metrics" style="margin-top:8px;">${cards}</div>
     ${missedSection}
-    <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">Expected = ${expectedDays} day(s) elapsed this month × ${total} project(s). TBT/DPR counts are project-days with a report logged in the TBT sheet.</div>`
+    ${leaveSection}
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">Expected = ${effExpected} day(s) (${expectedDays} elapsed − ${leaveCount} leave) × ${total} project(s). Leave dates are excluded from expected. TBT/DPR counts are project-days with a report logged in the TBT sheet.</div>`
     :'<div class="empty" style="margin-top:10px;">No projects assigned to this PE (Lead not assigned).</div>'}
   </div>`;
   ov.style.display='flex';
@@ -2519,7 +2533,7 @@ function buildPEMR(){
   const fCity=_pemrMS.city,fCluster=_pemrMS.cluster,fCityMgr=_pemrMS.citymgr,fPE=_pemrMS.pe;
   const head=document.getElementById('pemr-head'),body=document.getElementById('pemr-body'),legend=document.getElementById('pemr-legend');
   if(legend)legend.innerHTML=[
-    ['pmr-green','All projects updated'],['pmr-orange','Partially updated'],['pmr-red','Absent (no update)'],['pmr-grey','Future / no day']
+    ['pmr-green','All projects updated'],['pmr-orange','Partially updated'],['pmr-red','Absent (no update)'],['pmr-teal','On Leave'],['pmr-grey','Future / no day']
   ].map(([c,t])=>`<span class="lg"><span class="sw ${c}"></span>${t}</span>`).join('')+
     '<span class="lg" style="margin-left:auto;">Cell = projects updated / total · TBT/DPR ✓ if any report that day</span>';
 
@@ -2590,8 +2604,22 @@ function buildPEMR(){
     return true;
   }).sort((a,b)=>a.localeCompare(b));
 
+  // Leaves index: PE name -> Set of date keys (this month).
+  // Daily Activity: A(0)=email, B(1)=date, C(2)=type ("Leave")
+  const peEmailIdx=ci(D.pe.h,'email','mail');
+  const emailToPE={};
+  if(peEmailIdx>=0)D.pe.r.forEach(x=>{const em=v(x,peEmailIdx).toLowerCase().trim(),nm=v(x,1);if(em&&nm)emailToPE[em]=nm;});
+  const leavesByPE={};
+  D.daily.r.forEach(x=>{
+    if(String(v(x,2)).toLowerCase().trim()!=='leave')return;
+    const em=v(x,0).toLowerCase().trim(),d=parseDate(v(x,1));
+    if(!em||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    const nm=emailToPE[em];if(!nm)return;
+    (leavesByPE[nm]=leavesByPE[nm]||new Set()).add(pmrKey(d));
+  });
+
   // Save context for the day-detail popup
-  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,projDates,yy,mm,A_CI,A_CO,A_LOC};
+  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,projDates,leavesByPE,yy,mm,A_CI,A_CO,A_LOC};
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   head.innerHTML='<tr><th class="pemr-c0">PE Name</th><th class="pemr-c1">Projects</th>'+
@@ -2606,14 +2634,17 @@ function buildPEMR(){
     const cells=days.map(d=>{
       const dk=pmrKey(d);const future=d>today;
       if(leadNotAssigned)return `<td><div class="pmr-cell pmr-grey">—</div></td>`;
+      const onLeave=(leavesByPE[pe]&&leavesByPE[pe].has(dk));
       let updated=0,tbt=false,dpr=false;
       pids.forEach(pid=>{
         if(attProjDate.has(pid+'|'+dk))updated++;
         const t=tbtIdx[pid+'|'+dk];if(t){if(t.tbt)tbt=true;if(t.dpr)dpr=true;}
       });
       let cls,label;
-      if(updated===0){cls=future?'pmr-grey':'pmr-red';label=future?'—':'Absent';}
-      else{cls=(updated>=total)?'pmr-green':'pmr-orange';label=`${updated}/${total} updated`;}
+      if(updated===0){
+        if(onLeave){cls='pmr-teal';label='Leave';}
+        else{cls=future?'pmr-grey':'pmr-red';label=future?'—':'Absent';}
+      } else{cls=(updated>=total)?'pmr-green':'pmr-orange';label=`${updated}/${total} updated`;}
       const tags=(updated>0)?`<div class="pmr-tags"><span class="pmr-tg ${tbt?'pmr-green':'pmr-red'}">TBT ${tbt?'✓':'—'}</span><span class="pmr-tg ${dpr?'pmr-green':'pmr-red'}">DPR ${dpr?'✓':'—'}</span></div>`:'';
       const click=future?'':` onclick="pemrShowDay('${peEsc}','${dk}')" style="cursor:pointer;"`;
       return `<td><div class="pmr-cell ${cls}"${click}>${label}${tags}</div></td>`;
