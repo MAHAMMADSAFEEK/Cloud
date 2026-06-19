@@ -2356,7 +2356,12 @@ function pemrShowDay(peName,dk){
     const rows=ctx.attByPD[pid+'|'+dk];
     const head=(badge)=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;"><span style="font-weight:600;font-size:13px;color:var(--text);">${pemrEsc(nm)}</span><span style="font-size:10px;color:var(--muted);">${pemrEsc(pid)}</span><span style="margin-left:auto;">${badge}</span></div>`;
     if(!rows||!rows.length){
-      return `<div class="pemr-card" style="border-left:3px solid #e74c3c;">${head('<span class="badge br">No update</span>')}</div>`;
+      const dates=ctx.projDates[pid]||[];
+      const popupMs=new Date(y,m-1,d).getTime();
+      let last=null;for(let i=dates.length-1;i>=0;i--){if(dates[i]<popupMs){last=dates[i];break;}}
+      let lbl='No update';
+      if(last!==null){const gap=Math.round((popupMs-last)/86400000);const cnt=gap-1;lbl=cnt<=0?'No update Today':`No update from ${cnt} day${cnt>1?'s':''}`;}
+      return `<div class="pemr-card" style="border-left:3px solid #e74c3c;">${head(`<span class="badge br">${lbl}</span>`)}</div>`;
     }
     marked++;
     let chosen=null,mNorm='';
@@ -2423,6 +2428,57 @@ function pemrShowDay(peName,dk){
   ov.style.display='flex';
 }
 function pemrCloseDay(){const ov=document.getElementById('pemr-modal-ov');if(ov)ov.style.display='none';}
+
+function pemrShowPE(peName){
+  const ctx=_pemrCtx;if(!ctx||!ctx.attByPD)return;
+  const pids=ctx.peProjects[peName]||[];
+  const yy=ctx.yy,mm=ctx.mm;
+  const monthLabel=new Date(yy,mm-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  // Expected days elapsed in this month (till today)
+  let expectedDays;
+  if(yy>today.getFullYear()||(yy===today.getFullYear()&&(mm-1)>today.getMonth()))expectedDays=0;
+  else if(yy===today.getFullYear()&&(mm-1)===today.getMonth())expectedDays=Math.min(today.getDate(),daysInMonth);
+  else expectedDays=daysInMonth;
+
+  let daysUpdated=0,projUpdates=0,tbtCnt=0,dprCnt=0;
+  for(let dd=1;dd<=expectedDays;dd++){
+    const dk=yy+'-'+mm+'-'+dd;
+    let anyToday=false;
+    pids.forEach(pid=>{
+      const key=pid+'|'+dk;
+      if(ctx.attByPD[key]){anyToday=true;projUpdates++;}
+      const t=ctx.tbtByPD[key];if(t){if(t.tbt)tbtCnt++;if(t.dpr)dprCnt++;}
+    });
+    if(anyToday)daysUpdated++;
+  }
+  const total=pids.length;
+  const expectedProjUpdates=expectedDays*total;
+  const attPct=expectedDays?Math.round(daysUpdated/expectedDays*100):0;
+  const updPct=expectedProjUpdates?Math.round(projUpdates/expectedProjUpdates*100):0;
+
+  const cards=
+    metric('ti-briefcase','Total Projects',total,'Assigned to PE','#4f8ef7')+
+    metric('ti-calendar','Expected Days',expectedDays,`Till today · ${monthLabel}`,'#9b6dff')+
+    metricWithBar('ti-calendar-check','Days Updated',daysUpdated,`${attPct}% of expected days`,'#34c98a',attPct,'#34c98a')+
+    metricWithBar('ti-checklist','Project Updates',projUpdates,`of ${expectedProjUpdates} expected · ${updPct}%`,'#f5a623',updPct,'#f5a623')+
+    metric('ti-clipboard-check','TBT Updated',tbtCnt,`of ${expectedProjUpdates} expected`,'#34c98a')+
+    metric('ti-file-report','DPR Updated',dprCnt,`of ${expectedProjUpdates} expected`,'#3bc0d8');
+
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:620px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
+      <div><div style="font-size:15px;font-weight:600;color:var(--text);">${pemrEsc(peName)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">Attendance summary · ${monthLabel}</div></div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    ${total?`<div class="metrics" style="margin-top:8px;">${cards}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">Expected = ${expectedDays} day(s) elapsed this month × ${total} project(s). TBT/DPR counts are project-days with a report logged in the TBT sheet.</div>`
+    :'<div class="empty" style="margin-top:10px;">No projects assigned to this PE (Lead not assigned).</div>'}
+  </div>`;
+  ov.style.display='flex';
+}
 document.addEventListener('keydown',e=>{if(e.key==='Escape')pemrCloseDay();});
 
 function buildPEMR(){
@@ -2473,6 +2529,10 @@ function buildPEMR(){
   });
   const tbtIdx=tbtByPD; // cell rendering uses tbt/dpr booleans
   const attProjDate={has:k=>!!attByPD[k]};
+  // All-time update dates per project (any month) → used for "No update from N days"
+  const projDatesSet={};
+  D.att.r.forEach(x=>{const pid=v(x,ATT_COL.PID),d=parseDate(v(x,ATT_COL.DATE));if(!pid||!d)return;(projDatesSet[pid]=projDatesSet[pid]||new Set()).add(new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime());});
+  const projDates={};Object.keys(projDatesSet).forEach(p=>{projDates[p]=[...projDatesSet[p]].sort((a,b)=>a-b);});
 
   // Projects assigned per PE (Lead Tracker PE = col AI), with city/cluster/cm filters
   const peProjects={},peAssignedAny={},projName={};
@@ -2500,7 +2560,7 @@ function buildPEMR(){
   }).sort((a,b)=>a.localeCompare(b));
 
   // Save context for the day-detail popup
-  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,A_CI,A_CO,A_LOC};
+  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,projDates,yy,mm,A_CI,A_CO,A_LOC};
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   head.innerHTML='<tr><th class="pemr-c0">PE Name</th><th class="pemr-c1">Projects</th>'+
@@ -2514,7 +2574,7 @@ function buildPEMR(){
     const peEsc=pe.replace(/'/g,"\\'").replace(/"/g,'&quot;');
     const cells=days.map(d=>{
       const dk=pmrKey(d);const future=d>today;
-      if(leadNotAssigned)return `<td><div class="pmr-cell pmr-red">Absent</div></td>`;
+      if(leadNotAssigned)return `<td><div class="pmr-cell pmr-grey">—</div></td>`;
       let updated=0,tbt=false,dpr=false;
       pids.forEach(pid=>{
         if(attProjDate.has(pid+'|'+dk))updated++;
@@ -2528,10 +2588,14 @@ function buildPEMR(){
       return `<td><div class="pmr-cell ${cls}"${click}>${label}${tags}</div></td>`;
     }).join('');
     const projCell=leadNotAssigned
-      ? '<span class="badge br">Lead not assigned</span>'
+      ? '<span style="color:var(--muted);">—</span>'
       : `<span class="badge bp">${total}</span>`;
+    const nameLink=`<span onclick="pemrShowPE('${peEsc}')" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;">${pe}</span>`;
+    const nameCell=leadNotAssigned
+      ? `${nameLink}<div style="font-size:9px;color:#e74c3c;font-weight:400;margin-top:2px;">Lead not assigned</div>`
+      : nameLink;
     return `<tr>
-      <td class="pemr-c0" title="${pe.replace(/"/g,'&quot;')}">${pe}</td>
+      <td class="pemr-c0" title="${pe.replace(/"/g,'&quot;')}">${nameCell}</td>
       <td class="pemr-c1">${projCell}</td>
       ${cells}
     </tr>`;
