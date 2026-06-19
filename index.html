@@ -2207,6 +2207,46 @@ function pmrShowDay(pid,dk){
   </div>`;
   ov.style.display='flex';
 }
+function pmrShowDateSummary(dk){
+  const ctx=_pmrCtx;if(!ctx||!ctx.attByPD)return;
+  const [y,m,d]=dk.split('-').map(Number);
+  const dateLabel=new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+  const pids=ctx.projIds||[];
+  const pr=mm=>({'onsite visit':4,'without visit update':3,'no activity':2})[mm]||(mm?1:0);
+  let active=0,noUpdate=0,noActivity=0,onsiteC=0,onsiteP=0,withoutC=0,withoutP=0,other=0;
+  pids.forEach(pid=>{
+    const rows=ctx.attByPD[pid+'|'+dk];
+    if(!rows||!rows.length){noUpdate++;return;}
+    active++;
+    let chosen=null,mNorm='';rows.forEach(r=>{const mm=v(r,ATT_COL.M).toLowerCase();if(!chosen||pr(mm)>pr(mNorm)){chosen=r;mNorm=mm;}});
+    const t=ctx.tbtByPD[pid+'|'+dk]||{tbt:false,dpr:false};const complete=t.tbt&&t.dpr;
+    if(mNorm==='no activity')noActivity++;
+    else if(mNorm==='onsite visit'){complete?onsiteC++:onsiteP++;}
+    else if(mNorm==='without visit update'){complete?withoutC++:withoutP++;}
+    else other++;
+  });
+  const total=pids.length;
+  const cards=
+    metric('ti-building-skyscraper','Total Projects',total,'In current view','#4f8ef7')+
+    metricWithBar('ti-calendar-check','Updated Today',active,`${total?Math.round(active/total*100):0}% of projects`,'#34c98a',total?active/total*100:0,'#34c98a')+
+    metricWithBar('ti-calendar-x','No Update',noUpdate,`${total?Math.round(noUpdate/total*100):0}% of projects`,'#e74c3c',total?noUpdate/total*100:0,'#e74c3c')+
+    metric('ti-alert-triangle','No Activity',noActivity,'Marked, no work','#f5a623')+
+    metric('ti-map-pin','Onsite Visit',onsiteC+onsiteP,`Complete ${onsiteC} · Pending ${onsiteP}`,'#34c98a')+
+    metric('ti-clipboard','Without Visit Update',withoutC+withoutP,`Complete ${withoutC} · Pending ${withoutP}`,'#3bc0d8')+
+    (other?metric('ti-dots','Other',other,'Other status','#8b92b0'):'');
+  const note=`<div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">"Complete" = both TBT &amp; DPR reports present for that project on this day; otherwise "Pending". Counts reflect the projects currently filtered in the table.</div>`;
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:640px;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
+      <div><div style="font-size:15px;font-weight:600;color:var(--text);">Daily Summary</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${dateLabel}</div></div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="metrics" style="margin-top:8px;">${cards}</div>
+    ${note}
+  </div>`;
+  ov.style.display='flex';
+}
 function pmrShowRemark(rk){
   const data=_pmrRemarks[rk]||{remark:'No remark available',proj:'',date:'',title:'Remarks'};
   const esc=(s)=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -2288,9 +2328,10 @@ function buildPMR(){
 
   // Header
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  _pmrCtx.projIds=projRows.map(x=>lv(x,LEAD_COL.PID));
   head.innerHTML='<tr>'+
     '<th class="pmr-c0">City</th><th class="pmr-c1">Project</th><th class="pmr-c2">Size</th><th class="pmr-c3">PE</th>'+
-    days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+
+    days.map(d=>`<th class="dcol" onclick="pmrShowDateSummary('${pmrKey(d)}')" style="cursor:pointer;" title="Click for day summary"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+
     '</tr>';
 
   if(!projRows.length){body.innerHTML=`<tr><td class="empty" colspan="${4+days.length}">No projects match the selected filters</td></tr>`;return;}
@@ -2783,9 +2824,9 @@ function buildVMR(){
   const uidToProj={},projName={},projPE={};
   D.att.r.forEach(x=>{const pid=v(x,ATT_COL.PID),uid=v(x,ATT_COL.UID);if(uid&&pid)uidToProj[uid]=pid;});
   D.lead.r.forEach(x=>{const pid=lv(x,LEAD_COL.PID);if(pid){projName[pid]=lv(x,LEAD_COL.PNAME)||pid;projPE[pid]=lv(x,LEAD_COL.PE);}});
-  const dh=D.dpr.h;const Dp_UID=ci(dh,'UniqueID','unique'),Dp_TS=ci(dh,'Timestamp','time');
-  const dprByPD={};
-  D.dpr.r.forEach(x=>{const uid=v(x,Dp_UID),pid=uidToProj[uid],d=parseDate(v(x,Dp_TS));if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;const k=pid+'|'+pmrKey(d);(dprByPD[k]=dprByPD[k]||[]).push({plan:v(x,1),mp:v(x,2),status:v(x,3),pct:v(x,4)});});
+  // DPR indexed by Unique ID (DPR col A = index 0); workplan B(1), manpower C(2), status D(3), % E(4)
+  const dprByUid={};
+  D.dpr.r.forEach(x=>{const uid=v(x,0);if(!uid)return;(dprByUid[uid]=dprByUid[uid]||[]).push({plan:v(x,1),mp:v(x,2),status:v(x,3),pct:v(x,4)});});
 
   // TBT activity per vendor per day (TBT col B = vendor, I = date, C = topic, D/E = tech/help)
   const tbtByVD={};
@@ -2798,7 +2839,7 @@ function buildVMR(){
     const cur=tbtByVD[key]||{sites:new Set(),mp:0,items:[]};
     if(pid)cur.sites.add(pid);
     const tech=parseFloat(v(x,3))||0,help=parseFloat(v(x,4))||0;cur.mp+=tech+help;
-    cur.items.push({pid,projName:projName[pid]||pid||'—',pe:projPE[pid]||'',tech,help,topic:v(x,2),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
+    cur.items.push({pid,uid,projName:projName[pid]||pid||'—',pe:projPE[pid]||'',tech,help,topic:v(x,2),tbtRep:v(x,PMR_TBT.TBTREP),dprRep:v(x,PMR_TBT.DPRREP)});
     tbtByVD[key]=cur;
   });
 
@@ -2812,10 +2853,10 @@ function buildVMR(){
   }).map(row=>{const o={name:v(row,VENDOR_COL.NAME),city:v(row,VENDOR_COL.LOC)||'—',spoc:v(row,VENDOR_COL.SPOC),status:v(row,VENDOR_COL.STATUS)};vendorInfo[o.name]=o;return o;})
     .sort((a,b)=>{const c=a.city.localeCompare(b.city);return c!==0?c:a.name.localeCompare(b.name);});
 
-  _vmrCtx={tbtByVD,projName,projPE,dprByPD,vendorInfo,yy,mm};
+  _vmrCtx={tbtByVD,projName,projPE,dprByUid,vendorInfo,vendors,yy,mm};
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  head.innerHTML='<tr><th class="vmr-c0">City</th><th class="vmr-c1">Vendor</th>'+days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
+  head.innerHTML='<tr><th class="vmr-c0">City</th><th class="vmr-c1">Vendor</th>'+days.map(d=>`<th class="dcol" onclick="vmrShowDateSummary('${pmrKey(d)}')" style="cursor:pointer;" title="Click for day summary"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
   if(!vendors.length){body.innerHTML=`<tr><td class="empty" colspan="${2+days.length}">No vendors match the selected filters</td></tr>`;return;}
 
   body.innerHTML=vendors.map(vn=>{
@@ -2849,7 +2890,8 @@ function vmrShowDay(vendorName,dk){
     const pid=first.pid;const nm=first.projName;
     let tech=0,help=0;its.forEach(i=>{tech+=i.tech;help+=i.help;});
     const topics=[...new Set(its.map(i=>i.topic).filter(Boolean))].join(', ')||'—';
-    const dprList=(pid&&ctx.dprByPD[pid+'|'+dk])||[];
+    const uids=[...new Set(its.map(i=>i.uid).filter(Boolean))];
+    const dprList=[];uids.forEach(u=>{(ctx.dprByUid[u]||[]).forEach(e=>dprList.push(e));});
     const dprHtml=dprList.length
       ? '<div style="margin-top:4px;display:flex;flex-direction:column;gap:3px;">'+dprList.map(it=>`<div style="font-size:11px;color:var(--text);">${pemrEsc(it.plan)||'—'} <span style="color:var(--muted);">(${pemrEsc(it.status)||'—'} - ${pemrEsc(it.pct)||'0'}${/^\d+(\.\d+)?$/.test(String(it.pct).trim())?'%':''})</span> · Manpower ${pemrEsc(it.mp)||'0'}</div>`).join('')+'</div>'
       : '<div style="font-size:11px;color:var(--muted);">No DPR completed workplan.</div>';
@@ -2905,6 +2947,41 @@ function vmrShowVendor(vendorName){
       <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     <div class="metrics" style="margin-top:8px;">${cards}</div>
+  </div>`;
+  ov.style.display='flex';
+}
+
+function vmrShowDateSummary(dk){
+  const ctx=_vmrCtx;if(!ctx||!ctx.tbtByVD)return;
+  const [y,m,d]=dk.split('-').map(Number);
+  const dateLabel=new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+  const vendors=ctx.vendors||[];
+  let worked=0,totalMp=0;const allSites=new Set();const rows=[];
+  vendors.forEach(vn=>{
+    const info=ctx.tbtByVD[vn.name+'|'+dk];
+    if(!info||!info.sites.size)return;
+    worked++;totalMp+=info.mp;info.sites.forEach(s=>allSites.add(s));
+    let tbt=false,dpr=false;info.items.forEach(it=>{if(it.tbtRep&&String(it.tbtRep).trim().startsWith('http'))tbt=true;if(it.dprRep&&String(it.dprRep).trim().startsWith('http'))dpr=true;});
+    rows.push({name:vn.name,city:vn.city,sites:info.sites.size,mp:info.mp,tbt,dpr});
+  });
+  rows.sort((a,b)=>b.mp-a.mp);
+  const cards=
+    metric('ti-building-store','Vendors Worked',worked,`of ${vendors.length} in view`,'#4f8ef7')+
+    metric('ti-map-pin','Total Sites',allSites.size,'Distinct projects','#34c98a')+
+    metric('ti-users','Total Manpower',totalMp,'Tech + Helpers','#f5a623');
+  const table=rows.length?`<div class="table-wrap" style="margin-top:14px;max-height:46vh;overflow:auto;"><table style="font-size:12px;">
+    <thead><tr><th>Vendor</th><th>City</th><th style="text-align:right;">Sites</th><th style="text-align:right;">Manpower</th><th style="text-align:center;">TBT</th><th style="text-align:center;">DPR</th></tr></thead>
+    <tbody>${rows.map(r=>`<tr><td style="font-weight:500;">${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;"><span class="badge ${r.tbt?'bg':'br'}">${r.tbt?'✓':'—'}</span></td><td style="text-align:center;"><span class="badge ${r.dpr?'bg':'br'}">${r.dpr?'✓':'—'}</span></td></tr>`).join('')}</tbody>
+  </table></div>`:'<div class="empty" style="margin-top:12px;">No vendor activity on this day.</div>';
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:680px;max-height:86vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
+      <div><div style="font-size:15px;font-weight:600;color:var(--text);">Vendor Daily Summary</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${dateLabel}</div></div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="metrics" style="margin-top:8px;">${cards}</div>
+    ${table}
   </div>`;
   ov.style.display='flex';
 }
