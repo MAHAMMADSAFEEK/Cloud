@@ -2443,6 +2443,7 @@ function pemrShowPE(peName){
   else expectedDays=daysInMonth;
 
   let daysUpdated=0,projUpdates=0,tbtCnt=0,dprCnt=0;
+  const missed=[];
   for(let dd=1;dd<=expectedDays;dd++){
     const dk=yy+'-'+mm+'-'+dd;
     let anyToday=false;
@@ -2451,7 +2452,7 @@ function pemrShowPE(peName){
       if(ctx.attByPD[key]){anyToday=true;projUpdates++;}
       const t=ctx.tbtByPD[key];if(t){if(t.tbt)tbtCnt++;if(t.dpr)dprCnt++;}
     });
-    if(anyToday)daysUpdated++;
+    if(anyToday)daysUpdated++; else missed.push(dd);
   }
   const total=pids.length;
   const expectedProjUpdates=expectedDays*total;
@@ -2462,9 +2463,16 @@ function pemrShowPE(peName){
     metric('ti-briefcase','Total Projects',total,'Assigned to PE','#4f8ef7')+
     metric('ti-calendar','Expected Days',expectedDays,`Till today · ${monthLabel}`,'#9b6dff')+
     metricWithBar('ti-calendar-check','Days Updated',daysUpdated,`${attPct}% of expected days`,'#34c98a',attPct,'#34c98a')+
+    metricWithBar('ti-calendar-x','Not Updated',missed.length,`${expectedDays?Math.round(missed.length/expectedDays*100):0}% of expected days`,'#e74c3c',expectedDays?missed.length/expectedDays*100:0,'#e74c3c')+
     metricWithBar('ti-checklist','Project Updates',projUpdates,`of ${expectedProjUpdates} expected · ${updPct}%`,'#f5a623',updPct,'#f5a623')+
     metric('ti-clipboard-check','TBT Updated',tbtCnt,`of ${expectedProjUpdates} expected`,'#34c98a')+
     metric('ti-file-report','DPR Updated',dprCnt,`of ${expectedProjUpdates} expected`,'#3bc0d8');
+
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const missedChips=missed.map(dd=>{const dt=new Date(yy,mm-1,dd);return `<span style="font-size:11px;background:rgba(231,76,60,.14);color:#ff7a6b;border:1px solid rgba(231,76,60,.3);border-radius:6px;padding:3px 8px;">${dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · ${wd[dt.getDay()]}</span>`;}).join('');
+  const missedSection=missed.length
+    ? `<div style="margin-top:16px;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:8px;">Not Updated Dates (${missed.length})</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${missedChips}</div></div>`
+    : `<div style="margin-top:16px;font-size:12px;color:#34c98a;">✓ All ${expectedDays} expected day(s) updated.</div>`;
 
   let ov=document.getElementById('pemr-modal-ov');
   if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
@@ -2474,6 +2482,7 @@ function pemrShowPE(peName){
       <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
     </div>
     ${total?`<div class="metrics" style="margin-top:8px;">${cards}</div>
+    ${missedSection}
     <div style="font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5;">Expected = ${expectedDays} day(s) elapsed this month × ${total} project(s). TBT/DPR counts are project-days with a report logged in the TBT sheet.</div>`
     :'<div class="empty" style="margin-top:10px;">No projects assigned to this PE (Lead not assigned).</div>'}
   </div>`;
