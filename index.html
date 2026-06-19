@@ -168,6 +168,10 @@ tr:hover td{background:var(--surface2);}
 .pmr-grey{background:rgba(139,146,176,.14);color:#8b92b0;}
 .pmr-modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;}
 .pmr-modal{background:var(--surface);border:1px solid var(--border2);border-radius:12px;max-width:440px;width:100%;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+/* PE monthly report sticky cols */
+.pemr-c0{position:sticky;left:0;z-index:4;background:var(--surface);width:180px;min-width:180px;max-width:180px;overflow:hidden;text-overflow:ellipsis;font-weight:500;color:var(--text);}
+.pemr-c1{position:sticky;left:180px;z-index:4;background:var(--surface);width:80px;min-width:80px;max-width:80px;text-align:center;border-right:2px solid var(--border2);}
+.pmr-table thead th.pemr-c0,.pmr-table thead th.pemr-c1{z-index:6;background:var(--surface2);}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
@@ -203,7 +207,8 @@ tr:hover td{background:var(--surface2);}
     <button class="tab" onclick="switchTab('dpr',this)"><i class="ti ti-file-report"></i> DPR</button>
     <button class="tab" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
     <button class="tab" onclick="switchTab('rpt',this)"><i class="ti ti-chart-pie"></i> Reports</button>
-    <button class="tab" onclick="switchTab('pmr',this)"><i class="ti ti-calendar-month"></i> Monthly Report</button>
+    <button class="tab" onclick="switchTab('pmr',this)"><i class="ti ti-calendar-month"></i> Project wise Monthly report</button>
+    <button class="tab" onclick="switchTab('pemr',this)"><i class="ti ti-user-check"></i> PE Monthly Report</button>
     <button class="tab" onclick="switchTab('proj',this)"><i class="ti ti-building-skyscraper"></i> Project Summary</button>
   </div>
 
@@ -414,10 +419,40 @@ tr:hover td{background:var(--surface2);}
       <div class="pe-filter-actions"><span class="spacer"></span><button class="pe-clr-btn" onclick="clearPMRFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button></div>
     </div>
     <div style="padding:16px 24px 24px;">
-      <div class="section-title">Project Monthly Report</div>
+      <div class="section-title">Project wise Monthly report</div>
       <div class="pmr-legend" id="pmr-legend"></div>
       <div class="card" style="padding:0;overflow:hidden;">
         <div class="table-wrap pmr-wrap"><table class="pmr-table"><thead id="pmr-head"></thead><tbody id="pmr-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PE MONTHLY REPORT TAB -->
+  <div id="tab-pemr" class="tab-content">
+    <div class="pe-filter-bar">
+      <div class="pe-filter-group"><label>Month</label><select id="pemr-f-month" onchange="buildPEMR()"></select></div>
+      <div class="pe-filter-group"><label>Week</label>
+        <select id="pemr-f-week" onchange="buildPEMR()">
+          <option value="">All Weeks</option>
+          <option value="1">Week 1 (1–7)</option>
+          <option value="2">Week 2 (8–14)</option>
+          <option value="3">Week 3 (15–21)</option>
+          <option value="4">Week 4 (22–28)</option>
+          <option value="5">Week 5 (29–end)</option>
+        </select>
+      </div>
+      <div class="pe-filter-group"><label>City</label><div class="pov-ms pemr-ms" id="pemr-ms-city"></div></div>
+      <div class="pe-filter-group"><label>Cluster Head</label><div class="pov-ms pemr-ms" id="pemr-ms-cluster"></div></div>
+      <div class="pe-filter-group"><label>City Manager</label><div class="pov-ms pemr-ms" id="pemr-ms-citymgr"></div></div>
+      <div class="pe-filter-group"><label>PE</label><div class="pov-ms pemr-ms" id="pemr-ms-pe"></div></div>
+      <div class="pe-fdivider"></div>
+      <div class="pe-filter-actions"><span class="spacer"></span><button class="pe-clr-btn" onclick="clearPEMRFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear Filters</button></div>
+    </div>
+    <div style="padding:16px 24px 24px;">
+      <div class="section-title">PE Monthly Report</div>
+      <div class="pmr-legend" id="pemr-legend"></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap pmr-wrap"><table class="pmr-table"><thead id="pemr-head"></thead><tbody id="pemr-body"></tbody></table></div>
       </div>
     </div>
   </div>
@@ -628,6 +663,7 @@ async function loadAll(){
     populatePOVFilters();
     populateRPTFilters();
     populatePMRFilters();
+    populatePEMRFilters();
     buildAll();
     document.getElementById('main').style.display='block';
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
@@ -640,7 +676,7 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();buildPMR();}
+function buildAll(){buildPE();buildAtt();buildTBT();buildDPR();buildPOV();buildRPT();buildPMR();buildPEMR();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
@@ -2215,6 +2251,158 @@ function buildPMR(){
       <td class="pmr-c1" title="${pname.replace(/"/g,'&quot;')}">${pname}<div style="font-size:9px;color:var(--muted);font-weight:400;">${pid}</div></td>
       <td class="pmr-c2">${size}</td>
       <td class="pmr-c3" style="font-size:11px;">${pe}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+}
+
+// ── PE MONTHLY REPORT ─────────────────────────────────────────
+const PEMR_MS_CFG={
+  city:{col:'CITY',all:'All Cities',ph:'Search cities…'},
+  cluster:{col:'CLUSTER',all:'All Clusters',ph:'Search clusters…'},
+  citymgr:{col:'CITYMGR',all:'All City Mgrs',ph:'Search city managers…'},
+  pe:{col:'PE',all:'All PEs',ph:'Search PEs…'}
+};
+let _pemrMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
+let _pemrMSAll={city:[],cluster:[],citymgr:[],pe:[]};
+let _pemrMSCounts={city:{},cluster:{},citymgr:{},pe:{}};
+
+function populatePEMRFilters(){
+  const months={};
+  D.att.r.forEach(x=>{const d=parseDate(v(x,ATT_COL.DATE));if(d){const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=d;}});
+  const msel=document.getElementById('pemr-f-month');
+  if(msel){const cur=msel.value;msel.innerHTML='';const keys=Object.keys(months).sort().reverse();
+    keys.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=months[k].toLocaleDateString('en-IN',{month:'long',year:'numeric'});msel.appendChild(o);});
+    if(cur&&keys.includes(cur))msel.value=cur;else if(keys.length)msel.value=keys[0];
+    if(!keys.length){const o=document.createElement('option');o.value='';o.textContent='No data';msel.appendChild(o);}}
+  const sets={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set()};
+  D.lead.r.forEach(x=>{if(!lv(x,LEAD_COL.PID))return;
+    const c=lv(x,LEAD_COL.CITY);if(c)sets.city.add(c);
+    const ch=lv(x,LEAD_COL.CLUSTER);if(ch)sets.cluster.add(ch);
+    const cm=lv(x,LEAD_COL.CITYMGR);if(cm)sets.citymgr.add(cm);
+    const pe=lv(x,LEAD_COL.PE);if(pe)sets.pe.add(pe);});
+  Object.keys(sets).forEach(k=>{_pemrMSAll[k]=[...sets[k]].sort((a,b)=>a.localeCompare(b));_pemrMS[k]=new Set([..._pemrMS[k]].filter(v=>sets[k].has(v)));});
+  Object.keys(PEMR_MS_CFG).forEach(buildPEMRMSWidget);
+  recomputePEMROptions();
+}
+function buildPEMRMSWidget(key){
+  const host=document.getElementById('pemr-ms-'+key);if(!host)return;const cfg=PEMR_MS_CFG[key];
+  host.innerHTML=`
+    <div class="pov-ms-control" onclick="togglePEMRMS('${key}')"><span class="pov-ms-text placeholder" id="pemr-ms-text-${key}">${cfg.all}</span><i class="ti ti-chevron-down"></i></div>
+    <div class="pov-ms-panel">
+      <input type="text" class="pov-ms-search" id="pemr-ms-search-${key}" placeholder="${cfg.ph}" oninput="renderPEMRMSOptions('${key}')" onclick="event.stopPropagation()"/>
+      <div class="pov-ms-actions"><button onclick="event.stopPropagation();selectAllPEMRMS('${key}')">Select all</button><button onclick="event.stopPropagation();clearPEMRMS('${key}')">Clear</button></div>
+      <div class="pov-ms-options" id="pemr-ms-options-${key}"></div>
+    </div>`;
+  renderPEMRMSOptions(key);updatePEMRMSControl(key);
+}
+function renderPEMRMSOptions(key){
+  const box=document.getElementById('pemr-ms-options-'+key);if(!box)return;
+  const q=((document.getElementById('pemr-ms-search-'+key)||{}).value||'').trim().toLowerCase();
+  const opts=_pemrMSAll[key].filter(o=>!q||o.toLowerCase().includes(q));
+  if(!opts.length){box.innerHTML='<div class="pov-ms-empty">No matches</div>';return;}
+  const counts=_pemrMSCounts[key]||{};
+  const hl=(t)=>{if(!q)return t;const i=t.toLowerCase().indexOf(q);return i<0?t:t.slice(0,i)+'<mark>'+t.slice(i,i+q.length)+'</mark>'+t.slice(i+q.length);};
+  box.innerHTML=opts.map(o=>{const checked=_pemrMS[key].has(o)?'checked':'';const safe=o.replace(/"/g,'&quot;').replace(/'/g,"\\'");const cnt=counts[o]||0;
+    return `<label class="pov-ms-opt" onclick="event.stopPropagation()"><input type="checkbox" ${checked} onchange="togglePEMRMSOption('${key}','${safe}')"/><span class="lbl" title="${o.replace(/"/g,'&quot;')}">${hl(o)}</span><span class="pov-ms-cnt">${cnt}</span></label>`;}).join('');
+}
+function togglePEMRMSOption(key,val){if(_pemrMS[key].has(val))_pemrMS[key].delete(val);else _pemrMS[key].add(val);updatePEMRMSControl(key);recomputePEMROptions();buildPEMR();}
+function pemrRowPassesExcept(x,exceptKey){
+  if(!lv(x,LEAD_COL.PID))return false;
+  if(exceptKey!=='city'    && _pemrMS.city.size    && !_pemrMS.city.has(lv(x,LEAD_COL.CITY)))return false;
+  if(exceptKey!=='cluster' && _pemrMS.cluster.size && !_pemrMS.cluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
+  if(exceptKey!=='citymgr' && _pemrMS.citymgr.size && !_pemrMS.citymgr.has(lv(x,LEAD_COL.CITYMGR)))return false;
+  if(exceptKey!=='pe'      && _pemrMS.pe.size      && !_pemrMS.pe.has(lv(x,LEAD_COL.PE)))return false;
+  return true;
+}
+function recomputePEMROptions(){
+  const r=D.lead.r;
+  Object.keys(PEMR_MS_CFG).forEach(key=>{
+    const counts={};const colIdx=LEAD_COL[PEMR_MS_CFG[key].col];
+    r.forEach(x=>{if(pemrRowPassesExcept(x,key)){const val=lv(x,colIdx);if(val)counts[val]=(counts[val]||0)+1;}});
+    const set=new Set(Object.keys(counts));_pemrMS[key].forEach(v=>set.add(v));
+    _pemrMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));_pemrMSCounts[key]=counts;renderPEMRMSOptions(key);
+  });
+}
+function selectAllPEMRMS(key){const q=((document.getElementById('pemr-ms-search-'+key)||{}).value||'').trim().toLowerCase();_pemrMSAll[key].filter(o=>!q||o.toLowerCase().includes(q)).forEach(o=>_pemrMS[key].add(o));updatePEMRMSControl(key);recomputePEMROptions();buildPEMR();}
+function clearPEMRMS(key){_pemrMS[key].clear();updatePEMRMSControl(key);recomputePEMROptions();buildPEMR();}
+function updatePEMRMSControl(key){const txt=document.getElementById('pemr-ms-text-'+key);if(!txt)return;const sel=_pemrMS[key];if(!sel.size){txt.textContent=PEMR_MS_CFG[key].all;txt.classList.add('placeholder');}else if(sel.size===1){txt.textContent=[...sel][0];txt.classList.remove('placeholder');}else{txt.textContent=`${sel.size} selected`;txt.classList.remove('placeholder');}}
+function togglePEMRMS(key){const host=document.getElementById('pemr-ms-'+key);if(!host)return;const wasOpen=host.classList.contains('open');document.querySelectorAll('.pov-ms.open,.rpt-ms.open,.pmr-ms.open,.pemr-ms.open').forEach(el=>el.classList.remove('open'));if(!wasOpen){host.classList.add('open');const s=document.getElementById('pemr-ms-search-'+key);if(s){s.value='';renderPEMRMSOptions(key);setTimeout(()=>s.focus(),0);}}}
+document.addEventListener('click',e=>{if(!e.target.closest('.pemr-ms'))document.querySelectorAll('.pemr-ms.open').forEach(el=>el.classList.remove('open'));});
+function clearPEMRFilters(){const w=document.getElementById('pemr-f-week');if(w)w.value='';Object.keys(_pemrMS).forEach(k=>{_pemrMS[k].clear();updatePEMRMSControl(k);});recomputePEMROptions();buildPEMR();}
+
+function buildPEMR(){
+  const msel=document.getElementById('pemr-f-month');
+  const monthVal=msel?msel.value:'';
+  const weekVal=(document.getElementById('pemr-f-week')||{}).value||'';
+  const fCity=_pemrMS.city,fCluster=_pemrMS.cluster,fCityMgr=_pemrMS.citymgr,fPE=_pemrMS.pe;
+  const head=document.getElementById('pemr-head'),body=document.getElementById('pemr-body'),legend=document.getElementById('pemr-legend');
+  if(legend)legend.innerHTML=[
+    ['pmr-green','All projects updated'],['pmr-orange','Partially updated'],['pmr-red','Absent (no update)'],['pmr-grey','Future / no day']
+  ].map(([c,t])=>`<span class="lg"><span class="sw ${c}"></span>${t}</span>`).join('')+
+    '<span class="lg" style="margin-left:auto;">Cell = projects updated / total · TBT/DPR ✓ if any report that day</span>';
+
+  if(!monthVal){head.innerHTML='';body.innerHTML='<tr><td class="empty">No attendance data available</td></tr>';return;}
+  const [yy,mm]=monthVal.split('-').map(Number);
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  let dayStart=1,dayEnd=daysInMonth;
+  if(weekVal){const w=Number(weekVal);dayStart=(w-1)*7+1;dayEnd=Math.min(w*7,daysInMonth);if(dayStart>daysInMonth){head.innerHTML='';body.innerHTML='<tr><td class="empty">No days in this week</td></tr>';return;}}
+  const days=[];for(let d=dayStart;d<=dayEnd;d++)days.push(new Date(yy,mm-1,d));
+  const today=new Date();today.setHours(0,0,0,0);
+
+  // Index: which projects have attendance per day; TBT/DPR per project per day
+  const attProjDate=new Set(),uidToProj={};
+  D.att.r.forEach(x=>{
+    const pid=v(x,ATT_COL.PID),uid=v(x,ATT_COL.UID),d=parseDate(v(x,ATT_COL.DATE));
+    if(uid&&pid)uidToProj[uid]=pid;
+    if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    attProjDate.add(pid+'|'+pmrKey(d));
+  });
+  const tbtIdx={};
+  D.tbt.r.forEach(x=>{
+    const uid=v(x,PMR_TBT.UID),pid=uidToProj[uid],d=parseDate(v(x,PMR_TBT.DATE));
+    if(!pid||!d||d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+    const k=pid+'|'+pmrKey(d);const cur=tbtIdx[k]||{tbt:false,dpr:false};
+    if(v(x,PMR_TBT.TBTREP))cur.tbt=true;if(v(x,PMR_TBT.DPRREP))cur.dpr=true;tbtIdx[k]=cur;
+  });
+
+  // Group projects by PE (filtered by city/cluster/cm); PE filter limits which PEs show
+  const peMap={};
+  D.lead.r.forEach(x=>{
+    if(!lv(x,LEAD_COL.PID))return;
+    const pe=lv(x,LEAD_COL.PE);if(!pe)return; // PE report = assigned PEs only
+    if(fCity.size&&!fCity.has(lv(x,LEAD_COL.CITY)))return;
+    if(fCluster.size&&!fCluster.has(lv(x,LEAD_COL.CLUSTER)))return;
+    if(fCityMgr.size&&!fCityMgr.has(lv(x,LEAD_COL.CITYMGR)))return;
+    if(fPE.size&&!fPE.has(pe))return;
+    (peMap[pe]=peMap[pe]||[]).push(lv(x,LEAD_COL.PID));
+  });
+
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  head.innerHTML='<tr><th class="pemr-c0">PE Name</th><th class="pemr-c1">Projects</th>'+
+    days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
+
+  const peNames=Object.keys(peMap).sort((a,b)=>a.localeCompare(b));
+  if(!peNames.length){body.innerHTML=`<tr><td class="empty" colspan="${2+days.length}">No PEs match the selected filters</td></tr>`;return;}
+
+  body.innerHTML=peNames.map(pe=>{
+    const pids=peMap[pe];const total=pids.length;
+    const cells=days.map(d=>{
+      const dk=pmrKey(d);const future=d>today;
+      let updated=0,tbt=false,dpr=false;
+      pids.forEach(pid=>{
+        if(attProjDate.has(pid+'|'+dk))updated++;
+        const t=tbtIdx[pid+'|'+dk];if(t){if(t.tbt)tbt=true;if(t.dpr)dpr=true;}
+      });
+      let cls,label;
+      if(updated===0){cls=future?'pmr-grey':'pmr-red';label=future?'—':'Absent';}
+      else{cls=(updated>=total)?'pmr-green':'pmr-orange';label=`${updated}/${total} updated`;}
+      const tags=(updated>0)?`<div class="pmr-tags"><span class="pmr-tg ${tbt?'pmr-green':'pmr-grey'}">TBT ${tbt?'✓':'—'}</span><span class="pmr-tg ${dpr?'pmr-green':'pmr-grey'}">DPR ${dpr?'✓':'—'}</span></div>`:'';
+      return `<td><div class="pmr-cell ${cls}">${label}${tags}</div></td>`;
+    }).join('');
+    return `<tr>
+      <td class="pemr-c0" title="${pe.replace(/"/g,'&quot;')}">${pe}</td>
+      <td class="pemr-c1"><span class="badge bp">${total}</span></td>
       ${cells}
     </tr>`;
   }).join('');
