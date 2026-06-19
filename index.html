@@ -1328,6 +1328,9 @@ function clearDPRLogFilter(){
 // Lead Tracker fixed column indices (letters → 0-based index)
 const LEAD_COL={TOTAL:0,PID:1,CITY:2,PNAME:3,SIZE:5,CLUSTER:30,CITYMGR:32,PE:34};
 let _povCache={};
+let _povDelayBucket='';
+function setPOVDelayBucket(b){_povDelayBucket=(_povDelayBucket===b)?'':b;buildPOV();}
+function clearPOVDelayBucket(){_povDelayBucket='';buildPOV();}
 
 // Safe Lead-row cell getter by fixed index
 function lv(row,i){return (i>=0 && row[i]!=null)?String(row[i]).trim():'';}
@@ -1492,6 +1495,7 @@ document.addEventListener('click',e=>{
 
 function clearPOVFilters(){
   Object.keys(_povMS).forEach(k=>{_povMS[k].clear();updatePOVMSControl(k);});
+  _povDelayBucket='';
   recomputePOVOptions();
   buildPOV();
 }
@@ -1583,23 +1587,26 @@ function povCityTable(cityCount,citySize){
 
 // Project update / delay report (days since last DPR update)
 function povDelayReport({upNever,upOk,up7,up15,up30,totalProjects}){
-  if(!totalProjects)return'<div class="empty">No data</div>';
+  if(!totalProjects&&!_povDelayBucket)return'<div class="empty">No data</div>';
   const delayed=up7+up15+up30;
-  const line=(color,icon,text,count)=>`<tr>
-    <td style="width:1%;"><i class="ti ${icon}" style="color:${color};font-size:15px;"></i></td>
-    <td style="font-size:12px;">${text}</td>
-    <td style="text-align:right;font-size:13px;font-weight:600;color:${color};white-space:nowrap;">${count}</td>
-  </tr>`;
-  const banner=`<div style="margin-bottom:12px;padding:10px 12px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.25);border-radius:8px;font-size:12px;color:var(--text);">
-    <strong style="color:#e74c3c;">${delayed}</strong> project${delayed===1?'':'s'} delayed — no DPR update in 7+ days${upNever?`, and <strong style="color:#8b92b0;">${upNever}</strong> never updated`:''}.
-  </div>`;
-  return banner+`<table style="font-size:12px;">
+  const active=_povDelayBucket;
+  const line=(key,color,icon,text,count)=>{const isActive=active===key;const dim=active&&!isActive?'opacity:.45;':'';return `<tr onclick="setPOVDelayBucket('${key}')" style="cursor:pointer;${isActive?`background:${color}1a;`:''}${dim}">
+    <td style="width:1%;padding:6px 4px;"><i class="ti ${icon}" style="color:${color};font-size:15px;"></i></td>
+    <td style="font-size:12px;padding:6px 4px;${isActive?`color:${color};font-weight:600;`:''}">${text}${isActive?' <i class="ti ti-filter-check" style="margin-left:4px;font-size:11px;"></i>':''}</td>
+    <td style="text-align:right;font-size:13px;font-weight:600;color:${color};white-space:nowrap;padding:6px 4px;">${count}</td>
+  </tr>`;};
+  const banner=active
+    ? `<div style="margin-bottom:12px;padding:10px 12px;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.35);border-radius:8px;font-size:12px;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:8px;"><div><i class="ti ti-filter" style="margin-right:6px;color:var(--accent);"></i>Filtering tab by update bucket. Click again or use <strong>Clear</strong> to reset.</div><button onclick="clearPOVDelayBucket()" style="background:transparent;border:1px solid var(--accent);color:var(--accent);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;cursor:pointer;">Clear</button></div>`
+    : `<div style="margin-bottom:12px;padding:10px 12px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.25);border-radius:8px;font-size:12px;color:var(--text);">
+        <strong style="color:#e74c3c;">${delayed}</strong> project${delayed===1?'':'s'} delayed — no DPR update in 7+ days${upNever?`, and <strong style="color:#8b92b0;">${upNever}</strong> never updated`:''}. <span style="color:var(--muted);">Click a row to filter the tab.</span>
+      </div>`;
+  return banner+`<table style="font-size:12px;width:100%;">
     <tbody>
-      ${line('#e74c3c','ti-alert-octagon','Critically delayed — no update 30+ days',up30)}
-      ${line('#f5a623','ti-alert-triangle','Delayed — no update 15–29 days',up15)}
-      ${line('#f5a623','ti-clock-exclamation','Delayed — no update 7–14 days',up7)}
-      ${line('#34c98a','ti-circle-check','Up to date — updated within 7 days',upOk)}
-      ${line('#8b92b0','ti-clock-off','Never updated (no DPR yet)',upNever)}
+      ${line('up30','#e74c3c','ti-alert-octagon','Critically delayed — no update 30+ days',up30)}
+      ${line('up15','#f5a623','ti-alert-triangle','Delayed — no update 15–29 days',up15)}
+      ${line('up7','#f5a623','ti-clock-exclamation','Delayed — no update 7–14 days',up7)}
+      ${line('upOk','#34c98a','ti-circle-check','Up to date — updated within 7 days',upOk)}
+      ${line('upNever','#8b92b0','ti-clock-off','Never updated (no DPR yet)',upNever)}
     </tbody>
   </table>`;
 }
@@ -1609,7 +1616,7 @@ function buildPOV(){
   const fCity=_povMS.city, fCluster=_povMS.cluster, fCityMgr=_povMS.citymgr, fPE=_povMS.pe, fStatus=_povMS.status;
 
   // Filter lead rows; gate on a real project (Project ID non-empty)
-  const rows=r.filter(x=>{
+  const baseRows=r.filter(x=>{
     if(!lv(x,LEAD_COL.PID))return false;
     if(fCity.size&&!fCity.has(lv(x,LEAD_COL.CITY)))return false;
     if(fCluster.size&&!fCluster.has(lv(x,LEAD_COL.CLUSTER)))return false;
@@ -1619,8 +1626,18 @@ function buildPOV(){
     return true;
   });
 
+  // Delay bucket for each project (so the report counts always reflect base set,
+  // and the rest of the tab narrows further when a bucket is active)
+  const today=new Date();today.setHours(0,0,0,0);
+  const bucketOf=(x)=>{const m=computeProjectMetrics(lv(x,LEAD_COL.PID));if(!m.dprCount||!m.lastDate)return'upNever';const days=Math.floor((today-m.lastDate)/(1000*60*60*24));if(days>=30)return'up30';if(days>=15)return'up15';if(days>=7)return'up7';return'upOk';};
+  let upNever=0,upOk=0,up7=0,up15=0,up30=0;
+  baseRows.forEach(x=>{const b=bucketOf(x);if(b==='upNever')upNever++;else if(b==='up30')up30++;else if(b==='up15')up15++;else if(b==='up7')up7++;else upOk++;});
+
+  // Narrow rows by the active delay bucket if set
+  const rows=_povDelayBucket?baseRows.filter(x=>bucketOf(x)===_povDelayBucket):baseRows;
+
   // Filter indicator tag (count of filter groups with a selection)
-  const activeFilters=[fCity,fCluster,fCityMgr,fPE,fStatus].filter(s=>s.size).length;
+  const activeFilters=[fCity,fCluster,fCityMgr,fPE,fStatus].filter(s=>s.size).length+(_povDelayBucket?1:0);
   const tag=document.getElementById('pov-filter-tag');
   if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
 
@@ -1628,9 +1645,6 @@ function buildPOV(){
   const totalProjects=rows.length;
   let totalSize=0,assigned=0,notAssigned=0,completed=0,inProcess=0,pending=0,pendingAssigned=0,pendingNotAssigned=0;
   const cityCount={},citySize={};
-  // Update-recency buckets (days since last DPR entry)
-  let upNever=0,upOk=0,up7=0,up15=0,up30=0;
-  const today=new Date();today.setHours(0,0,0,0);
   rows.forEach(x=>{
     const projId=lv(x,LEAD_COL.PID);
     const city=lv(x,LEAD_COL.CITY)||'Unknown';
@@ -1644,9 +1658,6 @@ function buildPOV(){
     if(m.status==='done')completed++;
     else if(m.status==='wip')inProcess++;
     else {pending++; if(peAssigned)pendingAssigned++; else pendingNotAssigned++;}
-    // recency
-    if(!m.dprCount||!m.lastDate)upNever++;
-    else{const days=Math.floor((today-m.lastDate)/(1000*60*60*24));if(days>=30)up30++;else if(days>=15)up15++;else if(days>=7)up7++;else upOk++;}
   });
 
   document.getElementById('pov-metrics').innerHTML=
