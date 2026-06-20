@@ -746,12 +746,15 @@ async function loadAll(){
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
     _aclLeadAll=null;['att','tbt','dpr','vendor','pe'].forEach(k=>{if(D[k])delete D[k]._all;});
-    for(const [key,gid] of Object.entries(SHEETS)){
-      const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data',daily:'Daily Activity',cred:'Credentials'};
-      setOverlay(`Loading ${labels[key]}…`);
+    // Skip 'cred' (already fetched during login) — load the rest in parallel
+    const entries=Object.entries(SHEETS).filter(([k])=>k!=='cred');
+    let loaded=0;
+    setOverlay(`Loading data… 0/${entries.length}`);
+    await Promise.all(entries.map(async ([key,gid])=>{
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
-    }
+      loaded++;setOverlay(`Loading data… ${loaded}/${entries.length}`);
+    }));
     aclResolveRole();
     aclApply();
     aclRenderBadge();
