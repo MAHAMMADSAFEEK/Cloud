@@ -494,6 +494,7 @@ tr:hover td{background:var(--surface2);}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 // ── Config ────────────────────────────────────────────────────
 const SID='1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA';
@@ -505,8 +506,7 @@ const SHEETS={
   dpr:'351032265',
   workplan:'204658067',
   vendor:'2088990270', // Vendor data
-  daily:'1404385043',   // Daily Activity (leave tracker)
-  cred:'1939441300'     // Credentials (email + password)
+  daily:'1404385043'   // Daily Activity (leave tracker)
 };
 
 let D={
@@ -517,23 +517,14 @@ let D={
   dpr:{h:[],r:[]},
   workplan:{h:[],r:[]},
   vendor:{h:[],r:[]},
-  daily:{h:[],r:[]},
-  cred:{h:[],r:[]}
+  daily:{h:[],r:[]}
 };
 
 // ── Helpers ───────────────────────────────────────────────────
 const csvUrl=gid=>`https://docs.google.com/spreadsheets/d/${SID}/export?format=csv&gid=${gid}`;
 function ci(headers,...kws){for(const kw of kws){const i=headers.findIndex(h=>h.toLowerCase().replace(/[\s\-_]/g,'').includes(kw.toLowerCase().replace(/[\s\-_]/g,'')));if(i>=0)return i;}return -1;}
 const v=(row,i)=>i>=0?(row[i]||'').trim():'';
-function parseSheet(gid){return new Promise((res,rej)=>{
-  const timer=setTimeout(()=>rej(new Error('Timeout (>30s) loading sheet '+gid)),30000);
-  Papa.parse(csvUrl(gid),{download:true,header:false,skipEmptyLines:true,
-    complete:r=>{clearTimeout(timer);if(!r.data.length)return rej('Empty sheet '+gid);
-      const first=String((r.data[0]||[])[0]||'').trim().toLowerCase();
-      if(first.startsWith('<!')||first.startsWith('<html')||first.startsWith('<!doctype'))return rej(new Error('Sheet '+gid+' is not publicly accessible (got HTML, not CSV)'));
-      res(r.data);},
-    error:e=>{clearTimeout(timer);rej(e);}});
-});}
+function parseSheet(gid){return new Promise((res,rej)=>{Papa.parse(csvUrl(gid),{download:true,header:false,skipEmptyLines:true,complete:r=>{if(r.data.length<1)rej('Empty');else res(r.data);},error:e=>rej(e)});});}
 function setOverlay(txt){document.getElementById('overlay-txt').textContent=txt;}
 function switchTab(name,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');}
 function fillSel(id,vals){const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);[...new Set(vals)].filter(Boolean).sort().forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});}
@@ -591,92 +582,110 @@ function updateFilterIndicator(){}
 // ── ACL (role-based row access) ───────────────────────────────
 // Admin emails (lowercase). Adjust as needed.
 const ADMIN_EMAILS=new Set(['safeek.m@solarsquare.in']);
+// ▼ Google Sign-In: set GOOGLE_CLIENT_ID to enforce real Google identity.
+//   Create one at https://console.cloud.google.com/apis/credentials (OAuth Client ID, type "Web application").
+//   Add this page's URL to "Authorized JavaScript origins".
+//   When set, manual email entry is disabled; users MUST sign in with Google.
+const GOOGLE_CLIENT_ID=''; // e.g. '123-abc.apps.googleusercontent.com'
+const HOSTED_DOMAIN='solarsquare.in'; // restrict to workspace domain ('' to allow any Google account)
 let _userEmail='',_userName='',_userRole='none'; // role: admin|cluster|citymgr|pe|none
 let _aclLeadAll=null; // backup of D.lead.r before ACL filtering
-// PE Master identity columns (per user spec): H = name, I = email
-const PE_NAME_COL=7, PE_EMAIL_COL=8;
 
-async function aclLogin(ev){
-  if(ev&&ev.preventDefault)ev.preventDefault();
-  const emEl=document.getElementById('login-email'),pwEl=document.getElementById('login-pw'),errEl=document.getElementById('login-err'),btn=document.getElementById('login-btn');
-  const em=(emEl?emEl.value:'').trim().toLowerCase();
-  const pw=pwEl?pwEl.value:'';
-  if(errEl)errEl.textContent='';
-  if(!em||!pw){if(errEl)errEl.textContent='Please enter both email and password.';return false;}
-  if(btn){btn.disabled=true;btn.textContent='Verifying…';}
-  try{
-    const rows=await parseSheet(SHEETS.cred);
-    const credR=rows.slice(1);
-    const match=credR.find(r=>v(r,0).toLowerCase().trim()===em && String(v(r,1))===String(pw));
-    if(!match){if(errEl)errEl.textContent='Invalid email or password.';if(btn){btn.disabled=false;btn.textContent='Login';}return false;}
-    _userEmail=em;
-    try{sessionStorage.setItem('ops_email',em);sessionStorage.setItem('ops_authed','1');}catch(e){}
-    aclCloseSignIn();
-    loadAll();
-  }catch(e){
-    console.warn('Login error',e);
-    if(errEl)errEl.textContent='Cred sheet error: '+(e&&e.message?e.message:String(e));
-    if(btn){btn.disabled=false;btn.textContent='Login';}
+function aclDecodeJWT(token){try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');const j=decodeURIComponent(atob(b).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));return JSON.parse(j);}catch(e){return null;}}
+
+function aclHandleGoogleCredential(resp){
+  const payload=aclDecodeJWT(resp.credential);
+  if(!payload||!payload.email_verified||!payload.email){alert('Sign-in failed — email not verified.');return;}
+  if(HOSTED_DOMAIN&&payload.hd!==HOSTED_DOMAIN&&!ADMIN_EMAILS.has(payload.email.toLowerCase())){alert(`Please sign in with your @${HOSTED_DOMAIN} Google account.`);return;}
+  _userEmail=payload.email;
+  if(payload.name)_userGoogleName=payload.name;
+  try{sessionStorage.setItem('ops_email',_userEmail);}catch(e){}
+  aclCloseSignIn();
+  loadAll();
+}
+let _userGoogleName='';
+
+function aclInitGoogleSignIn(){
+  if(!GOOGLE_CLIENT_ID)return false;
+  if(typeof google==='undefined'||!google.accounts||!google.accounts.id){
+    // GIS script not yet ready — retry shortly
+    setTimeout(aclInitGoogleSignIn,200);return true;
   }
-  return false;
+  try{
+    google.accounts.id.initialize({
+      client_id:GOOGLE_CLIENT_ID,
+      callback:aclHandleGoogleCredential,
+      auto_select:true,
+      hd:HOSTED_DOMAIN||undefined
+    });
+    const btn=document.getElementById('google-signin-btn');
+    if(btn){btn.innerHTML='';google.accounts.id.renderButton(btn,{theme:'filled_blue',size:'large',type:'standard',text:'signin_with',shape:'pill',width:240});}
+    google.accounts.id.prompt(); // One Tap
+  }catch(e){console.warn('GIS init failed',e);}
+  return true;
 }
 
 function aclShowSignIn(){
   let ov=document.getElementById('acl-signin-ov');
   if(!ov){ov=document.createElement('div');ov.id='acl-signin-ov';ov.className='pmr-modal-ov';document.body.appendChild(ov);}
-  ov.innerHTML=`<div class="pmr-modal" style="max-width:380px;padding:32px 28px;">
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:22px;font-weight:700;color:var(--text);"><i class="ti ti-bolt" style="color:var(--accent);"></i> Ops Dashboard</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px;">Sign in to continue</div>
-    </div>
-    <form onsubmit="return aclLogin(event)" style="display:flex;flex-direction:column;gap:12px;">
-      <div>
-        <label style="font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:600;letter-spacing:.05em;">Email</label>
-        <input id="login-email" type="email" autocomplete="username" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-size:13px;margin-top:5px;box-sizing:border-box;outline:none;"/>
-      </div>
-      <div>
-        <label style="font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:600;letter-spacing:.05em;">Password</label>
-        <input id="login-pw" type="password" autocomplete="current-password" required style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;color:var(--text);font-size:13px;margin-top:5px;box-sizing:border-box;outline:none;"/>
-      </div>
-      <div id="login-err" style="color:#e74c3c;font-size:11px;min-height:14px;"></div>
-      <button id="login-btn" type="submit" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:11px;font-size:13px;font-weight:600;cursor:pointer;">Login</button>
-    </form>
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:420px;text-align:center;padding:32px 24px;">
+    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;"><i class="ti ti-bolt" style="color:var(--accent);"></i> Ops Dashboard</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Please sign in with your Google account to continue.</div>
+    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:44px;"></div>
+    ${HOSTED_DOMAIN?`<div style="font-size:11px;color:var(--muted);margin-top:18px;">Use your <b>@${HOSTED_DOMAIN}</b> account</div>`:''}
   </div>`;
   ov.style.display='flex';
-  setTimeout(()=>{const e=document.getElementById('login-email');if(e)e.focus();},50);
+  aclInitGoogleSignIn();
 }
 function aclCloseSignIn(){const ov=document.getElementById('acl-signin-ov');if(ov)ov.style.display='none';}
 
 function aclDetectEmail(){
-  // URL override (testing only)
+  // URL override (kept for testing only — works regardless of Google config)
   const p=new URLSearchParams(location.search).get('email');
   if(p){_userEmail=p;return true;}
-  let authed='';try{authed=sessionStorage.getItem('ops_authed')||'';}catch(e){}
-  if(authed==='1'){try{_userEmail=sessionStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}if(_userEmail)return true;}
-  aclShowSignIn();
-  return false;
+  if(GOOGLE_CLIENT_ID){
+    // Google mode: only session-scoped email is honoured (signed in this session)
+    try{_userEmail=sessionStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
+    if(!_userEmail){aclShowSignIn();return false;}
+    return true;
+  }
+  // Fallback (no Google client configured) — manual entry. ⚠ Easily spoofable.
+  try{_userEmail=localStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
+  if(!_userEmail){
+    const inp=prompt('⚠ DEV MODE — enter any email (real Google sign-in is not configured):');
+    if(inp){_userEmail=inp.trim();try{localStorage.setItem('ops_email',_userEmail);}catch(e){}}
+  }
+  return !!_userEmail;
 }
 
 function aclSwitchUser(){
-  try{sessionStorage.removeItem('ops_email');sessionStorage.removeItem('ops_authed');}catch(e){}
-  _userEmail='';_userName='';_userRole='none';
-  aclShowSignIn();
+  if(GOOGLE_CLIENT_ID){
+    try{sessionStorage.removeItem('ops_email');}catch(e){}
+    if(typeof google!=='undefined'&&google.accounts&&google.accounts.id){
+      try{google.accounts.id.disableAutoSelect();}catch(e){}
+    }
+    _userEmail='';_userGoogleName='';
+    aclShowSignIn();
+  }else{
+    try{localStorage.removeItem('ops_email');}catch(e){}
+    _userEmail='';aclDetectEmail();loadAll();
+  }
 }
-
 function aclResolveRole(){
   const em=(_userEmail||'').toLowerCase().trim();
   _userName='';_userRole='none';
   if(!em)return;
   if(ADMIN_EMAILS.has(em)){_userRole='admin';_userName='Admin';return;}
-  // Identity from PE Master col I (email) → col H (name)
-  const row=D.pe.r.find(x=>v(x,PE_EMAIL_COL).toLowerCase().trim()===em);
+  const emIdx=ci(D.pe.h,'email','mail');
+  let row=null;
+  if(emIdx>=0)row=D.pe.r.find(x=>v(x,emIdx).toLowerCase().trim()===em);
   if(!row){_userRole='none';return;}
-  _userName=v(row,PE_NAME_COL).trim();
+  _userName=v(row,1);
   const src=_aclLeadAll||D.lead.r;
   if(src.some(x=>lv(x,LEAD_COL.CLUSTER)===_userName)){_userRole='cluster';return;}
   if(src.some(x=>lv(x,LEAD_COL.CITYMGR)===_userName)){_userRole='citymgr';return;}
   if(src.some(x=>lv(x,LEAD_COL.PE)===_userName)){_userRole='pe';return;}
-  _userRole='pe'; // present in PE Master but no project assigned
+  _userRole='pe'; // present in PE Master but unassigned
 }
 function aclProjectPass(x){
   if(_userRole==='admin')return true;
@@ -708,8 +717,8 @@ function aclApply(){
   // PE Master — for PE role show only themselves; otherwise show PEs visible in their scope
   if(!D.pe._all)D.pe._all=D.pe.r;
   if(_userRole==='admin')D.pe.r=D.pe._all;
-  else if(_userRole==='pe')D.pe.r=D.pe._all.filter(x=>v(x,1)===_userName||v(x,PE_NAME_COL)===_userName);
-  else{const okPE=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PE)).filter(Boolean));D.pe.r=D.pe._all.filter(x=>okPE.has(v(x,1))||okPE.has(v(x,PE_NAME_COL)));}
+  else if(_userRole==='pe')D.pe.r=D.pe._all.filter(x=>v(x,1)===_userName);
+  else{const okPE=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PE)).filter(Boolean));D.pe.r=D.pe._all.filter(x=>okPE.has(v(x,1)));}
 }
 function aclRenderBadge(){
   const el=document.getElementById('acl-user-badge');if(!el)return;
@@ -754,15 +763,12 @@ async function loadAll(){
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
     _aclLeadAll=null;['att','tbt','dpr','vendor','pe'].forEach(k=>{if(D[k])delete D[k]._all;});
-    // Skip 'cred' (already fetched during login) — load the rest in parallel
-    const entries=Object.entries(SHEETS).filter(([k])=>k!=='cred');
-    let loaded=0;
-    setOverlay(`Loading data… 0/${entries.length}`);
-    await Promise.all(entries.map(async ([key,gid])=>{
+    for(const [key,gid] of Object.entries(SHEETS)){
+      const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data',daily:'Daily Activity'};
+      setOverlay(`Loading ${labels[key]}…`);
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
-      loaded++;setOverlay(`Loading data… ${loaded}/${entries.length}`);
-    }));
+    }
     aclResolveRole();
     aclApply();
     aclRenderBadge();
