@@ -8,39 +8,43 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{width:100%;min-height:100vh;}
-:root{--bg:#0f1117;--bg2:#181c27;--surface:#1e2336;--surface2:#252b40;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);--text:#f0f2f8;--muted:#8b92b0;--accent:#4f8ef7;--radius:10px;--radius-lg:16px;}
+:root{--bg:#eef2f9;--bg2:#e6edf8;--surface:#ffffff;--surface2:#f3f6fc;--border:#e4e9f2;--border2:#cdd7e6;--text:#1e293b;--muted:#64748b;--accent:#2563eb;--radius:10px;--radius-lg:16px;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
-.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
-.logo{font-size:17px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px;}
+.topbar{background:linear-gradient(90deg,#1e57d6 0%,#2f6fed 55%,#3b82f6 100%);border-bottom:none;box-shadow:0 2px 10px rgba(30,87,214,0.25);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:100;}
+.logo{font-size:17px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;}
+.topbar span[style*="--muted"],.topbar .logo+span{color:rgba(255,255,255,0.82)!important;}
 .topbar-right{display:flex;align-items:center;gap:10px;}
-#status-badge{font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(245,166,35,0.15);color:#f5a623;border:1px solid rgba(245,166,35,0.3);}
-#last-updated{font-size:11px;color:var(--muted);}
-.btn-refresh{font-size:12px;padding:7px 16px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
-.btn-refresh:hover{background:#3a7de0;}
+#status-badge{font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.35);}
+#last-updated{font-size:11px;color:rgba(255,255,255,0.85);}
+.btn-refresh{font-size:12px;padding:7px 16px;border-radius:var(--radius);border:1px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.16);color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:500;}
+.btn-refresh:hover{background:rgba(255,255,255,0.28);}
 .btn-refresh.spinning i{animation:spin 0.8s linear infinite;}
-
-
+#user-chip{background:rgba(255,255,255,0.16)!important;color:#fff!important;border:1px solid rgba(255,255,255,0.4)!important;}
+#user-chip .role{color:#cfe0ff!important;}
+.logout-btn{background:rgba(255,255,255,0.12)!important;color:#fff!important;border:1px solid rgba(255,255,255,0.4)!important;}
+.logout-btn:hover{background:rgba(255,255,255,0.24)!important;}
 
 .clr-btn{font-size:11px;padding:5px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;height:30px;}
 .clr-btn:hover{color:var(--text);}
 
 .main{padding:20px 24px;width:100%;}
-.tabs{display:flex;gap:4px;background:var(--bg2);border-radius:var(--radius);padding:4px;margin-bottom:20px;overflow-x:auto;}
-.tab{font-size:13px;padding:7px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all 0.15s;}
-.tab.active{background:var(--surface);color:var(--text);}
+.tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:5px;margin-bottom:20px;overflow-x:auto;box-shadow:0 1px 3px rgba(16,24,40,0.04);}
+.tab{font-size:13px;padding:7px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all 0.15s;font-weight:500;}
+.tab:hover:not(.active){background:var(--surface2);color:var(--text);}
+.tab.active{background:var(--accent);color:#fff;box-shadow:0 1px 2px rgba(37,99,235,0.3);}
 .tab-content{display:none;}
 .tab-content.active{display:block;}
 .section-title{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .section-title::after{content:'';flex:1;height:1px;background:var(--border);}
 .metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
-.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;position:relative;overflow:hidden;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 1px 3px rgba(16,24,40,0.05);}
 .metric::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mc,var(--accent));}
 .metric .micon{font-size:18px;color:var(--mc,var(--accent));margin-bottom:6px;}
 .metric .mlbl{font-size:10px;color:var(--muted);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;}
 .metric .mval{font-size:28px;font-weight:600;line-height:1;}
 .metric .msub{font-size:10px;color:var(--muted);margin-top:4px;}
 .charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-bottom:20px;}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;margin-bottom:14px;box-shadow:0 1px 3px rgba(16,24,40,0.05);}
 .card-title{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
 .card-title i{color:var(--accent);font-size:15px;}
 .table-wrap{overflow-x:auto;width:100%;}
@@ -63,11 +67,29 @@ tr:hover td{background:var(--surface2);}
 .pr-cnt{font-size:12px;color:var(--muted);min-width:28px;text-align:right;}
 .avatar{width:30px;height:30px;border-radius:50%;background:var(--surface2);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--accent);flex-shrink:0;}
 .empty{text-align:center;color:var(--muted);padding:32px;font-size:13px;}
-#overlay{position:fixed;inset:0;background:rgba(15,17,23,0.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9999;}
+#overlay{position:fixed;inset:0;background:rgba(238,242,249,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9999;}
 #overlay.hidden{display:none;}
 .spin{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 #overlay-txt{font-size:14px;color:var(--muted);}
+
+/* ── Login overlay ── */
+#login-overlay{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+#login-overlay.hidden{display:none;}
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px 28px;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.login-logo{font-size:20px;font-weight:600;color:var(--accent);display:flex;align-items:center;gap:8px;justify-content:center;}
+.login-sub{font-size:12px;color:var(--muted);text-align:center;margin:6px 0 22px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.login-field input{width:100%;font-size:14px;padding:10px 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--surface2);color:var(--text);outline:none;}
+.login-field input:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(79,142,247,0.15);}
+.login-err{font-size:12px;color:#e74c3c;min-height:16px;margin-bottom:8px;}
+.login-btn{width:100%;font-size:14px;font-weight:600;padding:11px;border:none;border-radius:var(--radius);background:var(--accent);color:#fff;cursor:pointer;}
+.login-btn:hover{background:#3a7de0;}
+#user-chip{font-size:11px;color:var(--text);background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:4px 12px;display:inline-flex;align-items:center;gap:6px;}
+#user-chip .role{color:var(--accent);font-weight:600;}
+.logout-btn{font-size:11px;padding:5px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+.logout-btn:hover{color:var(--text);}
 
 /* Project Summary styles */
 .proj-filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end;}
@@ -179,6 +201,18 @@ tr:hover td{background:var(--surface2);}
 .pov-ms-opt mark{background:rgba(79,142,247,0.3);color:var(--accent);border-radius:2px;}
 .pov-ms-empty{padding:12px;text-align:center;color:var(--muted);font-size:12px;}
 
+/* ── Hierarchy Report ── */
+.hrc-table{border-collapse:separate;border-spacing:0;font-size:12px;width:100%;min-width:max-content;}
+.hrc-table th{position:sticky;top:0;z-index:5;background:var(--surface2);color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.hrc-table td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+.hrc-table tr:hover td{background:rgba(37,99,235,0.04);}
+.hrc-row-0{background:rgba(79,142,247,0.04);}
+.hrc-row-1{background:rgba(155,109,255,0.04);}
+.hrc-row-2{background:rgba(245,166,35,0.04);}
+.hrc-row-3{background:transparent;}
+.hrc-tg{background:var(--surface);border:1px solid var(--border2);border-radius:4px;cursor:pointer;width:20px;height:20px;line-height:1;font-size:13px;padding:0;margin-right:8px;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center;}
+.hrc-tg:hover{background:var(--surface2);}
+
 </style>
 </head>
 <body>
@@ -188,26 +222,38 @@ tr:hover td{background:var(--surface2);}
   <div id="overlay-txt">Connecting to Google Sheets…</div>
 </div>
 
-<div class="topbar">
-  <div style="display:flex;align-items:center;gap:10px;">
-    <div class="logo"><i class="ti ti-bolt"></i> Ops Dashboard</div>
-    <span style="font-size:11px;color:var(--muted);">PE · Attendance · TBT · DPR · Projects</span>
-  </div>
-  <div class="topbar-right">
-    <span id="acl-user-badge" style="display:none;font-size:12px;color:var(--text);background:var(--surface2);border:1px solid var(--border2);padding:6px 12px;border-radius:8px;line-height:1.2;align-items:center;gap:8px;"></span>
-    <span id="status-badge">Loading…</span>
-    <span id="last-updated"></span>
-    <button class="btn-refresh" onclick="loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
+<div id="login-overlay" class="hidden">
+  <div class="login-card">
+    <div class="login-logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToL7ghMGlVSZZldEAR63B8XCpsOUoKx00ATeQzw6OJACIfjw61nHrhpOQ9&s=10" alt="logo" style="height:28px;width:auto;border-radius:6px;"/> Ops Dashboard</div>
+    <div class="login-sub">Sign in to continue</div>
+    <div class="login-field"><label>Email</label>
+      <input type="text" id="login-email" placeholder="you@example.com" autocomplete="username"/></div>
+    <div class="login-field"><label>Password</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password"/></div>
+    <div id="login-err" class="login-err"></div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">Sign In</button>
   </div>
 </div>
 
-<!-- GLOBAL FILTER BAR -->
-
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcToL7ghMGlVSZZldEAR63B8XCpsOUoKx00ATeQzw6OJACIfjw61nHrhpOQ9&s=10" alt="logo" style="height:24px;width:auto;border-radius:5px;"/> Ops Dashboard</div>
+    <span style="font-size:11px;color:var(--muted);">PE · Attendance · TBT · DPR · Projects</span>
+  </div>
+  <div class="topbar-right">
+    <span id="user-chip" style="display:none;"></span>
+    <span id="status-badge">Loading…</span>
+    <span id="last-updated"></span>
+    <button class="btn-refresh" onclick="loadAll()"><i class="ti ti-refresh"></i> Refresh</button>
+    <button class="logout-btn" id="logout-btn" style="display:none;" onclick="doLogout()"><i class="ti ti-logout"></i> Logout</button>
+  </div>
+</div>
 
 <div class="main" id="main" style="display:none;">
   <div class="tabs">
     <button class="tab active" onclick="switchTab('pov',this)"><i class="ti ti-layout-dashboard"></i> Project Overview</button>
     <button class="tab" onclick="switchTab('rpt',this)"><i class="ti ti-chart-pie"></i> Reports</button>
+    <button class="tab" onclick="switchTab('hrc',this)"><i class="ti ti-binary-tree"></i> Hierarchy Report</button>
     <button class="tab" onclick="switchTab('pmr',this)"><i class="ti ti-calendar-month"></i> Project wise Monthly report</button>
     <button class="tab" onclick="switchTab('pemr',this)"><i class="ti ti-user-check"></i> PE Monthly Report</button>
     <button class="tab" onclick="switchTab('vmr',this)"><i class="ti ti-building-store"></i> Vendor Monthly Report</button>
@@ -299,6 +345,39 @@ tr:hover td{background:var(--surface2);}
     </div>
   </div>
 
+  <!-- HIERARCHY REPORT TAB -->
+  <div id="tab-hrc" class="tab-content">
+    <div class="pe-filter-bar">
+      <div class="pe-filter-group"><label>Month</label><select id="hrc-f-month" onchange="onHRCMonthChange()"></select></div>
+      <div class="pe-filter-group"><label>Week</label>
+        <select id="hrc-f-week" onchange="onHRCWeekChange()">
+          <option value="">All Weeks</option>
+          <option value="1">Week 1 (1–7)</option>
+          <option value="2">Week 2 (8–14)</option>
+          <option value="3">Week 3 (15–21)</option>
+          <option value="4">Week 4 (22–28)</option>
+          <option value="5">Week 5 (29–end)</option>
+        </select>
+      </div>
+      <div class="pe-filter-group"><label>Date (daily)</label><select id="hrc-f-date" onchange="onHRCDateChange()"><option value="">All Days</option></select></div>
+      <div class="pe-fdivider"></div>
+      <div class="pe-filter-actions">
+        <span class="spacer"></span>
+        <div style="display:flex;gap:8px;">
+          <button class="pe-clr-btn" onclick="expandAllHRC()"><i class="ti ti-square-plus" style="font-size:12px;"></i> Expand all</button>
+          <button class="pe-clr-btn" onclick="collapseAllHRC()"><i class="ti ti-square-minus" style="font-size:12px;"></i> Collapse all</button>
+          <button class="pe-clr-btn" onclick="clearHRCFilters()"><i class="ti ti-x" style="font-size:12px;"></i> Clear</button>
+        </div>
+      </div>
+    </div>
+    <div style="padding:16px 24px 24px;">
+      <div class="section-title">Hierarchy Report <span style="text-transform:none;font-weight:400;color:var(--muted);font-size:12px;margin-left:6px;">Cluster Head → City Manager → PE → Project · click + to expand</span></div>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="table-wrap" style="max-height:78vh;overflow:auto;"><table class="hrc-table"><thead id="hrc-head"></thead><tbody id="hrc-body"></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
   <!-- PROJECT MONTHLY REPORT TAB -->
   <div id="tab-pmr" class="tab-content">
     <div class="pe-filter-bar">
@@ -356,6 +435,7 @@ tr:hover td{background:var(--surface2);}
       <div class="card" style="padding:0;overflow:hidden;">
         <div class="table-wrap pmr-wrap"><table class="pmr-table"><thead id="pemr-head"></thead><tbody id="pemr-body"></tbody></table></div>
       </div>
+      <div id="pemr-pe-summary"></div>
     </div>
   </div>
 
@@ -494,7 +574,6 @@ tr:hover td{background:var(--surface2);}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
 // ── Config ────────────────────────────────────────────────────
 const SID='1NuqbG_4a3bGS4Wd6dKvxsP0FN2tE6yMupkQ-1fYDQNA';
@@ -506,7 +585,8 @@ const SHEETS={
   dpr:'351032265',
   workplan:'204658067',
   vendor:'2088990270', // Vendor data
-  daily:'1404385043'   // Daily Activity (leave tracker)
+  daily:'1404385043',  // Daily Activity (leave tracker)
+  cred:'1939441300'    // Cred (login) sheet
 };
 
 let D={
@@ -517,14 +597,23 @@ let D={
   dpr:{h:[],r:[]},
   workplan:{h:[],r:[]},
   vendor:{h:[],r:[]},
-  daily:{h:[],r:[]}
+  daily:{h:[],r:[]},
+  cred:{h:[],r:[]}
 };
 
 // ── Helpers ───────────────────────────────────────────────────
 const csvUrl=gid=>`https://docs.google.com/spreadsheets/d/${SID}/export?format=csv&gid=${gid}`;
 function ci(headers,...kws){for(const kw of kws){const i=headers.findIndex(h=>h.toLowerCase().replace(/[\s\-_]/g,'').includes(kw.toLowerCase().replace(/[\s\-_]/g,'')));if(i>=0)return i;}return -1;}
 const v=(row,i)=>i>=0?(row[i]||'').trim():'';
-function parseSheet(gid){return new Promise((res,rej)=>{Papa.parse(csvUrl(gid),{download:true,header:false,skipEmptyLines:true,complete:r=>{if(r.data.length<1)rej('Empty');else res(r.data);},error:e=>rej(e)});});}
+function parseSheet(gid){return new Promise((res,rej)=>{
+  const timer=setTimeout(()=>rej(new Error('Timeout (>30s) loading sheet '+gid)),30000);
+  Papa.parse(csvUrl(gid),{download:true,header:false,skipEmptyLines:true,
+    complete:r=>{clearTimeout(timer);if(!r.data.length)return rej('Empty sheet '+gid);
+      const first=String((r.data[0]||[])[0]||'').trim().toLowerCase();
+      if(first.startsWith('<!')||first.startsWith('<html')||first.startsWith('<!doctype'))return rej(new Error('Sheet '+gid+' is not publicly accessible (got HTML, not CSV)'));
+      res(r.data);},
+    error:e=>{clearTimeout(timer);rej(e);}});
+});}
 function setOverlay(txt){document.getElementById('overlay-txt').textContent=txt;}
 function switchTab(name,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('tab-'+name).classList.add('active');}
 function fillSel(id,vals){const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);[...new Set(vals)].filter(Boolean).sort().forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});}
@@ -548,10 +637,8 @@ function dateMatch(cellVal,filterDate){
 
 function parseDate(str){
   if(!str)return null;
-  // Try M/D/YYYY H:mm:ss
   const d=new Date(str);
   if(!isNaN(d))return d;
-  // Try DD/MM/YYYY
   const p=str.trim().split(/[\/\-]/);
   if(p.length>=3){
     const d2=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
@@ -579,212 +666,26 @@ function applyFilters(){buildAll();}
 function clearFilters(){buildAll();}
 function updateFilterIndicator(){}
 
-// ── ACL (role-based row access) ───────────────────────────────
-// Admin emails (lowercase). Adjust as needed.
-const ADMIN_EMAILS=new Set(['safeek.m@solarsquare.in']);
-// ▼ Google Sign-In: set GOOGLE_CLIENT_ID to enforce real Google identity.
-//   Create one at https://console.cloud.google.com/apis/credentials (OAuth Client ID, type "Web application").
-//   Add this page's URL to "Authorized JavaScript origins".
-//   When set, manual email entry is disabled; users MUST sign in with Google.
-const GOOGLE_CLIENT_ID=''; // e.g. '123-abc.apps.googleusercontent.com'
-const HOSTED_DOMAIN='solarsquare.in'; // restrict to workspace domain ('' to allow any Google account)
-let _userEmail='',_userName='',_userRole='none'; // role: admin|cluster|citymgr|pe|none
-let _aclLeadAll=null; // backup of D.lead.r before ACL filtering
-
-function aclDecodeJWT(token){try{const b=token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');const j=decodeURIComponent(atob(b).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));return JSON.parse(j);}catch(e){return null;}}
-
-function aclHandleGoogleCredential(resp){
-  const payload=aclDecodeJWT(resp.credential);
-  if(!payload||!payload.email_verified||!payload.email){alert('Sign-in failed — email not verified.');return;}
-  if(HOSTED_DOMAIN&&payload.hd!==HOSTED_DOMAIN&&!ADMIN_EMAILS.has(payload.email.toLowerCase())){alert(`Please sign in with your @${HOSTED_DOMAIN} Google account.`);return;}
-  _userEmail=payload.email;
-  if(payload.name)_userGoogleName=payload.name;
-  try{sessionStorage.setItem('ops_email',_userEmail);}catch(e){}
-  aclCloseSignIn();
-  loadAll();
-}
-let _userGoogleName='';
-
-function aclInitGoogleSignIn(){
-  if(!GOOGLE_CLIENT_ID)return false;
-  if(typeof google==='undefined'||!google.accounts||!google.accounts.id){
-    // GIS script not yet ready — retry shortly
-    setTimeout(aclInitGoogleSignIn,200);return true;
-  }
-  try{
-    google.accounts.id.initialize({
-      client_id:GOOGLE_CLIENT_ID,
-      callback:aclHandleGoogleCredential,
-      auto_select:true,
-      hd:HOSTED_DOMAIN||undefined
-    });
-    const btn=document.getElementById('google-signin-btn');
-    if(btn){btn.innerHTML='';google.accounts.id.renderButton(btn,{theme:'filled_blue',size:'large',type:'standard',text:'signin_with',shape:'pill',width:240});}
-    google.accounts.id.prompt(); // One Tap
-  }catch(e){console.warn('GIS init failed',e);}
-  return true;
-}
-
-function aclShowSignIn(){
-  let ov=document.getElementById('acl-signin-ov');
-  if(!ov){ov=document.createElement('div');ov.id='acl-signin-ov';ov.className='pmr-modal-ov';document.body.appendChild(ov);}
-  ov.innerHTML=`<div class="pmr-modal" style="max-width:420px;text-align:center;padding:32px 24px;">
-    <div style="font-size:22px;font-weight:700;color:var(--text);margin-bottom:8px;"><i class="ti ti-bolt" style="color:var(--accent);"></i> Ops Dashboard</div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:24px;">Please sign in with your Google account to continue.</div>
-    <div id="google-signin-btn" style="display:flex;justify-content:center;min-height:44px;"></div>
-    ${HOSTED_DOMAIN?`<div style="font-size:11px;color:var(--muted);margin-top:18px;">Use your <b>@${HOSTED_DOMAIN}</b> account</div>`:''}
-  </div>`;
-  ov.style.display='flex';
-  aclInitGoogleSignIn();
-}
-function aclCloseSignIn(){const ov=document.getElementById('acl-signin-ov');if(ov)ov.style.display='none';}
-
-function aclDetectEmail(){
-  // URL override (kept for testing only — works regardless of Google config)
-  const p=new URLSearchParams(location.search).get('email');
-  if(p){_userEmail=p;return true;}
-  if(GOOGLE_CLIENT_ID){
-    // Google mode: only session-scoped email is honoured (signed in this session)
-    try{_userEmail=sessionStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
-    if(!_userEmail){aclShowSignIn();return false;}
-    return true;
-  }
-  // Fallback (no Google client configured) — manual entry. ⚠ Easily spoofable.
-  try{_userEmail=localStorage.getItem('ops_email')||'';}catch(e){_userEmail='';}
-  if(!_userEmail){
-    const inp=prompt('⚠ DEV MODE — enter any email (real Google sign-in is not configured):');
-    if(inp){_userEmail=inp.trim();try{localStorage.setItem('ops_email',_userEmail);}catch(e){}}
-  }
-  return !!_userEmail;
-}
-
-function aclSwitchUser(){
-  if(GOOGLE_CLIENT_ID){
-    try{sessionStorage.removeItem('ops_email');}catch(e){}
-    if(typeof google!=='undefined'&&google.accounts&&google.accounts.id){
-      try{google.accounts.id.disableAutoSelect();}catch(e){}
-    }
-    _userEmail='';_userGoogleName='';
-    aclShowSignIn();
-  }else{
-    try{localStorage.removeItem('ops_email');}catch(e){}
-    _userEmail='';aclDetectEmail();loadAll();
-  }
-}
-function aclResolveRole(){
-  const em=(_userEmail||'').toLowerCase().trim();
-  _userName='';_userRole='none';
-  if(!em)return;
-  if(ADMIN_EMAILS.has(em)){_userRole='admin';_userName='Admin';return;}
-  const emIdx=ci(D.pe.h,'email','mail');
-  let row=null;
-  if(emIdx>=0)row=D.pe.r.find(x=>v(x,emIdx).toLowerCase().trim()===em);
-  if(!row){_userRole='none';return;}
-  _userName=v(row,1);
-  const src=_aclLeadAll||D.lead.r;
-  if(src.some(x=>lv(x,LEAD_COL.CLUSTER)===_userName)){_userRole='cluster';return;}
-  if(src.some(x=>lv(x,LEAD_COL.CITYMGR)===_userName)){_userRole='citymgr';return;}
-  if(src.some(x=>lv(x,LEAD_COL.PE)===_userName)){_userRole='pe';return;}
-  _userRole='pe'; // present in PE Master but unassigned
-}
-function aclProjectPass(x){
-  if(_userRole==='admin')return true;
-  if(_userRole==='none')return false;
-  if(_userRole==='cluster')return lv(x,LEAD_COL.CLUSTER)===_userName;
-  if(_userRole==='citymgr')return lv(x,LEAD_COL.CITYMGR)===_userName;
-  if(_userRole==='pe')return lv(x,LEAD_COL.PE)===_userName;
-  return false;
-}
-function aclApply(){
-  // Filter D.lead.r in place (keeping backup). Downstream pop/build use filtered set.
-  if(!_aclLeadAll)_aclLeadAll=D.lead.r;
-  D.lead.r=_aclLeadAll.filter(aclProjectPass);
-  // Build set of allowed project IDs for attendance/TBT/DPR filtering
-  const okPid=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PID)).filter(Boolean));
-  // Attendance has project ID in col D — filter directly
-  if(!D.att._all)D.att._all=D.att.r;
-  D.att.r=_userRole==='admin'?D.att._all:D.att._all.filter(x=>okPid.has(v(x,ATT_COL.PID)));
-  // TBT/DPR — map uid→pid via attendance
-  const uidToProj={};D.att._all.forEach(x=>{const uid=v(x,ATT_COL.UID),pid=v(x,ATT_COL.PID);if(uid&&pid)uidToProj[uid]=pid;});
-  if(!D.tbt._all)D.tbt._all=D.tbt.r;
-  D.tbt.r=_userRole==='admin'?D.tbt._all:D.tbt._all.filter(x=>{const pid=uidToProj[v(x,0)];return pid&&okPid.has(pid);});
-  if(!D.dpr._all)D.dpr._all=D.dpr.r;
-  D.dpr.r=_userRole==='admin'?D.dpr._all:D.dpr._all.filter(x=>{const pid=uidToProj[v(x,0)];return pid&&okPid.has(pid);});
-  // Vendor data — filter by city for non-admin roles
-  if(!D.vendor._all)D.vendor._all=D.vendor.r;
-  if(_userRole==='admin')D.vendor.r=D.vendor._all;
-  else{const okCity=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.CITY)).filter(Boolean));D.vendor.r=D.vendor._all.filter(x=>okCity.has(v(x,4)));}
-  // PE Master — for PE role show only themselves; otherwise show PEs visible in their scope
-  if(!D.pe._all)D.pe._all=D.pe.r;
-  if(_userRole==='admin')D.pe.r=D.pe._all;
-  else if(_userRole==='pe')D.pe.r=D.pe._all.filter(x=>v(x,1)===_userName);
-  else{const okPE=new Set(D.lead.r.map(x=>lv(x,LEAD_COL.PE)).filter(Boolean));D.pe.r=D.pe._all.filter(x=>okPE.has(v(x,1)));}
-}
-function aclRenderBadge(){
-  const el=document.getElementById('acl-user-badge');if(!el)return;
-  if(!_userEmail){el.style.display='none';return;}
-  const roleLabel={admin:'Admin',cluster:'Cluster Head',citymgr:'City Manager',pe:'PE',none:'No Access'}[_userRole]||_userRole;
-  const color={admin:'#9b6dff',cluster:'#4f8ef7',citymgr:'#f5a623',pe:'#34c98a',none:'#e74c3c'}[_userRole]||'#8b92b0';
-  const name=(_userName||_userEmail);
-  const initials=(name.match(/\b[A-Za-z]/g)||['?']).slice(0,2).join('').toUpperCase();
-  el.style.display='inline-flex';
-  el.innerHTML=`<span style="width:24px;height:24px;border-radius:50%;background:${color}22;border:1px solid ${color}66;color:${color};display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;">${initials}</span><span style="display:flex;flex-direction:column;line-height:1.2;"><b style="font-size:12px;color:var(--text);">${name.replace(/</g,'&lt;')}</b><span style="font-size:10px;color:${color};font-weight:500;">${roleLabel}</span></span><a onclick="aclSwitchUser()" title="Switch user" style="color:var(--muted);cursor:pointer;margin-left:2px;font-size:14px;" onmouseover="this.style.color='var(--accent)';" onmouseout="this.style.color='var(--muted)';"><i class="ti ti-switch-horizontal"></i></a>`;
-}
-
-function aclShowWelcome(){
-  const role=_userRole;
-  const roleMap={admin:{label:'Admin Access',sub:'You have full access to all data across all clusters, cities, and PEs.',color:'#9b6dff',icon:'ti-shield-check'},cluster:{label:'Cluster Head Access',sub:`You'll see only projects under your cluster.`,color:'#4f8ef7',icon:'ti-users-group'},citymgr:{label:'City Manager Access',sub:`You'll see only projects in your city.`,color:'#f5a623',icon:'ti-building-skyscraper'},pe:{label:'PE Access',sub:`You'll see only the projects assigned to you.`,color:'#34c98a',icon:'ti-user'},none:{label:'No Access',sub:`Your email isn't registered in PE Master. Please contact the admin to be granted access, or switch to a registered email.`,color:'#e74c3c',icon:'ti-lock-x'}};
-  const info=roleMap[role]||roleMap.none;
-  const isNone=role==='none';
-  const display=_userName||_userEmail||'there';
-  let ov=document.getElementById('acl-welcome-ov');
-  if(!ov){ov=document.createElement('div');ov.id='acl-welcome-ov';ov.className='pmr-modal-ov';document.body.appendChild(ov);}
-  ov.innerHTML=`<div class="pmr-modal" style="max-width:460px;text-align:center;padding:28px 24px;">
-    <div style="width:60px;height:60px;border-radius:50%;background:${info.color}22;border:2px solid ${info.color}66;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;"><i class="ti ${info.icon}" style="color:${info.color};font-size:30px;"></i></div>
-    <div style="font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px;">Hi ${pemrEsc(display)} 👋</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">${pemrEsc(_userEmail)}</div>
-    <div style="font-size:14px;font-weight:600;color:${info.color};margin-bottom:8px;">${info.label}</div>
-    <div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:20px;">${info.sub}</div>
-    <div style="display:flex;gap:8px;justify-content:center;">
-      ${isNone?'':`<button onclick="aclCloseWelcome()" style="background:${info.color};color:#fff;border:none;border-radius:6px;padding:8px 22px;font-size:13px;font-weight:600;cursor:pointer;">OK, Continue</button>`}
-      <button onclick="aclSwitchUser()" style="background:transparent;color:var(--accent);border:1px solid var(--accent);border-radius:6px;padding:8px 18px;font-size:13px;cursor:pointer;">${isNone?'Try Another Email':'Switch User'}</button>
-    </div>
-  </div>`;
-  ov.style.display='flex';
-  // Hide main content until OK
-  const main=document.getElementById('main');if(main&&!isNone)main.style.opacity='0.25';
-}
-function aclCloseWelcome(){const ov=document.getElementById('acl-welcome-ov');if(ov)ov.style.display='none';const main=document.getElementById('main');if(main)main.style.opacity='1';}
-
 // ── Load ──────────────────────────────────────────────────────
 async function loadAll(){
-  if(!aclDetectEmail())return; // Sign-in screen shown; bail out
   document.getElementById('overlay').classList.remove('hidden');
   document.querySelector('.btn-refresh').classList.add('spinning');
   try{
-    _aclLeadAll=null;['att','tbt','dpr','vendor','pe'].forEach(k=>{if(D[k])delete D[k]._all;});
-    for(const [key,gid] of Object.entries(SHEETS)){
-      const labels={lead:'Lead Tracker',pe:'PE Master',att:'Attendance Tracker',tbt:'TBT',dpr:'DPR',workplan:'Workplan',vendor:'Vendor data',daily:'Daily Activity'};
-      setOverlay(`Loading ${labels[key]}…`);
+    // Load all sheets in parallel (incl. cred)
+    const entries=Object.entries(SHEETS);
+    let loaded=0;
+    setOverlay(`Loading data… 0/${entries.length}`);
+    await Promise.all(entries.map(async ([key,gid])=>{
       try{const rows=await parseSheet(gid);D[key].h=rows[0]||[];D[key].r=rows.slice(1);}
       catch(e){console.warn(`Failed: ${key}`,e);D[key].h=[];D[key].r=[];}
-    }
-    aclResolveRole();
-    aclApply();
-    aclRenderBadge();
-    _povCache={};
-    buildProjFilters();
-    populatePOVFilters();
-    populateRPTFilters();
-    populatePMRFilters();
-    populatePEMRFilters();
-    populateVMRFilters();
-    buildAll();
-    document.getElementById('main').style.display='block';
-    aclShowWelcome();
+      loaded++;setOverlay(`Loading data… ${loaded}/${entries.length}`);
+    }));
     document.getElementById('status-badge').innerHTML='<i class="ti ti-circle-check" style="font-size:10px"></i> Live';
     document.getElementById('status-badge').style.cssText='font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);';
     document.getElementById('last-updated').textContent='Updated '+new Date().toLocaleTimeString();
+
+    if(_user){ enterDashboard(); }                       // refresh while logged in → re-scope & rebuild
+    else { document.getElementById('login-overlay').classList.remove('hidden'); }
   }catch(e){
     document.getElementById('status-badge').innerHTML='Error';
     document.getElementById('status-badge').style.cssText='font-size:11px;padding:4px 12px;border-radius:20px;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);';
@@ -792,7 +693,143 @@ async function loadAll(){
   }finally{document.getElementById('overlay').classList.add('hidden');document.querySelector('.btn-refresh').classList.remove('spinning');}
 }
 
-function buildAll(){buildPOV();buildRPT();buildPMR();buildPEMR();buildVMR();}
+// ── AUTH / ROLE SCOPE ─────────────────────────────────────────
+let _user=null;                 // {email, role, name}
+let _leadAll=null, _peAll=null; // unscoped masters
+
+function normRole(s){
+  s=(s||'').toLowerCase().replace(/[\s\-_]/g,'');
+  if(s.includes('admin'))return 'admin';
+  if(s.includes('cluster'))return 'cluster';
+  if(s.includes('citymanager')||s.includes('citymgr')||s==='cm')return 'citymgr';
+  if(s.includes('projectengineer')||s.includes('engineer')||s==='pe')return 'pe';
+  return s;
+}
+
+function doLogin(){
+  const email=(document.getElementById('login-email').value||'').trim().toLowerCase();
+  const pass =(document.getElementById('login-pass').value||'').trim();
+  const errEl=document.getElementById('login-err'); errEl.textContent='';
+  if(!email||!pass){errEl.textContent='Enter email and password.';return;}
+
+  const h=D.cred.h, r=D.cred.r;
+  if(!r.length){errEl.textContent='Credentials sheet not loaded — check that the "Cred" sheet is shared (Anyone with link → Viewer).';return;}
+  // Cred sheet fixed layout: A=Name(0) B=User Email(1) C=Password(2) D=Access Type(3).
+  // Use those positions, but let header detection override if the sheet is arranged differently.
+  const _ix=(def,...kw)=>{const i=ci(h,...kw);return i>=0?i:def;};
+  const NI=_ix(0,'Name','employeename','fullname','username');
+  const EI=_ix(1,'UserEmail','Email','mailid','mail');
+  const PI=_ix(2,'Password','pass');
+  const AI=_ix(3,'Accesstype','access','role','type');
+
+  const row=r.find(x=>v(x,EI).toLowerCase()===email);
+  if(!row){errEl.textContent='No account found for this email.';return;}
+  if(v(row,PI)!==pass){errEl.textContent='Incorrect password.';return;}
+
+  const role=normRole(v(row,AI));
+  let name=v(row,NI);
+  if(!name && role==='pe'){ // fall back to PE Master email→name
+    const peEI=ci(D.pe.h,'Mailid','email','mail'), peNI=ci(D.pe.h,'EmployeeName','name');
+    const peRow=D.pe.r.find(x=>v(x,peEI).toLowerCase()===email);
+    if(peRow)name=v(peRow,peNI);
+  }
+  if(role!=='admin' && !name){
+    errEl.textContent='No "Name" found in column A of the Cred sheet for this account.';return;
+  }
+
+  _user={email,role,name};
+  document.getElementById('login-overlay').classList.add('hidden');
+  enterDashboard();
+}
+
+function doLogout(){
+  _user=null;
+  if(_leadAll)D.lead.r=_leadAll;
+  if(_peAll)D.pe.r=_peAll;
+  document.getElementById('main').style.display='none';
+  document.getElementById('user-chip').style.display='none';
+  document.getElementById('logout-btn').style.display='none';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-err').textContent='';
+  document.getElementById('login-overlay').classList.remove('hidden');
+}
+
+function applyUserScope(){
+  if(_leadAll===null)_leadAll=D.lead.r;
+  if(_peAll===null)_peAll=D.pe.r;
+  let lead=_leadAll, pe=_peAll;
+  const eq=(a,b)=>String(a||'').trim().toLowerCase()===String(b||'').trim().toLowerCase();
+  if(_user && _user.role!=='admin'){
+    const nm=_user.name;
+    if(_user.role==='cluster'){
+      // Lead Tracker: Cluster Head = column AE (index 30)
+      lead=_leadAll.filter(x=>eq(lv(x,LEAD_COL.CLUSTER),nm));
+      const i=ci(D.pe.h,'Clusterhead','cluster'); pe=_peAll.filter(x=>eq(v(x,i),nm));
+    }else if(_user.role==='citymgr'){
+      // Lead Tracker: City Manager = column AG (index 32)
+      lead=_leadAll.filter(x=>eq(lv(x,LEAD_COL.CITYMGR),nm));
+      const i=ci(D.pe.h,'CityManager','citymanager','city'); pe=_peAll.filter(x=>eq(v(x,i),nm));
+    }else if(_user.role==='pe'){
+      lead=_leadAll.filter(x=>eq(lv(x,LEAD_COL.PE),nm));
+      const i=ci(D.pe.h,'EmployeeName','name'); pe=_peAll.filter(x=>eq(v(x,i),nm));
+    }
+    if(!lead.length){
+      console.warn(`No Lead Tracker rows matched "${nm}" for role ${_user.role}. Check the name in Cred col A exactly matches the `+
+        (_user.role==='cluster'?'Cluster Head (col AE)':_user.role==='citymgr'?'City Manager (col AG)':'PE')+' column.');
+    }
+  }
+  D.lead.r=lead; D.pe.r=pe;
+}
+
+function applyTabVisibility(){
+  const isAdmin=_user.role==='admin';
+  // Vendor report is global (not project-scoped) → admin only
+  const vmrTab=[...document.querySelectorAll('.tab')].find(b=>(b.getAttribute('onclick')||'').includes("'vmr'"));
+  if(vmrTab)vmrTab.style.display=isAdmin?'':'none';
+  if(!isAdmin){
+    const vmrC=document.getElementById('tab-vmr');
+    if(vmrC&&vmrC.classList.contains('active')){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+      const pov=[...document.querySelectorAll('.tab')].find(b=>(b.getAttribute('onclick')||'').includes("'pov'"));
+      if(pov)pov.classList.add('active');
+      document.getElementById('tab-pov').classList.add('active');
+    }
+  }
+}
+
+function enterDashboard(){
+  applyUserScope();
+  _povCache={};
+  buildProjFilters();
+  populatePOVFilters(); populateRPTFilters(); populatePMRFilters();
+  populatePEMRFilters(); populateVMRFilters(); populateHRCFilters();
+  buildAll();
+  applyTabVisibility();
+  // PE users land on their PE Monthly Report (calendar + summary)
+  if(_user.role==='pe'){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    const b=[...document.querySelectorAll('.tab')].find(x=>(x.getAttribute('onclick')||'').includes("'pemr'"));
+    if(b)b.classList.add('active');
+    document.getElementById('tab-pemr').classList.add('active');
+    buildPEMR();
+  }
+  const roleLabel={admin:'Admin',cluster:'Cluster Head',citymgr:'City Manager',pe:'Project Engineer'}[_user.role]||_user.role;
+  const chip=document.getElementById('user-chip');
+  chip.innerHTML=`<i class="ti ti-user"></i> ${_user.name||_user.email} <span class="role">· ${roleLabel}</span>`;
+  chip.style.display='inline-flex';
+  document.getElementById('logout-btn').style.display='inline-flex';
+  document.getElementById('main').style.display='block';
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  ['login-email','login-pass'].forEach(id=>{
+    document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+  });
+});
+
+function buildAll(){buildPOV();buildRPT();buildPMR();buildPEMR();buildVMR();buildHRC();}
 
 // ── PE ────────────────────────────────────────────────────────
 function populatePEFilters(){
@@ -801,36 +838,26 @@ function populatePEFilters(){
   const clusters=[...new Set(r.map(x=>v(x,CLI)).filter(Boolean))].sort();
   const cities=[...new Set(r.map(x=>v(x,CMI)).filter(Boolean))].sort();
   const vsStatuses=[...new Set(D.att.r.map(x=>v(x,ci(D.att.h,'VisitStatus','status'))).filter(Boolean))].sort();
-
-  // Build Month, Week, Date options from Attendance col B (Date)
   const _ADI=ci(D.att.h,'Date');
   const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthSet=new Set(), weekSet=new Set(), dateSet=new Set();
-
   D.att.r.forEach(x=>{
     const raw=v(x,_ADI);
     if(!raw)return;
     const d=attDateObjStatic(raw);
     if(!d)return;
-    const mo=d.getMonth()+1; // 1-12
+    const mo=d.getMonth()+1;
     const day=d.getDate();
     const wk=day<=7?1:day<=14?2:day<=21?3:day<=28?4:5;
-    // Store as "YYYY-MM" so months sort correctly across years
     monthSet.add(`${d.getFullYear()}-${String(mo).padStart(2,'0')}|${MONTH_NAMES[mo-1]} ${d.getFullYear()}`);
     weekSet.add(wk);
-    // Store date as ISO for value, display as DD MMM YYYY
     const iso=`${d.getFullYear()}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
     const disp=d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
     dateSet.add(`${iso}|${disp}`);
   });
-
-  // Sort months chronologically
   const monthsSorted=[...monthSet].sort((a,b)=>a.localeCompare(b));
-  // Sort dates chronologically
   const datesSorted=[...dateSet].sort((a,b)=>a.localeCompare(b));
-  // Weeks always 1-5 but only include those present
   const weeksSorted=[...weekSet].sort((a,b)=>a-b);
-
   const selOpts=(id,entries,valFn,lblFn)=>{
     const s=document.getElementById(id);
     if(!s)return;
@@ -843,30 +870,22 @@ function populatePEFilters(){
       s.appendChild(o);
     });
   };
-
   const sel=(id,vals)=>{const s=document.getElementById(id);if(!s)return;const cur=s.value;while(s.options.length>1)s.remove(1);vals.forEach(val=>{const o=document.createElement('option');o.value=val;o.textContent=val;if(val===cur)o.selected=true;s.appendChild(o);});};
   sel('pe-f-cluster',clusters);
   sel('pe-f-city',cities);
   sel('pe-f-vstatus',vsStatuses);
-
-  // Month: value = "YYYY-MM", label = "January 2026"
   selOpts('pe-f-month', monthsSorted, e=>e.split('|')[0], e=>e.split('|')[1]);
-  // Week: value = week number, label = "Week N (D–D)"
   const weekLabels={1:'Week 1 (1–7)',2:'Week 2 (8–14)',3:'Week 3 (15–21)',4:'Week 4 (22–28)',5:'Week 5 (29–31)'};
   selOpts('pe-f-week', weeksSorted, e=>String(e), e=>weekLabels[e]);
-  // Date: value = ISO date "YYYY-MM-DD", label = "13 May 2026"
   selOpts('pe-f-date', datesSorted, e=>e.split('|')[0], e=>e.split('|')[1]);
 }
 
-// Static helper (no closure needed) for parsing att date strings
 function attDateObjStatic(raw){
   if(!raw)return null;
   const p=raw.trim().split(/[\/\-]/);
   if(p.length>=3){
-    // Try DD/MM/YYYY
     const d=new Date(`${p[2]}-${p[1].padStart(2,'0')}-${p[0].padStart(2,'0')}`);
     if(!isNaN(d)&&d.getFullYear()>2000)return d;
-    // Try M/D/YYYY
     const d2=new Date(`${p[2]}-${p[0].padStart(2,'0')}-${p[1].padStart(2,'0')}`);
     if(!isNaN(d2)&&d2.getFullYear()>2000)return d2;
   }
@@ -879,8 +898,6 @@ function clearPEFilters(){
   buildPE();
 }
 
-// Month/Week/Date are mutually exclusive at the detail level:
-// Picking month clears date; picking date clears month+week
 function onPEMonthChange(){
   const m=document.getElementById('pe-f-month').value;
   if(m){document.getElementById('pe-f-date').value='';}
@@ -900,8 +917,6 @@ function onPEDateChange(){
 function buildPE(){
   const h=D.pe.h,r=D.pe.r;
   const NI=ci(h,'EmployeeName','name'),SI=ci(h,'SSEID','sse'),EI=ci(h,'Mailid','email','mail'),DI=ci(h,'Dept','department'),RI=ci(h,'Region'),CLI=ci(h,'Clusterhead','cluster'),CMI=ci(h,'CityManager','city');
-
-  // Read PE-local filters
   const fCluster=(document.getElementById('pe-f-cluster')||{}).value||'';
   const fCity=(document.getElementById('pe-f-city')||{}).value||'';
   const fAtt=(document.getElementById('pe-f-att')||{}).value||'';
@@ -909,11 +924,7 @@ function buildPE(){
   const fWeek=parseInt((document.getElementById('pe-f-week')||{}).value||'')||0;
   const fDate=(document.getElementById('pe-f-date')||{}).value||'';
   const fVS=(document.getElementById('pe-f-vstatus')||{}).value||'';
-
-  // Attendance columns
   const _AEI=ci(D.att.h,'UserEmail','email'),_ACI=ci(D.att.h,'CheckinTime','checkin'),_AOI=ci(D.att.h,'CheckoutTime','checkout'),_AVSI=ci(D.att.h,'VisitStatus','status'),_ADI=ci(D.att.h,'Date');
-
-  // Filter attendance rows by date / month / week / visit status
   const filtAtt=D.att.r.filter(x=>{
     if(fVS&&v(x,_AVSI)!==fVS)return false;
     const cellDate=v(x,_ADI);
@@ -922,7 +933,6 @@ function buildPE(){
       const d=attDateObjStatic(cellDate);
       if(!d)return false;
       if(fMonth){
-        // fMonth is "YYYY-MM"
         const yr=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0');
         if(`${yr}-${mo}`!==fMonth)return false;
       }
@@ -934,13 +944,9 @@ function buildPE(){
     }
     return true;
   });
-
-  // Build per-email sets from filtered attendance
   const ciEmails=new Set(filtAtt.filter(x=>v(x,_ACI)).map(x=>v(x,_AEI).toLowerCase()));
   const fullEmails=new Set(filtAtt.filter(x=>v(x,_ACI)&&v(x,_AOI)).map(x=>v(x,_AEI).toLowerCase()));
   const visitMap={};filtAtt.forEach(x=>{const e=v(x,_AEI).toLowerCase();visitMap[e]=(visitMap[e]||0)+1;});
-
-  // Visit Status counts per PE from filtered att
   const vsMap={};
   filtAtt.forEach(x=>{
     const e=(v(x,_AEI)||'').toLowerCase();
@@ -951,8 +957,6 @@ function buildPE(){
     else if(st==='Without Visit Update')vsMap[e].without++;
     else if(st==='No Activity')vsMap[e].noact++;
   });
-
-  // Check-in/out time per PE from filtered att
   function parseTime(t){if(!t)return null;const d=new Date('1970/01/01 '+t);return isNaN(d)?null:d;}
   function fmtTime(d){if(!d)return'—';return d.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',hour12:true});}
   function timeDiff(a,b){if(!a||!b)return'—';const diff=Math.round((b-a)/60000);const hh=Math.floor(diff/60),mm=diff%60;return hh>0?`${hh}h ${mm}m`:`${mm}m`;}
@@ -965,8 +969,6 @@ function buildPE(){
     if(ci_t&&(!timeMap[e].minCI||ci_t<timeMap[e].minCI))timeMap[e].minCI=ci_t;
     if(co_t&&(!timeMap[e].maxCO||co_t>timeMap[e].maxCO))timeMap[e].maxCO=co_t;
   });
-
-  // TBT/DPR links
   const TUI=ci(D.tbt.h,'Uniqueid','unique');
   const TBTLI=ci(D.tbt.h,'TBTReport','tbt report');
   const DPRLI=ci(D.tbt.h,'DPRReport','dpr report');
@@ -974,15 +976,11 @@ function buildPE(){
     if(!link||!link.startsWith('http'))return'<span style="color:var(--muted);font-size:11px;">—</span>';
     return`<a href="${link}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(52,201,138,0.15);color:#34c98a;border:1px solid rgba(52,201,138,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-folder-open" style="font-size:12px;"></i>${label}</a>`;
   }
-
-  // Filter PE master rows
   let filteredPE=r.filter(x=>{
     if(fCluster&&v(x,CLI)!==fCluster)return false;
     if(fCity&&v(x,CMI)!==fCity)return false;
     return true;
   });
-
-  // Filter by attendance status AFTER we know which emails qualify
   if(fAtt){
     filteredPE=filteredPE.filter(x=>{
       const email=v(x,EI).toLowerCase();
@@ -992,23 +990,22 @@ function buildPE(){
       return true;
     });
   }
-
-  // Filter indicator
   const activeFilters=[fCluster,fCity,fAtt,fMonth?String(fMonth):'',fWeek?String(fWeek):'',fDate,fVS].filter(Boolean).length;
   const tag=document.getElementById('pe-filter-tag');
   if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
-
   const total=filteredPE.length;
   const ci_=filteredPE.filter(x=>ciEmails.has(v(x,EI).toLowerCase())).length;
   const full=filteredPE.filter(x=>fullEmails.has(v(x,EI).toLowerCase())).length;
-  document.getElementById('pe-metrics').innerHTML=
+  const pem=document.getElementById('pe-metrics');
+  if(pem)pem.innerHTML=
     metric('ti-users','Total PEs',total,'','#4f8ef7')+
     metric('ti-login','Checked In',ci_,`${total?Math.round(ci_/total*100):0}%`,'#34c98a')+
     metric('ti-circle-check','Full Attendance',full,'In+Out','#9b6dff')+
     metric('ti-user-off','Absent',total-ci_,'No check-in','#e74c3c');
-
-  document.getElementById('pe-head').innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>Onsite Visit</th><th>Without Visit Update</th><th>No Activity</th><th>Total Activity</th><th>TBT</th><th>DPR</th><th>Check-In Time</th><th>Check-Out Time</th><th>Total Duration</th></tr>';
+  const peh=document.getElementById('pe-head');
+  if(peh)peh.innerHTML='<tr><th>#</th><th>Name</th><th>SSE ID</th><th>Dept</th><th>Region</th><th>Cluster</th><th>City Mgr</th><th>Attendance</th><th>Visits</th><th>Onsite Visit</th><th>Without Visit Update</th><th>No Activity</th><th>Total Activity</th><th>TBT</th><th>DPR</th><th>Check-In Time</th><th>Check-Out Time</th><th>Total Duration</th></tr>';
   const tbody=document.getElementById('pe-body');
+  if(!tbody)return;
   if(!filteredPE.length){tbody.innerHTML='<tr><td colspan="18" class="empty">No records match the selected filters</td></tr>';return;}
   tbody.innerHTML=filteredPE.map((x,i)=>{
     const email=v(x,EI).toLowerCase(),hasFull=fullEmails.has(email),hasIn=ciEmails.has(email);
@@ -1043,19 +1040,18 @@ function buildPE(){
     </tr>`;
   }).join('');
 }
-
 // ── Attendance ────────────────────────────────────────────────
 function buildAtt(){
   const{rows,EI,DI,PI,CI,OI,LI,VSI,RI}=getFilteredAtt();
   const total=rows.length,withIn=rows.filter(x=>v(x,CI)).length,withFull=rows.filter(x=>v(x,CI)&&v(x,OI)).length,uPE=new Set(rows.map(x=>v(x,EI))).size,uProj=new Set(rows.map(x=>v(x,PI))).size;
-  document.getElementById('att-metrics').innerHTML=metric('ti-calendar','Total Visits',total,'Filtered','#4f8ef7')+metric('ti-users','Unique PEs',uPE,'','#34c98a')+metric('ti-login','Check-ins',withIn,`${total?Math.round(withIn/total*100):0}%`,'#9b6dff')+metric('ti-circle-check','Full (In+Out)',withFull,`${total?Math.round(withFull/total*100):0}%`,'#f5a623')+metric('ti-building','Projects',uProj,'','#e74c3c');
+  const am=document.getElementById('att-metrics');if(am)am.innerHTML=metric('ti-calendar','Total Visits',total,'Filtered','#4f8ef7')+metric('ti-users','Unique PEs',uPE,'','#34c98a')+metric('ti-login','Check-ins',withIn,`${total?Math.round(withIn/total*100):0}%`,'#9b6dff')+metric('ti-circle-check','Full (In+Out)',withFull,`${total?Math.round(withFull/total*100):0}%`,'#f5a623')+metric('ti-building','Projects',uProj,'','#e74c3c');
   const pm={};rows.forEach(x=>{const p=v(x,PI)||'Unknown';pm[p]=(pm[p]||0)+1;});
-  document.getElementById('proj-bars').innerHTML=bars(Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
+  const pb=document.getElementById('proj-bars');if(pb)pb.innerHTML=bars(Object.entries(pm).sort((a,b)=>b[1]-a[1]).slice(0,12),'#4f8ef7');
   const em={};rows.forEach(x=>{const e=v(x,EI)||'Unknown';em[e]=(em[e]||0)+1;});
-  document.getElementById('pe-visit-bars').innerHTML=bars(Object.entries(em).sort((a,b)=>b[1]-a[1]).slice(0,12),'#34c98a');
-
-  document.getElementById('att-head').innerHTML='<tr><th>#</th><th>Email</th><th>Date</th><th>Project</th><th>Check-in</th><th>Check-out</th><th>Location</th><th>Status</th><th>Remarks</th></tr>';
+  const pvb=document.getElementById('pe-visit-bars');if(pvb)pvb.innerHTML=bars(Object.entries(em).sort((a,b)=>b[1]-a[1]).slice(0,12),'#34c98a');
+  const ah2=document.getElementById('att-head');if(ah2)ah2.innerHTML='<tr><th>#</th><th>Email</th><th>Date</th><th>Project</th><th>Check-in</th><th>Check-out</th><th>Location</th><th>Status</th><th>Remarks</th></tr>';
   const tbody=document.getElementById('att-body');
+  if(!tbody)return;
   if(!rows.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No records</td></tr>';return;}
   tbody.innerHTML=rows.slice(0,300).map((x,i)=>{const cin=v(x,CI),cout=v(x,OI),st=v(x,VSI);const sb=cin&&cout?'<span class="badge bg">Complete</span>':cin?'<span class="badge bb">In only</span>':'<span class="badge br">Absent</span>';return `<tr><td style="color:var(--muted)">${i+1}</td><td style="font-size:12px">${v(x,EI)||'—'}</td><td><span class="badge bb">${v(x,DI)||'—'}</span></td><td style="font-size:12px">${v(x,PI)||'—'}</td><td style="font-size:12px">${cin||'—'}</td><td style="font-size:12px">${cout||'—'}</td><td style="font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis">${v(x,LI)||'—'}</td><td>${st?`<span class="badge bb">${st}</span>`:sb}</td><td style="font-size:11px;color:var(--muted)">${v(x,RI)||'—'}</td></tr>`;}).join('');
   if(rows.length>300)tbody.innerHTML+=`<tr><td colspan="9" style="text-align:center;color:var(--muted);font-size:12px;padding:10px">Showing 300 of ${rows.length}</td></tr>`;
@@ -1066,13 +1062,14 @@ function buildTBT(){
   const h=D.tbt.h,r=D.tbt.r;
   const VI=ci(h,'Vendor','IC','I&C'),TI=ci(h,'Topic'),TEI=ci(h,'Technician'),HI=ci(h,'Helper'),TSI=ci(h,'Timestamp','time'),UI=ci(h,'Uniqueid','unique'),RI2=ci(h,'TBTReport','report'),MSI=ci(h,'Mailstatus','mail');
   const total=r.length,uIds=new Set(r.map(x=>v(x,UI)).filter(Boolean)).size,totTech=r.reduce((s,x)=>s+(parseInt(v(x,TEI))||0),0),totHelp=r.reduce((s,x)=>s+(parseInt(v(x,HI))||0),0),withRep=r.filter(x=>v(x,RI2)).length,mailSent=r.filter(x=>(v(x,MSI)||'').toLowerCase().includes('sent')).length;
-  document.getElementById('tbt-metrics').innerHTML=metric('ti-clipboard-list','Total TBT',total,'','#4f8ef7')+metric('ti-id','Unique IDs',uIds,'','#34c98a')+metric('ti-tool','Technicians',totTech,'','#9b6dff')+metric('ti-users','Helpers',totHelp,'','#f5a623')+metric('ti-file-check','With Report',withRep,`of ${total}`,'#e74c3c')+metric('ti-send','Mail Sent',mailSent,`of ${total}`,'#34c98a');
+  const tm2=document.getElementById('tbt-metrics');if(tm2)tm2.innerHTML=metric('ti-clipboard-list','Total TBT',total,'','#4f8ef7')+metric('ti-id','Unique IDs',uIds,'','#34c98a')+metric('ti-tool','Technicians',totTech,'','#9b6dff')+metric('ti-users','Helpers',totHelp,'','#f5a623')+metric('ti-file-check','With Report',withRep,`of ${total}`,'#e74c3c')+metric('ti-send','Mail Sent',mailSent,`of ${total}`,'#34c98a');
   const vm={};r.forEach(x=>{const vv=v(x,VI)||'Unknown';vm[vv]=(vm[vv]||0)+1;});
-  document.getElementById('tbt-bars').innerHTML=bars(Object.entries(vm).sort((a,b)=>b[1]-a[1]).slice(0,10),'#9b6dff');
+  const tb=document.getElementById('tbt-bars');if(tb)tb.innerHTML=bars(Object.entries(vm).sort((a,b)=>b[1]-a[1]).slice(0,10),'#9b6dff');
   const mm={'Sent':0,'Pending':0};r.forEach(x=>{if((v(x,MSI)||'').toLowerCase().includes('sent'))mm['Sent']++;else mm['Pending']++;});
-  document.getElementById('tbt-mail-bars').innerHTML=bars([['Sent',mm.Sent],['Pending',mm.Pending]],'#4f8ef7');
-  document.getElementById('tbt-head').innerHTML='<tr><th>#</th><th>Unique ID</th><th>Vendor</th><th>Topic</th><th>Tech</th><th>Helpers</th><th>Timestamp</th><th>Report</th><th>Mail</th></tr>';
+  const tmb=document.getElementById('tbt-mail-bars');if(tmb)tmb.innerHTML=bars([['Sent',mm.Sent],['Pending',mm.Pending]],'#4f8ef7');
+  const th2=document.getElementById('tbt-head');if(th2)th2.innerHTML='<tr><th>#</th><th>Unique ID</th><th>Vendor</th><th>Topic</th><th>Tech</th><th>Helpers</th><th>Timestamp</th><th>Report</th><th>Mail</th></tr>';
   const tbody=document.getElementById('tbt-body');
+  if(!tbody)return;
   if(!r.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No TBT records</td></tr>';return;}
   tbody.innerHTML=r.slice(0,300).map((x,i)=>`<tr><td style="color:var(--muted)">${i+1}</td><td><span class="badge bp">${v(x,UI)||'—'}</span></td><td style="font-size:12px">${v(x,VI)||'—'}</td><td style="font-size:12px;max-width:160px;overflow:hidden;text-overflow:ellipsis">${v(x,TI)||'—'}</td><td>${v(x,TEI)||'0'}</td><td>${v(x,HI)||'0'}</td><td style="font-size:11px">${v(x,TSI)||'—'}</td><td>${v(x,RI2)?'<span class="badge bg">✓ Yes</span>':'<span class="badge br">✗ No</span>'}</td><td>${v(x,MSI)?`<span class="badge bb">${v(x,MSI)}</span>`:'<span class="badge bo">Pending</span>'}</td></tr>`).join('');
 }
@@ -1083,16 +1080,17 @@ function buildDPR(){
   const CII=ci(h,'ChildID','child'),PI=ci(h,'WorkPlan','plan','work'),MPI=ci(h,'Manpower'),PCI=ci(h,'%','completion','percent'),ISI=ci(h,'Issues','challenges'),RI=ci(h,'Remarks','remark'),TSI=ci(h,'Timestamp','time'),UI=ci(h,'UniqueID','unique');
   const total=r.length,uIds=new Set(r.map(x=>v(x,UI)).filter(Boolean)).size,totMP=r.reduce((s,x)=>s+(parseInt(v(x,MPI))||0),0),withIss=r.filter(x=>{const i=v(x,ISI).toLowerCase();return i&&i!=='no'&&i!=='none'&&i!=='na';}).length;
   const pcts=r.map(x=>parseFloat(v(x,PCI))||0).filter(n=>n>0);const avg=pcts.length?Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length):0;
-  document.getElementById('dpr-metrics').innerHTML=metric('ti-file-report','Total DPR',total,'','#4f8ef7')+metric('ti-id','Unique IDs',uIds,'','#34c98a')+metric('ti-users','Manpower',totMP,'','#9b6dff')+metric('ti-percentage','Avg Completion',avg+'%','','#f5a623')+metric('ti-alert-triangle','With Issues',withIss,`of ${total}`,'#e74c3c');
+  const dm=document.getElementById('dpr-metrics');if(dm)dm.innerHTML=metric('ti-file-report','Total DPR',total,'','#4f8ef7')+metric('ti-id','Unique IDs',uIds,'','#34c98a')+metric('ti-users','Manpower',totMP,'','#9b6dff')+metric('ti-percentage','Avg Completion',avg+'%','','#f5a623')+metric('ti-alert-triangle','With Issues',withIss,`of ${total}`,'#e74c3c');
   const buckets=[['0–25%',0],['26–50%',0],['51–75%',0],['76–100%',0]];
   r.forEach(x=>{const p=parseFloat(v(x,PCI))||0;if(p<=25)buckets[0][1]++;else if(p<=50)buckets[1][1]++;else if(p<=75)buckets[2][1]++;else buckets[3][1]++;});
   const bC=['#e74c3c','#f5a623','#4f8ef7','#34c98a'],maxB=Math.max(...buckets.map(b=>b[1]))||1;
-  document.getElementById('dpr-bars').innerHTML=buckets.map(([l,n],i)=>`<div class="pr-row"><div class="pr-lbl">${l}</div><div class="pr-track"><div class="pr-fill" style="width:${Math.round(n/maxB*100)}%;background:${bC[i]}"></div></div><div class="pr-cnt">${n}</div></div>`).join('');
+  const db=document.getElementById('dpr-bars');if(db)db.innerHTML=buckets.map(([l,n],i)=>`<div class="pr-row"><div class="pr-lbl">${l}</div><div class="pr-track"><div class="pr-fill" style="width:${Math.round(n/maxB*100)}%;background:${bC[i]}"></div></div><div class="pr-cnt">${n}</div></div>`).join('');
   const im={};r.forEach(x=>{const iss=v(x,ISI);if(iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na'){const k=iss.slice(0,35);im[k]=(im[k]||0)+1;}});
   const topI=Object.entries(im).sort((a,b)=>b[1]-a[1]).slice(0,8);
-  document.getElementById('dpr-issue-bars').innerHTML=topI.length?bars(topI,'#e74c3c'):'<div class="empty" style="padding:16px;font-size:13px;">No issues reported</div>';
-  document.getElementById('dpr-head').innerHTML='<tr><th>#</th><th>Unique ID</th><th>Child ID</th><th>Work Plan</th><th>Manpower</th><th>Completion</th><th>Issues</th><th>Remarks</th><th>Timestamp</th></tr>';
+  const dib=document.getElementById('dpr-issue-bars');if(dib)dib.innerHTML=topI.length?bars(topI,'#e74c3c'):'<div class="empty" style="padding:16px;font-size:13px;">No issues reported</div>';
+  const dh2=document.getElementById('dpr-head');if(dh2)dh2.innerHTML='<tr><th>#</th><th>Unique ID</th><th>Child ID</th><th>Work Plan</th><th>Manpower</th><th>Completion</th><th>Issues</th><th>Remarks</th><th>Timestamp</th></tr>';
   const tbody=document.getElementById('dpr-body');
+  if(!tbody)return;
   if(!r.length){tbody.innerHTML='<tr><td colspan="9" class="empty">No DPR records</td></tr>';return;}
   tbody.innerHTML=r.slice(0,300).map((x,i)=>{const pct=parseFloat(v(x,PCI))||0,pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br',iss=v(x,ISI),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';return `<tr><td style="color:var(--muted)">${i+1}</td><td><span class="badge bp">${v(x,UI)||'—'}</span></td><td style="font-size:11px">${v(x,CII)||'—'}</td><td style="font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis">${v(x,PI)||'—'}</td><td>${v(x,MPI)||'—'}</td><td><span class="badge ${pc}">${pct}%</span></td><td>${hasIss?'<span class="badge br">⚠ Yes</span>':'<span class="badge bg">None</span>'}</td><td style="font-size:11px;color:var(--muted);max-width:120px;overflow:hidden;text-overflow:ellipsis">${v(x,RI)||'—'}</td><td style="font-size:11px">${v(x,TSI)||'—'}</td></tr>`;}).join('');
 }
@@ -1136,9 +1134,7 @@ function filterProjDropdown(type){
   dd.classList.add('open');
 }
 
-function openDropdown(type){
-  filterProjDropdown(type);
-}
+function openDropdown(type){filterProjDropdown(type);}
 
 function closeDropdownDelayed(type){
   setTimeout(()=>{
@@ -1158,11 +1154,9 @@ function selectProj(id,name,type){
 function searchProject(){
   const nameVal=document.getElementById('proj-name-input').value.trim();
   const idVal=document.getElementById('proj-id-input').value.trim();
-  // Try exact ID match first
   if(idVal){
     const match=allProjects.find(p=>p.id.toLowerCase()===idVal.toLowerCase());
     if(match){renderProjectSummary(match.id,match.name);return;}
-    // fuzzy
     const fuzzy=allProjects.find(p=>p.id.toLowerCase().includes(idVal.toLowerCase()));
     if(fuzzy){renderProjectSummary(fuzzy.id,fuzzy.name);document.getElementById('proj-id-input').value=fuzzy.id;document.getElementById('proj-name-input').value=fuzzy.name;return;}
   }
@@ -1185,7 +1179,6 @@ function clearProjFilter(){
   document.getElementById('proj-info-bar').style.display='none';
 }
 
-// Also allow Enter key to trigger search
 document.addEventListener('DOMContentLoaded',()=>{
   ['proj-name-input','proj-id-input'].forEach(id=>{
     document.getElementById(id)?.addEventListener('keydown',e=>{if(e.key==='Enter')searchProject();});
@@ -1194,22 +1187,16 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 function renderProjectSummary(projId,projName){
   if(!projId){clearProjFilter();return;}
-
-  // ── Step 1: Find all Attendance Tracker rows for this project
   const ah=D.att.h,ar=D.att.r;
-  const A_UID=ci(ah,'UniqueID','unique id');  // col A - Unique ID
-  const A_DATE=ci(ah,'Date');                  // col B - Date
-  const A_PNAME=ci(ah,'ProjectName','project name'); // col C - Project Name
-  const A_PID=ci(ah,'ProjectID','project id');       // col D - Project ID
-
-  // Get all unique IDs (col A) where Project ID (col D) matches
+  const A_UID=ci(ah,'UniqueID','unique id');
+  const A_DATE=ci(ah,'Date');
+  const A_PNAME=ci(ah,'ProjectName','project name');
+  const A_PID=ci(ah,'ProjectID','project id');
   const attRowsForProj=ar.filter(r=>v(r,A_PID)===projId);
   const uniqueIdsForProj=new Set(attRowsForProj.map(r=>v(r,A_UID)).filter(Boolean));
-
-  // ── Step 2: Get all DPR rows matching those unique IDs
   const dh=D.dpr.h,dr=D.dpr.r;
-  const D_CID=ci(dh,'ChildID','child');         // Child ID like SSHS_1507/13-May-2026
-  const D_PLAN=ci(dh,'WorkPlan','plan','work'); // Today's Work Plan
+  const D_CID=ci(dh,'ChildID','child');
+  const D_PLAN=ci(dh,'WorkPlan','plan','work');
   const D_MP=ci(dh,'Manpower');
   const D_TASK=ci(dh,'CompletedTask','completed task');
   const D_PCT=ci(dh,'%','completion','percent');
@@ -1217,29 +1204,17 @@ function renderProjectSummary(projId,projName){
   const D_REM=ci(dh,'Remarks','remark');
   const D_TS=ci(dh,'Timestamp','time');
   const D_UID=ci(dh,'UniqueID','unique');
-
-  // DPR Child ID format: SSHS_1507/13-May-2026(xxx)
-  // Unique ID in DPR is col L (Unique ID)
-  // We need to match DPR rows where Unique ID exists in uniqueIdsForProj
-  // OR Child ID starts with projId
   const dprForProj=dr.filter(r=>{
     const uid=v(r,D_UID);
     const cid=v(r,D_CID);
-    // Match by unique id OR by child id containing project ID
     return uniqueIdsForProj.has(uid) || cid.startsWith(projId);
   });
-
-  // ── Step 3: Get workplan items
   const wh=D.workplan.h,wr=D.workplan.r;
-  // Build workplan with A=process, B=expected completion %
   const workplanItemsRaw=wr.filter(r=>(r[0]||'').trim()).map(r=>({
     plan:(r[0]||'').trim(),
     expectedPct:parseFloat((r[1]||'').trim())||0
   }));
   const workplanItems=workplanItemsRaw.map(w=>w.plan);
-
-  // ── Step 4: For each workplan item, find latest DPR entry
-  // Group DPR by work plan
   const dprByPlan={};
   dprForProj.forEach(r=>{
     const plan=v(r,D_PLAN).trim().toLowerCase();
@@ -1247,28 +1222,19 @@ function renderProjectSummary(projId,projName){
     if(!dprByPlan[plan])dprByPlan[plan]=[];
     dprByPlan[plan].push(r);
   });
-
-  // Helper: normalize plan name for matching
   const norm=s=>s.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
-
-  // ── Step 5: Build workplan table
   const tbody=document.getElementById('proj-workplan-body');
   let completedCount=0,wipCount=0,pendingCount=0;
-
   const rows=workplanItemsRaw.map(({plan,expectedPct},idx)=>{
     const planNorm=norm(plan);
-    // Find matching DPR entries (fuzzy match)
     const matchedDPR=dprForProj.filter(r=>{
       const dp=norm(v(r,D_PLAN));
       return dp===planNorm||dp.includes(planNorm)||planNorm.includes(dp);
     });
-
     if(!matchedDPR.length){
       pendingCount++;
       return{plan,expectedPct,status:'pending',pct:0,mp:0,startDate:null,endDate:null,remarks:'',matchedDPR:[]};
     }
-
-    // Sort by timestamp to get latest
     const sorted=[...matchedDPR].sort((a,b)=>{
       const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));
       if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;
@@ -1282,16 +1248,12 @@ function renderProjectSummary(projId,projName){
     const endDate=allDates.length?allDates[allDates.length-1]:null;
     const totalMP=matchedDPR.reduce((s,r)=>s+(parseInt(v(r,D_MP))||0),0);
     const latestRemarks=v(latest,D_REM);
-
     let status,pct;
     if(latestTask.includes('complet')||latestPct>=100){status='done';pct=100;completedCount++;}
     else{status='wip';pct=latestPct;wipCount++;}
-
     return{plan,expectedPct,status,pct,mp:totalMP,startDate,endDate,remarks:latestRemarks,matchedDPR:sorted};
   });
-
   pendingCount=workplanItems.length-completedCount-wipCount;
-
   tbody.innerHTML=rows.map((r,i)=>{
     let statusBadge,progBar;
     if(r.status==='done'){
@@ -1318,16 +1280,11 @@ function renderProjectSummary(projId,projName){
       <td style="font-size:11px;color:var(--muted);max-width:150px;overflow:hidden;text-overflow:ellipsis">${r.remarks||'—'}</td>
     </tr>`;
   }).join('');
-
-  // ── Overall project dates from DPR timestamps
   const allProjDates=dprForProj.map(r=>parseDate(v(r,D_TS))).filter(Boolean);
   const projStartDate=allProjDates.length?new Date(Math.min(...allProjDates)):null;
   const projEndDate=allProjDates.length?new Date(Math.max(...allProjDates)):null;
   const today=new Date(); today.setHours(0,0,0,0);
   const projTAT=projStartDate?Math.ceil((today-projStartDate)/(1000*60*60*24))+1:null;
-
-  // ── Weighted completion % from Workplan B column (expected %)
-  // For each completed item, add its expectedPct; for WIP add proportional; pending = 0
   let weightedCompleted=0,totalWeight=0;
   rows.forEach(r=>{
     const w=r.expectedPct||0;
@@ -1336,23 +1293,18 @@ function renderProjectSummary(projId,projName){
     else if(r.status==='wip') weightedCompleted+=w*(r.pct/100);
   });
   const weightedPct=totalWeight>0?Math.round(weightedCompleted/totalWeight*100):0;
-
-  // Simple counts
   const total_=workplanItems.length;
   const completedPct=total_?Math.round(completedCount/total_*100):0;
   const wipPct=total_?Math.round(wipCount/total_*100):0;
   const pendingPct=total_?Math.round(pendingCount/total_*100):0;
-
-  // ── DPR sorted for log + last updated
   const dprSorted=[...dprForProj].sort((a,b)=>{
     const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));
     if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;
-    return db-da; // newest first
+    return db-da;
   });
   const lastDPREntry=dprSorted.length?dprSorted[0]:null;
   const lastWorkPlan=lastDPREntry?v(lastDPREntry,D_PLAN):'—';
   const lastDPRDate=lastDPREntry?parseDate(v(lastDPREntry,D_TS)):null;
-
   const tatCard=`<div class="metric" style="--mc:#4f8ef7;grid-column:span 2;min-width:280px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
       <i class="ti ti-calendar-stats" style="font-size:16px;color:#4f8ef7;"></i>
@@ -1373,10 +1325,7 @@ function renderProjectSummary(projId,projName){
       </div>
     </div>
   </div>`;
-
-  // Pending from = Today - Last DPR Date
   const pendingFromDays=lastDPRDate?Math.ceil((today-lastDPRDate)/(1000*60*60*24)):null;
-
   const lastUpdatedCard=`<div class="metric" style="--mc:#4f8ef7;grid-column:span 2;min-width:280px;">
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
       <i class="ti ti-history" style="font-size:16px;color:#4f8ef7;"></i>
@@ -1397,7 +1346,6 @@ function renderProjectSummary(projId,projName){
       </div>
     </div>
   </div>`;
-
   document.getElementById('proj-metrics').innerHTML=
     metricWithBar('ti-list-check','Total Items',total_,'Workplan items','#4f8ef7',100,100)+
     metricWithBar('ti-circle-check','Completed',completedCount,`${completedPct}% of items`,'#34c98a',completedPct,'#34c98a')+
@@ -1407,14 +1355,10 @@ function renderProjectSummary(projId,projName){
     metricWithBar('ti-chart-donut','Completion %',weightedPct+'%','Weighted by workplan %','#34c98a',weightedPct,'#34c98a')+
     tatCard+
     lastUpdatedCard;
-
-  // ── DPR Activity Log (filterable by TBT "DPR Summary" link; match on column A)
   _projDPRSorted=dprSorted;
   _projDPRCols={D_PLAN,D_TASK,D_PCT,D_MP,D_ISS,D_REM,D_TS};
   _dprLogFilterUid=null;
   renderProjDPRLog();
-
-  // ── TBT Log (TBT sheet, fixed columns; scoped to this project's unique IDs via col A)
   const th=D.tbt.h,tr=D.tbt.r;
   const T_UID=0,T_VENDOR=1,T_TOPIC=2,T_TECH=3,T_HELP=4,T_ATTEND=5,T_REMARK=6,T_DATE=8,T_TBTREP=12,T_DPRREP=13;
   const tbtForProj=tr.filter(x=>uniqueIdsForProj.has(v(x,T_UID)))
@@ -1444,8 +1388,6 @@ function renderProjectSummary(projId,projName){
     </tr>`;
   }).join('');
   if(!tbtForProj.length){tbtBody.innerHTML='<tr><td colspan="11" class="empty">No TBT entries found for this project</td></tr>';}
-
-  // ── Info bar
   const infoBar=document.getElementById('proj-info-bar');
   infoBar.style.display='flex';
   infoBar.innerHTML=`
@@ -1455,28 +1397,22 @@ function renderProjectSummary(projId,projName){
     <span>Unique IDs tracked: <strong>${uniqueIdsForProj.size}</strong></span>
     <span>DPR records: <strong>${dprForProj.length}</strong></span>
   `;
-
   document.getElementById('proj-summary-area').style.display='block';
   document.getElementById('proj-empty').style.display='none';
 }
 
-// ── DPR Activity Log render + filter (driven by TBT "DPR Summary" link; matches column A)
 let _projDPRSorted=[], _projDPRCols=null, _dprLogFilterUid=null;
 
 function renderProjDPRLog(){
   const logBody=document.getElementById('proj-dpr-log-body');
   if(!logBody||!_projDPRCols)return;
   const {D_PLAN,D_TASK,D_PCT,D_MP,D_ISS,D_REM,D_TS}=_projDPRCols;
-  // Filter on column A (index 0) when a TBT unique ID is active
   const rows=_dprLogFilterUid?_projDPRSorted.filter(r=>v(r,0)===_dprLogFilterUid):_projDPRSorted;
-
-  // Filter indicator next to the card title
   const tag=document.getElementById('proj-dpr-log-filter');
   if(tag){
     if(_dprLogFilterUid){tag.style.display='inline-flex';tag.innerHTML=`<span class="pe-active-tag" style="cursor:pointer;align-self:center;" onclick="clearDPRLogFilter()"><i class="ti ti-filter" style="font-size:11px;"></i> ID: ${_dprLogFilterUid} · clear ✕</span>`;}
     else {tag.style.display='none';tag.innerHTML='';}
   }
-
   logBody.innerHTML=rows.map((r,i)=>{
     const pct=parseFloat(v(r,D_PCT))||0,pc=pct>=75?'bg':pct>=50?'bb':pct>=25?'bo':'br';
     const iss=v(r,D_ISS),hasIss=iss&&iss.toLowerCase()!=='no'&&iss.toLowerCase()!=='none'&&iss.toLowerCase()!=='na';
@@ -1506,22 +1442,16 @@ function clearDPRLogFilter(){
   _dprLogFilterUid=null;
   renderProjDPRLog();
 }
-
 // ── PROJECT OVERVIEW ──────────────────────────────────────────
-// Lead Tracker fixed column indices (letters → 0-based index)
 const LEAD_COL={TOTAL:0,PID:1,CITY:2,PNAME:3,SIZE:5,CLUSTER:30,CITYMGR:32,PE:34};
 let _povCache={};
 let _povDelayBucket='';
 function setPOVDelayBucket(b){_povDelayBucket=(_povDelayBucket===b)?'':b;buildPOV();}
 function clearPOVDelayBucket(){_povDelayBucket='';buildPOV();}
 
-// Safe Lead-row cell getter by fixed index
 function lv(row,i){return (i>=0 && row[i]!=null)?String(row[i]).trim():'';}
-
-// Parse a size/capacity value, stripping any non-numeric characters
 function povNum(s){if(!s)return 0;const n=parseFloat(String(s).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n;}
 
-// Multi-select state: selected values per filter + full option lists
 const POV_STATUSES=['Not Assigned','Completed','In Process','Pending'];
 const POV_MS_CFG={
   city:    {col:'CITY',    all:'All Cities',    ph:'Search cities…'},
@@ -1534,7 +1464,6 @@ let _povMS={city:new Set(),cluster:new Set(),citymgr:new Set(),pe:new Set(),stat
 let _povMSAll={city:[],cluster:[],citymgr:[],pe:[],status:POV_STATUSES.slice()};
 let _povMSCounts={city:{},cluster:{},citymgr:{},pe:{},status:{}};
 
-// Status tags for a lead row (a project may be "Not Assigned" plus one of done/wip/pending)
 function povProjectStatuses(x){
   const tags=[];
   if(!lv(x,LEAD_COL.PE))tags.push('Not Assigned');
@@ -1557,10 +1486,8 @@ function populatePOVFilters(){
   });
   Object.keys(sets).forEach(k=>{
     _povMSAll[k]=[...sets[k]].sort((a,b)=>a.localeCompare(b));
-    // drop any previously-selected values that no longer exist
     _povMS[k]=new Set([..._povMS[k]].filter(v=>sets[k].has(v)));
   });
-  // status: fixed list; prune selections to valid values
   _povMSAll.status=POV_STATUSES.slice();
   _povMS.status=new Set([..._povMS.status].filter(v=>POV_STATUSES.includes(v)));
   Object.keys(POV_MS_CFG).forEach(buildPOVMSWidget);
@@ -1612,7 +1539,6 @@ function togglePOVMSOption(key,val){
   buildPOV();
 }
 
-// Does a lead row satisfy every selected filter EXCEPT the named one?
 function povRowPassesExcept(x,exceptKey){
   if(!lv(x,LEAD_COL.PID))return false;
   if(exceptKey!=='city'    && _povMS.city.size    && !_povMS.city.has(lv(x,LEAD_COL.CITY)))return false;
@@ -1623,19 +1549,18 @@ function povRowPassesExcept(x,exceptKey){
   return true;
 }
 
-// Dependent dropdowns: each filter's options + counts = values co-occurring with the OTHER filters' selections
 function recomputePOVOptions(){
   const r=D.lead.r;
   Object.keys(POV_MS_CFG).forEach(key=>{
     const counts={};
     if(key==='status'){
       r.forEach(x=>{ if(povRowPassesExcept(x,key)){ povProjectStatuses(x).forEach(t=>counts[t]=(counts[t]||0)+1); } });
-      _povMSAll[key]=POV_STATUSES.slice(); // always show all statuses, in fixed order
+      _povMSAll[key]=POV_STATUSES.slice();
     } else {
       const colIdx=LEAD_COL[POV_MS_CFG[key].col];
       r.forEach(x=>{ if(povRowPassesExcept(x,key)){ const val=lv(x,colIdx); if(val)counts[val]=(counts[val]||0)+1; } });
       const set=new Set(Object.keys(counts));
-      _povMS[key].forEach(v=>set.add(v)); // keep current selections visible
+      _povMS[key].forEach(v=>set.add(v));
       _povMSAll[key]=[...set].sort((a,b)=>a.localeCompare(b));
     }
     _povMSCounts[key]=counts;
@@ -1671,7 +1596,6 @@ function togglePOVMS(key){
   if(!wasOpen){host.classList.add('open');const s=document.getElementById('pov-ms-search-'+key);if(s){s.value='';renderPOVMSOptions(key);setTimeout(()=>s.focus(),0);}}
 }
 
-// Close any open multi-select when clicking outside
 document.addEventListener('click',e=>{
   if(!e.target.closest('.pov-ms'))document.querySelectorAll('.pov-ms.open').forEach(el=>el.classList.remove('open'));
 });
@@ -1683,37 +1607,26 @@ function clearPOVFilters(){
   buildPOV();
 }
 
-// Compute per-project metrics from DPR (same matching logic as Project Summary), cached.
 function computeProjectMetrics(projId){
   if(!projId)return{dprCount:0,startDate:null,endDate:null,tat:null,finalStage:'—',weightedPct:0,status:'pending',lastDate:null};
   if(_povCache[projId])return _povCache[projId];
-
-  // Attendance rows for this project → unique IDs
   const ah=D.att.h,ar=D.att.r;
   const A_UID=ci(ah,'UniqueID','unique id'),A_PID=ci(ah,'ProjectID','project id');
   const uniqueIds=new Set(ar.filter(x=>v(x,A_PID)===projId).map(x=>v(x,A_UID)).filter(Boolean));
-
-  // DPR rows matching by unique id OR child id starting with projId
   const dh=D.dpr.h,dr=D.dpr.r;
   const D_CID=ci(dh,'ChildID','child'),D_PLAN=ci(dh,'WorkPlan','plan','work'),D_TASK=ci(dh,'CompletedTask','completed task'),D_PCT=ci(dh,'%','completion','percent'),D_TS=ci(dh,'Timestamp','time'),D_UID=ci(dh,'UniqueID','unique');
   const dprRows=dr.filter(x=>{const uid=v(x,D_UID),cid=v(x,D_CID);return uniqueIds.has(uid)||cid.startsWith(projId);});
-
-  // Timeline from DPR timestamps
   const dates=dprRows.map(x=>parseDate(v(x,D_TS))).filter(Boolean).sort((a,b)=>a-b);
   const startDate=dates.length?dates[0]:null;
   const endDate=dates.length?dates[dates.length-1]:null;
   const today=new Date();today.setHours(0,0,0,0);
   const tat=startDate?Math.ceil((today-startDate)/(1000*60*60*24))+1:null;
-
-  // Final update stage = last DPR entry's column B (fixed index 1); status reference = column D (index 3)
   const DPR_B=1, DPR_D=3;
   const dprSorted=[...dprRows].sort((a,b)=>{const da=parseDate(v(a,D_TS)),db=parseDate(v(b,D_TS));if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;return da-db;});
   const lastEntry=dprSorted.length?dprSorted[dprSorted.length-1]:null;
   const finalStage=lastEntry?(lv(lastEntry,DPR_B)||'—'):'—';
   const lastStatus=lastEntry?lv(lastEntry,DPR_D):'';
   const lastDate=lastEntry?parseDate(v(lastEntry,D_TS)):null;
-
-  // Weighted completion vs global workplan template
   const wr=D.workplan.r;
   const tmpl=wr.filter(x=>(x[0]||'').trim()).map(x=>({plan:(x[0]||'').trim(),expectedPct:parseFloat((x[1]||'').trim())||0}));
   const norm=s=>s.trim().toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -1731,19 +1644,15 @@ function computeProjectMetrics(projId){
     else weightedCompleted+=expectedPct*(latestPct/100);
   });
   const weightedPct=totalWeight>0?Math.round(weightedCompleted/totalWeight*100):0;
-
-  // Status (Project Overview): no DPR → pending; any DPR entry → in process; weighted 100% → completed
   let status;
   if(!dprRows.length)status='pending';
   else if(weightedPct>=100)status='done';
   else status='wip';
-
   const res={dprCount:dprRows.length,startDate,endDate,tat,finalStage,lastStatus,weightedPct,status,lastDate};
   _povCache[projId]=res;
   return res;
 }
 
-// Compact city-wise table: City | Count | Size (numbers)
 function povCityTable(cityCount,citySize){
   const cities=Object.keys(cityCount);
   if(!cities.length)return'<div class="empty">No data</div>';
@@ -1768,7 +1677,6 @@ function povCityTable(cityCount,citySize){
   </div>`;
 }
 
-// Project update / delay report (days since last DPR update)
 function povDelayReport({upNever,upOk,up7,up15,up30,totalProjects}){
   if(!totalProjects&&!_povDelayBucket)return'<div class="empty">No data</div>';
   const delayed=up7+up15+up30;
@@ -1797,8 +1705,6 @@ function povDelayReport({upNever,upOk,up7,up15,up30,totalProjects}){
 function buildPOV(){
   const r=D.lead.r;
   const fCity=_povMS.city, fCluster=_povMS.cluster, fCityMgr=_povMS.citymgr, fPE=_povMS.pe, fStatus=_povMS.status;
-
-  // Filter lead rows; gate on a real project (Project ID non-empty)
   const baseRows=r.filter(x=>{
     if(!lv(x,LEAD_COL.PID))return false;
     if(fCity.size&&!fCity.has(lv(x,LEAD_COL.CITY)))return false;
@@ -1808,23 +1714,14 @@ function buildPOV(){
     if(fStatus.size&&!povProjectStatuses(x).some(t=>fStatus.has(t)))return false;
     return true;
   });
-
-  // Delay bucket for each project (so the report counts always reflect base set,
-  // and the rest of the tab narrows further when a bucket is active)
   const today=new Date();today.setHours(0,0,0,0);
   const bucketOf=(x)=>{const m=computeProjectMetrics(lv(x,LEAD_COL.PID));if(!m.dprCount||!m.lastDate)return'upNever';const days=Math.floor((today-m.lastDate)/(1000*60*60*24));if(days>=30)return'up30';if(days>=15)return'up15';if(days>=7)return'up7';return'upOk';};
   let upNever=0,upOk=0,up7=0,up15=0,up30=0;
   baseRows.forEach(x=>{const b=bucketOf(x);if(b==='upNever')upNever++;else if(b==='up30')up30++;else if(b==='up15')up15++;else if(b==='up7')up7++;else upOk++;});
-
-  // Narrow rows by the active delay bucket if set
   const rows=_povDelayBucket?baseRows.filter(x=>bucketOf(x)===_povDelayBucket):baseRows;
-
-  // Filter indicator tag (count of filter groups with a selection)
   const activeFilters=[fCity,fCluster,fCityMgr,fPE,fStatus].filter(s=>s.size).length+(_povDelayBucket?1:0);
   const tag=document.getElementById('pov-filter-tag');
   if(tag){tag.style.display=activeFilters?'inline':'none';if(activeFilters)tag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
-
-  // Cards
   const totalProjects=rows.length;
   let totalSize=0,assigned=0,notAssigned=0,completed=0,inProcess=0,pending=0,pendingAssigned=0,pendingNotAssigned=0;
   const cityCount={},citySize={};
@@ -1842,7 +1739,6 @@ function buildPOV(){
     else if(m.status==='wip')inProcess++;
     else {pending++; if(peAssigned)pendingAssigned++; else pendingNotAssigned++;}
   });
-
   document.getElementById('pov-metrics').innerHTML=
     metric('ti-building-skyscraper','Total Projects',totalProjects,'From Lead Tracker','#4f8ef7')+
     metric('ti-ruler-2','Total Project Size',Math.round(totalSize).toLocaleString(),'Sum of capacity','#9b6dff')+
@@ -1850,24 +1746,16 @@ function buildPOV(){
     metricWithBar('ti-circle-check','Completed',completed,`${totalProjects?Math.round(completed/totalProjects*100):0}% of projects`,'#34c98a',totalProjects?completed/totalProjects*100:0,'#34c98a')+
     metricWithBar('ti-loader','In Process',inProcess,`${totalProjects?Math.round(inProcess/totalProjects*100):0}% of projects`,'#f5a623',totalProjects?inProcess/totalProjects*100:0,'#f5a623')+
     metricWithBar('ti-clock','Pending',pending,`${pendingAssigned} actual (assigned) · ${pendingNotAssigned} not assigned`,'#e74c3c',totalProjects?pending/totalProjects*100:0,'#e74c3c');
-
-  // Left: compact city-wise table (count + size in numbers)
   document.getElementById('pov-city-table').innerHTML=povCityTable(cityCount,citySize);
-  // Right: project update / delay report
   document.getElementById('pov-delay-report').innerHTML=povDelayReport({upNever,upOk,up7,up15,up30,totalProjects});
-
-  // Master table
   document.getElementById('pov-head').innerHTML='<tr><th>#</th><th>City</th><th>Project ID</th><th>Project Name</th><th>Capacity</th><th>PE</th><th>Process Start</th><th>Process End</th><th>TAT</th><th>Completion %</th><th>Final Update Stage</th><th>Remarks</th><th>Report</th></tr>';
   const tbody=document.getElementById('pov-body');
   if(!rows.length){tbody.innerHTML='<tr><td colspan="13" class="empty">No projects match the selected filters</td></tr>';return;}
-
-  // Sort by City then Project Name
   const sortedRows=[...rows].sort((a,b)=>{
     const c=lv(a,LEAD_COL.CITY).localeCompare(lv(b,LEAD_COL.CITY));
     if(c!==0)return c;
     return lv(a,LEAD_COL.PNAME).localeCompare(lv(b,LEAD_COL.PNAME));
   });
-
   tbody.innerHTML=sortedRows.map((x,i)=>{
     const city=lv(x,LEAD_COL.CITY)||'—';
     const projId=lv(x,LEAD_COL.PID);
@@ -1885,7 +1773,7 @@ function buildPOV(){
     const pct=m.weightedPct;
     const pctColor=pct>=100?'#34c98a':pct>0?'#f5a623':'#e74c3c';
     const pctCell=`<div style="display:flex;align-items:center;gap:8px;min-width:90px;">
-      <div style="flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;"><div style="width:${Math.min(pct,100)}%;height:100%;background:${pctColor};border-radius:3px;"></div></div>
+      <div style="flex:1;height:6px;border-radius:3px;background:rgba(15,23,42,0.08);overflow:hidden;"><div style="width:${Math.min(pct,100)}%;height:100%;background:${pctColor};border-radius:3px;"></div></div>
       <span style="font-size:12px;font-weight:600;color:${pctColor};min-width:30px;text-align:right;">${pct}%</span>
     </div>`;
     const reportLink=`<a onclick="openProjectSummaryFor('${escId}','${escName}')" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(79,142,247,0.15);color:#4f8ef7;border:1px solid rgba(79,142,247,0.3);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;cursor:pointer;"><i class="ti ti-external-link" style="font-size:12px;"></i>View Summary</a>`;
@@ -1907,7 +1795,6 @@ function buildPOV(){
   }).join('');
 }
 
-// Open a project in the existing Project Summary tab
 function openProjectSummaryFor(projId,projName){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
@@ -1923,7 +1810,6 @@ function openProjectSummaryFor(projId,projName){
 }
 
 // ── REPORTS TAB ───────────────────────────────────────────────
-// Reports filter bar: dependent multi-selects with counts + search (mirrors POV, separate state)
 const RPT_MS_CFG={
   city:    {col:'CITY',    all:'All Cities',    ph:'Search cities…'},
   cluster: {col:'CLUSTER', all:'All Clusters',  ph:'Search clusters…'},
@@ -1994,7 +1880,6 @@ function toggleRPTMSOption(key,val){
   updateRPTMSControl(key); recomputeRPTOptions(); buildRPT();
 }
 
-// Click a report row to drill down (toggle that value into the dimension's filter)
 function rptDrill(dimKey,val){
   if(_rptMS[dimKey].has(val))_rptMS[dimKey].delete(val); else _rptMS[dimKey].add(val);
   updateRPTMSControl(dimKey); recomputeRPTOptions(); buildRPT();
@@ -2074,12 +1959,9 @@ function buildRPT(){
   if(dimBar)dimBar.innerHTML=RPT_DIMS.map(d=>`<button class="rpt-dim ${d.key===_rptDim?'active':''}" onclick="setRPTDim('${d.key}')"><i class="ti ${d.icon}"></i> ${d.label}-wise</button>`).join('');
   const titleEl=document.getElementById('rpt-table-title');
   if(titleEl)titleEl.textContent=dim.label+'-wise Report';
-
-  // Active-filter indicator
   const activeFilters=[_rptMS.city,_rptMS.cluster,_rptMS.citymgr,_rptMS.pe].filter(s=>s.size).length;
   const ftag=document.getElementById('rpt-filter-tag');
   if(ftag){ftag.style.display=activeFilters?'inline':'none';if(activeFilters)ftag.textContent=`${activeFilters} filter${activeFilters>1?'s':''} active`;}
-
   const r=D.lead.r;
   const groups={};
   let tProjects=0,tSize=0,tCompleted=0,tInProcess=0,tPending=0,tNotAssigned=0;
@@ -2097,7 +1979,6 @@ function buildRPT(){
     tProjects++; tSize+=size; if(!peAssigned)tNotAssigned++;
     if(m.status==='done')tCompleted++; else if(m.status==='wip')tInProcess++; else tPending++;
   });
-
   const metricsEl=document.getElementById('rpt-metrics');
   if(metricsEl)metricsEl.innerHTML=
     metric('ti-building-skyscraper','Total Projects',tProjects,'All projects','#4f8ef7')+
@@ -2106,7 +1987,6 @@ function buildRPT(){
     metricWithBar('ti-loader','In Process',tInProcess,`${tProjects?Math.round(tInProcess/tProjects*100):0}% of projects`,'#f5a623',tProjects?tInProcess/tProjects*100:0,'#f5a623')+
     metricWithBar('ti-clock','Pending',tPending,`${tProjects?Math.round(tPending/tProjects*100):0}% of projects`,'#e74c3c',tProjects?tPending/tProjects*100:0,'#e74c3c')+
     metricWithBar('ti-user-off','Not Assigned',tNotAssigned,`${tProjects?Math.round(tNotAssigned/tProjects*100):0}% of projects`,'#e74c3c',tProjects?tNotAssigned/tProjects*100:0,'#e74c3c');
-
   document.getElementById('rpt-head').innerHTML=`<tr><th>#</th><th>${dim.label}</th><th style="text-align:right;">Projects</th><th style="text-align:right;">Size</th><th style="text-align:right;">Completed</th><th style="text-align:right;">In Process</th><th style="text-align:right;">Pending</th><th style="text-align:right;">Not Assigned</th><th style="min-width:130px;">Completion %</th></tr>`;
   const tbody=document.getElementById('rpt-body');
   const entries=Object.entries(groups).sort((a,b)=>b[1].count-a[1].count);
@@ -2720,6 +2600,104 @@ function pemrShowPE(peName){
 }
 document.addEventListener('keydown',e=>{if(e.key==='Escape')pemrCloseDay();});
 
+function pemrShowDateSummary(dk){
+  const ctx=_pemrCtx;if(!ctx||!ctx.attByPD)return;
+  const [y,m,d]=dk.split('-').map(Number);
+  const dateLabel=new Date(y,m-1,d).toLocaleDateString('en-IN',{weekday:'long',day:'2-digit',month:'short',year:'numeric'});
+  const pes=ctx.peNames||[];
+  const pr=mm=>({'onsite visit':4,'without visit update':3,'no activity':2})[mm]||(mm?1:0);
+
+  // Aggregate counts
+  let totalProjects=0,projUpdated=0,projPending=0,onsite=0,withoutVisit=0,noActivity=0;
+  let pesUpdated=0,pesAbsent=0,pesLeave=0,pesPartial=0,pesAllUpdated=0;
+  const rows=[];
+
+  pes.forEach(pe=>{
+    const pids=ctx.peProjects[pe]||[];
+    const onLeave=!!(ctx.leavesByPE&&ctx.leavesByPE[pe]&&ctx.leavesByPE[pe].has(dk));
+    let peUpdated=0,pePending=0,peOnsite=0,peWithout=0,peNoAct=0;
+    pids.forEach(pid=>{
+      totalProjects++;
+      const arows=ctx.attByPD[pid+'|'+dk];
+      if(!arows||!arows.length){projPending++;pePending++;return;}
+      projUpdated++;peUpdated++;
+      let chosen=null,mNorm='';
+      arows.forEach(r=>{const mm=v(r,ATT_COL.M).toLowerCase();if(!chosen||pr(mm)>pr(mNorm)){chosen=r;mNorm=mm;}});
+      if(mNorm==='no activity'){noActivity++;peNoAct++;}
+      else if(mNorm==='onsite visit'){onsite++;peOnsite++;}
+      else if(mNorm==='without visit update'){withoutVisit++;peWithout++;}
+    });
+    if(onLeave)pesLeave++;
+    else if(peUpdated===0)pesAbsent++;
+    else if(peUpdated>=pids.length&&pids.length>0)pesAllUpdated++;
+    else pesPartial++;
+    if(peUpdated>0)pesUpdated++;
+    rows.push({pe,cluster:ctx.peClusterMap[pe]||'',citymgr:ctx.peCityMgrMap[pe]||'',total:pids.length,updated:peUpdated,pending:pePending,onsite:peOnsite,without:peWithout,noact:peNoAct,onLeave});
+  });
+
+  // sort: all-updated > partial > leave > absent; within each, by updated count desc, name asc
+  const rank=r=>r.total===0?4:(r.onLeave?3:(r.updated===0?2:(r.updated>=r.total?0:1)));
+  rows.sort((a,b)=>{const ra=rank(a),rb=rank(b);if(ra!==rb)return ra-rb;if(b.updated!==a.updated)return b.updated-a.updated;return a.pe.localeCompare(b.pe);});
+
+  const cards=
+    metric('ti-users','Total PEs',pes.length,'In current view','#4f8ef7')+
+    metric('ti-briefcase','Total Projects',totalProjects,'Across all PEs','#9b6dff')+
+    metricWithBar('ti-calendar-check','Updated',projUpdated,`${totalProjects?Math.round(projUpdated/totalProjects*100):0}% project-days`,'#34c98a',totalProjects?projUpdated/totalProjects*100:0,'#34c98a')+
+    metricWithBar('ti-calendar-x','Pending',projPending,`${totalProjects?Math.round(projPending/totalProjects*100):0}% project-days`,'#e74c3c',totalProjects?projPending/totalProjects*100:0,'#e74c3c')+
+    metric('ti-map-pin','Onsite Visit',onsite,'Project-days','#34c98a')+
+    metric('ti-clipboard','Without Visit Update',withoutVisit,'Project-days','#3bc0d8')+
+    metric('ti-alert-triangle','No Activity',noActivity,'Project-days','#f5a623')+
+    metric('ti-beach','On Leave',pesLeave,'PEs','#3bc0d8');
+
+  const peBreakdown=`<div style="display:flex;gap:14px;flex-wrap:wrap;font-size:11px;padding:10px 12px;background:var(--surface2);border-radius:8px;margin-top:10px;">
+    <span>PEs All Updated: <b style="color:#34c98a;">${pesAllUpdated}</b></span>
+    <span>Partial: <b style="color:#f5a623;">${pesPartial}</b></span>
+    <span>Absent: <b style="color:#e74c3c;">${pesAbsent}</b></span>
+    <span>On Leave: <b style="color:#3bc0d8;">${pesLeave}</b></span>
+  </div>`;
+
+  const tableRows=rows.map((r,i)=>{
+    let statusBadge;
+    if(r.onLeave)statusBadge='<span class="badge bb">🏖 Leave</span>';
+    else if(r.total===0)statusBadge='<span class="badge bgr">—</span>';
+    else if(r.updated===0)statusBadge='<span class="badge br">Absent</span>';
+    else if(r.updated>=r.total)statusBadge='<span class="badge bg">All Updated</span>';
+    else statusBadge='<span class="badge bo">Partial</span>';
+    const peEsc=r.pe.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    return `<tr>
+      <td style="color:var(--muted);">${i+1}</td>
+      <td style="font-weight:500;font-size:12px;"><span onclick="pemrShowDay('${peEsc}','${dk}')" style="cursor:pointer;text-decoration:underline;text-underline-offset:2px;">${pemrEsc(r.pe)}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${pemrEsc(r.cluster)||'—'}</td>
+      <td style="font-size:11px;color:var(--muted);">${pemrEsc(r.citymgr)||'—'}</td>
+      <td style="text-align:right;font-weight:600;">${r.total}</td>
+      <td style="text-align:right;color:#34c98a;font-weight:600;">${r.updated}</td>
+      <td style="text-align:right;color:#e74c3c;font-weight:600;">${r.pending}</td>
+      <td style="text-align:center;">${r.onsite||'—'}</td>
+      <td style="text-align:center;">${r.without||'—'}</td>
+      <td style="text-align:center;">${r.noact||'—'}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join('');
+
+  const table=rows.length?`<div class="table-wrap" style="margin-top:14px;max-height:48vh;overflow:auto;"><table style="font-size:12px;">
+    <thead><tr><th>#</th><th>PE Name</th><th>Cluster Head</th><th>City Manager</th><th style="text-align:right;">Total Projects</th><th style="text-align:right;">Updated</th><th style="text-align:right;">Pending</th><th style="text-align:center;">Onsite</th><th style="text-align:center;">Without Visit</th><th style="text-align:center;">No Activity</th><th>Status</th></tr></thead>
+    <tbody>${tableRows}</tbody>
+  </table></div>`:'<div class="empty" style="margin-top:14px;">No PEs in view.</div>';
+
+  let ov=document.getElementById('pemr-modal-ov');
+  if(!ov){ov=document.createElement('div');ov.id='pemr-modal-ov';ov.className='pmr-modal-ov';ov.onclick=(e)=>{if(e.target===ov)pemrCloseDay();};document.body.appendChild(ov);}
+  ov.innerHTML=`<div class="pmr-modal" style="max-width:880px;max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:6px;">
+      <div><div style="font-size:15px;font-weight:600;color:var(--text);">PE Daily Summary</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${dateLabel} · ${pes.length} PE(s) in view</div></div>
+      <button onclick="pemrCloseDay()" style="background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;">×</button>
+    </div>
+    <div class="metrics" style="margin-top:8px;">${cards}</div>
+    ${peBreakdown}
+    ${table}
+  </div>`;
+  ov.style.display='flex';
+}
+
 function buildPEMR(){
   const msel=document.getElementById('pemr-f-month');
   const monthVal=msel?msel.value:'';
@@ -2812,12 +2790,19 @@ function buildPEMR(){
     (leavesByPE[nm]=leavesByPE[nm]||new Set()).add(pmrKey(d));
   });
 
+  // Cluster Head / City Manager maps from PE Master (header-matched)
+  const peCli=ci(D.pe.h,'Clusterhead','cluster'),peCmi=ci(D.pe.h,'CityManager','citymanager','city');
+  const peClusterMap={},peCityMgrMap={};
+  D.pe.r.forEach(x=>{const nm=v(x,1);if(!nm)return;if(peCli>=0)peClusterMap[nm]=v(x,peCli);if(peCmi>=0)peCityMgrMap[nm]=v(x,peCmi);});
+  // Fallback: derive from Lead Tracker (most common cluster/city mgr across their projects)
+  D.lead.r.forEach(x=>{const pe=lv(x,LEAD_COL.PE);if(!pe)return;if(!peClusterMap[pe])peClusterMap[pe]=lv(x,LEAD_COL.CLUSTER);if(!peCityMgrMap[pe])peCityMgrMap[pe]=lv(x,LEAD_COL.CITYMGR);});
+
   // Save context for the day-detail popup
-  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,projDates,leavesByPE,yy,mm,A_CI,A_CO,A_LOC};
+  _pemrCtx={peProjects,projName,attByPD,tbtByPD,dprByPD,projDates,leavesByPE,peNames,peClusterMap,peCityMgrMap,yy,mm,A_CI,A_CO,A_LOC};
 
   const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   head.innerHTML='<tr><th class="pemr-c0">PE Name</th><th class="pemr-c1">Projects</th>'+
-    days.map(d=>`<th class="dcol"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
+    days.map(d=>`<th class="dcol" onclick="pemrShowDateSummary('${pmrKey(d)}')" style="cursor:pointer;" title="Click for day summary"><div class="dn">${d.getDate()}</div><div class="dw">${wd[d.getDay()]}</div></th>`).join('')+'</tr>';
 
   if(!peNames.length){body.innerHTML=`<tr><td class="empty" colspan="${2+days.length}">No PEs match the selected filters</td></tr>`;return;}
 
@@ -2856,6 +2841,111 @@ function buildPEMR(){
       ${cells}
     </tr>`;
   }).join('');
+
+  // For a logged-in PE, render a detailed stylish summary below the calendar
+  if(_user && _user.role==='pe'){ renderPEMRPESummary(); }
+  else { const s=document.getElementById('pemr-pe-summary'); if(s)s.innerHTML=''; }
+}
+
+// Detailed PE summary shown below the PE Monthly calendar (for PE logins)
+function renderPEMRPESummary(){
+  const host=document.getElementById('pemr-pe-summary'); if(!host)return;
+  const ctx=_pemrCtx; if(!ctx||!ctx.attByPD){host.innerHTML='';return;}
+  const peName=(_user&&_user.name)||(ctx.peNames&&ctx.peNames[0])||'';
+  if(!peName){host.innerHTML='';return;}
+  const pids=ctx.peProjects[peName]||[];
+  const yy=ctx.yy,mm=ctx.mm;
+  const monthLabel=new Date(yy,mm-1,1).toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  const today=new Date();today.setHours(0,0,0,0);
+  let expectedDays;
+  if(yy>today.getFullYear()||(yy===today.getFullYear()&&(mm-1)>today.getMonth()))expectedDays=0;
+  else if(yy===today.getFullYear()&&(mm-1)===today.getMonth())expectedDays=Math.min(today.getDate(),daysInMonth);
+  else expectedDays=daysInMonth;
+  const leavesSet=(ctx.leavesByPE&&ctx.leavesByPE[peName])||new Set();
+  const pr=m2=>({'onsite visit':4,'without visit update':3,'no activity':2})[m2]||(m2?1:0);
+
+  let daysUpdated=0,projUpdates=0,tbtCnt=0,dprCnt=0,leaveCount=0;
+  const missed=[],leaveDates=[];
+  const projStats={}; pids.forEach(p=>projStats[p]={updated:0,onsite:0,without:0,noact:0,tbt:0,dpr:0,lastDk:null});
+  for(let dd=1;dd<=expectedDays;dd++){
+    const dk=yy+'-'+mm+'-'+dd;
+    if(leavesSet.has(dk)){leaveCount++;leaveDates.push(dd);continue;}
+    let anyToday=false;
+    pids.forEach(pid=>{
+      const key=pid+'|'+dk;
+      const arows=ctx.attByPD[key];
+      if(arows&&arows.length){
+        anyToday=true;projUpdates++;
+        const ps=projStats[pid];ps.updated++;ps.lastDk=dk;
+        let chosen=null,mNorm='';arows.forEach(r=>{const m2=v(r,ATT_COL.M).toLowerCase();if(!chosen||pr(m2)>pr(mNorm)){chosen=r;mNorm=m2;}});
+        if(mNorm==='onsite visit')ps.onsite++;else if(mNorm==='without visit update')ps.without++;else if(mNorm==='no activity')ps.noact++;
+      }
+      const t=ctx.tbtByPD[key];if(t){if(t.tbt){tbtCnt++;projStats[pid].tbt++;}if(t.dpr){dprCnt++;projStats[pid].dpr++;}}
+    });
+    if(anyToday)daysUpdated++; else missed.push(dd);
+  }
+  const effExpected=Math.max(0,expectedDays-leaveCount);
+  const total=pids.length;
+  const expectedProjUpdates=effExpected*total;
+  const attPct=effExpected?Math.round(daysUpdated/effExpected*100):0;
+  const updPct=expectedProjUpdates?Math.round(projUpdates/expectedProjUpdates*100):0;
+  const notUpdatedProjects=pids.filter(p=>projStats[p].updated===0).length;
+
+  const cards=
+    metric('ti-briefcase','Total Projects',total,'Assigned to you','#4f8ef7')+
+    metric('ti-calendar','Expected Days',effExpected,`${expectedDays} elapsed − ${leaveCount} leave · ${monthLabel}`,'#9b6dff')+
+    metricWithBar('ti-calendar-check','Days Updated',daysUpdated,`${attPct}% of expected days`,'#34c98a',attPct,'#34c98a')+
+    metricWithBar('ti-calendar-x','Days Not Updated',missed.length,`${effExpected?Math.round(missed.length/effExpected*100):0}% of expected days`,'#e74c3c',effExpected?missed.length/effExpected*100:0,'#e74c3c')+
+    metric('ti-beach','Total Leave Days',leaveCount,leaveCount?'Approved leaves':'No leaves','#3bc0d8')+
+    metricWithBar('ti-checklist','Project Updates',projUpdates,`of ${expectedProjUpdates} expected · ${updPct}%`,'#f5a623',updPct,'#f5a623')+
+    metric('ti-clipboard-check','TBT Updated',tbtCnt,`of ${expectedProjUpdates} expected`,'#34c98a')+
+    metric('ti-file-report','DPR Updated',dprCnt,`of ${expectedProjUpdates} expected`,'#3bc0d8');
+
+  // Project-wise table
+  const projRows=pids.map(pid=>{
+    const ps=projStats[pid];
+    const nm=ctx.projName[pid]||pid;
+    const lastDk=ps.lastDk?(()=>{const [a,b,c]=ps.lastDk.split('-').map(Number);return new Date(a,b-1,c).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});})():'—';
+    let statusBadge;
+    if(ps.updated===0)statusBadge='<span class="badge br">Never updated</span>';
+    else if(effExpected&&ps.updated>=effExpected)statusBadge='<span class="badge bg">Up to date</span>';
+    else statusBadge='<span class="badge bo">Partial</span>';
+    const escPid=String(pid).replace(/'/g,"\\'");
+    return {nm,pid,ps,lastDk,statusBadge,escPid};
+  }).sort((a,b)=>b.ps.updated-a.ps.updated||a.nm.localeCompare(b.nm));
+  const projTableRows=projRows.map((r,i)=>`<tr>
+      <td style="color:var(--muted);">${i+1}</td>
+      <td style="font-weight:500;">${pemrEsc(r.nm)}<div style="font-size:9px;color:var(--muted);">${pemrEsc(r.pid)}</div></td>
+      <td style="text-align:right;color:#34c98a;font-weight:600;">${r.ps.updated}</td>
+      <td style="text-align:center;">${r.ps.onsite||'—'}</td>
+      <td style="text-align:center;">${r.ps.without||'—'}</td>
+      <td style="text-align:center;">${r.ps.noact||'—'}</td>
+      <td style="text-align:center;">${r.ps.tbt||'—'}</td>
+      <td style="text-align:center;">${r.ps.dpr||'—'}</td>
+      <td style="font-size:11px;white-space:nowrap;">${r.lastDk}</td>
+      <td>${r.statusBadge}</td>
+    </tr>`).join('');
+  const projTable=pids.length?`<div class="table-wrap" style="overflow:auto;"><table style="font-size:12px;">
+    <thead><tr><th>#</th><th>Project</th><th style="text-align:right;">Days Updated</th><th style="text-align:center;">Onsite</th><th style="text-align:center;">Without Visit</th><th style="text-align:center;">No Activity</th><th style="text-align:center;">TBT</th><th style="text-align:center;">DPR</th><th>Last Update</th><th>Status</th></tr></thead>
+    <tbody>${projTableRows}</tbody>
+  </table></div>`:'<div class="empty">No projects assigned.</div>';
+
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const missedChips=missed.map(dd=>{const dt=new Date(yy,mm-1,dd);return `<span style="font-size:11px;background:rgba(231,76,60,.14);color:#ff7a6b;border:1px solid rgba(231,76,60,.3);border-radius:6px;padding:3px 8px;">${dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · ${wd[dt.getDay()]}</span>`;}).join('');
+  const leaveChips=leaveDates.map(dd=>{const dt=new Date(yy,mm-1,dd);return `<span style="font-size:11px;background:rgba(56,178,210,.14);color:#3bc0d8;border:1px solid rgba(56,178,210,.3);border-radius:6px;padding:3px 8px;">${dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})} · ${wd[dt.getDay()]}</span>`;}).join('');
+
+  const sect=(icon,title,inner)=>`<div class="card"><div class="card-title"><i class="ti ${icon}"></i> ${title}</div>${inner}</div>`;
+
+  host.innerHTML=`
+    <div class="section-title" style="margin-top:22px;">My Monthly Summary · ${pemrEsc(peName)} · ${monthLabel}</div>
+    <div class="metrics">${cards}</div>
+    ${sect('ti-list-details','Project-wise Activity',projTable)}
+    ${sect('ti-calendar-x',`Days Not Updated (${missed.length})`, missed.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;">${missedChips}</div>`:(effExpected?`<div style="font-size:12px;color:#34c98a;">✓ All ${effExpected} expected day(s) updated.</div>`:'<div class="empty" style="padding:14px;">No expected days yet.</div>'))}
+    ${sect('ti-alert-triangle',`Projects Never Updated (${notUpdatedProjects})`, notUpdatedProjects?`<div style="display:flex;flex-wrap:wrap;gap:6px;">${projRows.filter(r=>r.ps.updated===0).map(r=>`<span style="font-size:11px;background:rgba(245,166,35,.14);color:#f5a623;border:1px solid rgba(245,166,35,.3);border-radius:6px;padding:3px 10px;">${pemrEsc(r.nm)}</span>`).join('')}</div>`:'<div style="font-size:12px;color:#34c98a;">✓ Every assigned project has at least one update this month.</div>')}
+    ${sect('ti-beach',`Leave Summary (${leaveCount})`, leaveDates.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;">${leaveChips}</div>`:'<div class="empty" style="padding:14px;">No leave days recorded this month.</div>')}
+    <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:4px;">Expected = ${effExpected} day(s) (${expectedDays} elapsed − ${leaveCount} leave) × ${total} project(s). Leave dates are excluded from expected. Click any calendar cell above for that day's project detail.</div>
+  `;
 }
 
 // ── VENDOR MONTHLY REPORT ─────────────────────────────────────
@@ -3157,7 +3247,7 @@ function vmrShowDateSummary(dk){
     bodyHtml+=`<tr><td style="font-weight:500;">${toggle}${pemrEsc(r.name)}</td><td style="color:var(--muted);">${pemrEsc(r.city)}</td><td style="text-align:right;">${r.sites}</td><td style="text-align:right;font-weight:600;">${r.mp}</td><td style="text-align:center;">${tl(r.tbtUrl)}</td><td style="text-align:center;">${dl(r.dprUrl)}</td></tr>`;
     if(multi){
       r.projects.forEach(p=>{
-        bodyHtml+=`<tr class="vmr-grp-${gi}" style="display:none;background:rgba(255,255,255,0.025);"><td style="padding-left:30px;color:var(--muted);font-size:11px;">↳ ${pemrEsc(p.name)}${p.pe?`<span style="opacity:.7;"> · ${pemrEsc(p.pe)}</span>`:''}</td><td></td><td style="text-align:right;color:var(--muted);">1</td><td style="text-align:right;">${p.mp}</td><td style="text-align:center;">${tl(p.tbtUrl)}</td><td style="text-align:center;">${dl(p.dprUrl)}</td></tr>`;
+        bodyHtml+=`<tr class="vmr-grp-${gi}" style="display:none;background:rgba(37,99,235,0.04);"><td style="padding-left:30px;color:var(--muted);font-size:11px;">↳ ${pemrEsc(p.name)}${p.pe?`<span style="opacity:.7;"> · ${pemrEsc(p.pe)}</span>`:''}</td><td></td><td style="text-align:right;color:var(--muted);">1</td><td style="text-align:right;">${p.mp}</td><td style="text-align:center;">${tl(p.tbtUrl)}</td><td style="text-align:center;">${dl(p.dprUrl)}</td></tr>`;
       });
     }
   });
@@ -3228,6 +3318,194 @@ function vmrShowDatePivot(dk){
     ${table}
   </div>`;
   ov.style.display='flex';
+}
+
+// ── HIERARCHY REPORT ──────────────────────────────────────────
+let _hrcExpanded=new Set();
+function toggleHRC(key){if(_hrcExpanded.has(key))_hrcExpanded.delete(key);else _hrcExpanded.add(key);buildHRC();}
+function collapseAllHRC(){_hrcExpanded.clear();buildHRC();}
+function expandAllHRC(){
+  // Expand every cluster and city-manager (PEs typically have many projects, so leave PE collapsed unless user clicks)
+  D.lead.r.forEach(x=>{
+    const pid=lv(x,LEAD_COL.PID);if(!pid)return;
+    const cluster=lv(x,LEAD_COL.CLUSTER)||'(No Cluster)';
+    const cm=lv(x,LEAD_COL.CITYMGR)||'(No City Mgr)';
+    _hrcExpanded.add('c:'+cluster);
+    _hrcExpanded.add('c:'+cluster+'|'+cm);
+  });
+  buildHRC();
+}
+function populateHRCFilters(){
+  const months={};
+  D.att.r.forEach(x=>{const d=parseDate(v(x,ATT_COL.DATE));if(d){const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');months[k]=d;}});
+  const msel=document.getElementById('hrc-f-month');
+  if(msel){
+    const cur=msel.value;
+    msel.innerHTML='<option value="">All time</option>';
+    const keys=Object.keys(months).sort().reverse();
+    keys.forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=months[k].toLocaleDateString('en-IN',{month:'long',year:'numeric'});msel.appendChild(o);});
+    if(cur)msel.value=cur; else if(keys.length)msel.value=keys[0];
+  }
+  populateHRCDates();
+}
+
+// Fill the Date dropdown with the days present in attendance for the selected month
+function populateHRCDates(){
+  const dsel=document.getElementById('hrc-f-date');if(!dsel)return;
+  const cur=dsel.value;
+  const monthVal=(document.getElementById('hrc-f-month')||{}).value||'';
+  dsel.innerHTML='<option value="">All Days</option>';
+  if(!monthVal){dsel.disabled=true;return;}
+  dsel.disabled=false;
+  const [yy,mm]=monthVal.split('-').map(Number);
+  const present=new Set();
+  D.att.r.forEach(x=>{const d=parseDate(v(x,ATT_COL.DATE));if(d&&d.getFullYear()===yy&&d.getMonth()===mm-1)present.add(d.getDate());});
+  const wd=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  [...present].sort((a,b)=>a-b).forEach(dd=>{
+    const dt=new Date(yy,mm-1,dd);
+    const o=document.createElement('option');o.value=String(dd);
+    o.textContent=dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'})+' · '+wd[dt.getDay()];
+    dsel.appendChild(o);
+  });
+  if(cur&&present.has(Number(cur)))dsel.value=cur; else dsel.value='';
+}
+
+function onHRCMonthChange(){ populateHRCDates(); buildHRC(); }
+// Week and Date are mutually exclusive (a single day overrides the week range)
+function onHRCWeekChange(){ const d=document.getElementById('hrc-f-date'); if(d&&document.getElementById('hrc-f-week').value)d.value=''; buildHRC(); }
+function onHRCDateChange(){ const w=document.getElementById('hrc-f-week'); if(w&&document.getElementById('hrc-f-date').value)w.value=''; buildHRC(); }
+function clearHRCFilters(){
+  const m=document.getElementById('hrc-f-month');if(m&&m.options.length)m.selectedIndex=Math.min(1,m.options.length-1);
+  const w=document.getElementById('hrc-f-week');if(w)w.value='';
+  populateHRCDates();
+  const dd=document.getElementById('hrc-f-date');if(dd)dd.value='';
+  _hrcExpanded.clear();
+  buildHRC();
+}
+
+function buildHRC(){
+  const monthVal=(document.getElementById('hrc-f-month')||{}).value||'';
+  const weekVal=(document.getElementById('hrc-f-week')||{}).value||'';
+  const dateVal=(document.getElementById('hrc-f-date')||{}).value||'';
+  const head=document.getElementById('hrc-head'),body=document.getElementById('hrc-body');
+  if(!head||!body)return;
+
+  // Time bounds (optional)
+  let yy=null,mm=null,dayStart=null,dayEnd=null;
+  if(monthVal){
+    [yy,mm]=monthVal.split('-').map(Number);
+    const daysInMonth=new Date(yy,mm,0).getDate();
+    dayStart=1;dayEnd=daysInMonth;
+    if(dateVal){const dd=Number(dateVal);dayStart=dd;dayEnd=dd;}        // single day overrides week
+    else if(weekVal){const w=Number(weekVal);dayStart=(w-1)*7+1;dayEnd=Math.min(w*7,daysInMonth);}
+  }
+
+  // Per-project attendance stats in window
+  const projAtt={}; // pid -> {onsite, without, noact, hasAny}
+  D.att.r.forEach(x=>{
+    const pid=v(x,ATT_COL.PID),d=parseDate(v(x,ATT_COL.DATE));
+    if(!pid||!d)return;
+    if(yy!==null){
+      if(d.getFullYear()!==yy||d.getMonth()!==mm-1)return;
+      const dd=d.getDate();if(dd<dayStart||dd>dayEnd)return;
+    }
+    if(!projAtt[pid])projAtt[pid]={onsite:0,without:0,noact:0,hasAny:false};
+    projAtt[pid].hasAny=true;
+    const st=v(x,ATT_COL.M).toLowerCase();
+    if(st==='onsite visit')projAtt[pid].onsite++;
+    else if(st==='without visit update')projAtt[pid].without++;
+    else if(st==='no activity')projAtt[pid].noact++;
+  });
+
+  // Hierarchy: cluster → cm → pe → projects[]
+  const tree={};
+  D.lead.r.forEach(x=>{
+    const pid=lv(x,LEAD_COL.PID);if(!pid)return;
+    const cluster=lv(x,LEAD_COL.CLUSTER)||'(No Cluster Head)';
+    const cm=lv(x,LEAD_COL.CITYMGR)||'(No City Manager)';
+    const pe=lv(x,LEAD_COL.PE)||'(PE Not Assigned)';
+    const pname=lv(x,LEAD_COL.PNAME)||pid;
+    const city=lv(x,LEAD_COL.CITY)||'—';
+    if(!tree[cluster])tree[cluster]={};
+    if(!tree[cluster][cm])tree[cluster][cm]={};
+    if(!tree[cluster][cm][pe])tree[cluster][cm][pe]={};
+    tree[cluster][cm][pe][pid]={pname,city};
+  });
+
+  // Counters
+  const projC=pid=>{const a=projAtt[pid]||{onsite:0,without:0,noact:0,hasAny:false};return {projects:1,updated:a.hasAny?1:0,pending:a.hasAny?0:1,onsite:a.onsite,without:a.without,noact:a.noact};};
+  const sumC=(a,b)=>({projects:a.projects+b.projects,updated:a.updated+b.updated,pending:a.pending+b.pending,onsite:a.onsite+b.onsite,without:a.without+b.without,noact:a.noact+b.noact});
+  const zeroC={projects:0,updated:0,pending:0,onsite:0,without:0,noact:0};
+
+  // Render rows respecting expansion state
+  const rows=[];
+  Object.keys(tree).sort().forEach(cluster=>{
+    const cKey='c:'+cluster;
+    const cmsObj=tree[cluster];
+    let cCounts={...zeroC};
+    const cmKeys=Object.keys(cmsObj).sort();
+    cmKeys.forEach(cm=>{Object.keys(cmsObj[cm]).forEach(pe=>{Object.keys(cmsObj[cm][pe]).forEach(pid=>{cCounts=sumC(cCounts,projC(pid));});});});
+    const cExpanded=_hrcExpanded.has(cKey);
+    rows.push({level:0,key:cKey,label:cluster,counts:cCounts,expandable:cmKeys.length>0,expanded:cExpanded});
+    if(!cExpanded)return;
+    cmKeys.forEach(cm=>{
+      const cmKey=cKey+'|'+cm;
+      const pesObj=cmsObj[cm];
+      const peKeys=Object.keys(pesObj).sort();
+      let cmCounts={...zeroC};
+      peKeys.forEach(pe=>{Object.keys(pesObj[pe]).forEach(pid=>{cmCounts=sumC(cmCounts,projC(pid));});});
+      const cmExpanded=_hrcExpanded.has(cmKey);
+      rows.push({level:1,key:cmKey,label:cm,counts:cmCounts,expandable:peKeys.length>0,expanded:cmExpanded});
+      if(!cmExpanded)return;
+      peKeys.forEach(pe=>{
+        const peKey=cmKey+'|'+pe;
+        const pidsObj=pesObj[pe];
+        const pidKeys=Object.keys(pidsObj);
+        let peCounts={...zeroC};
+        pidKeys.forEach(pid=>{peCounts=sumC(peCounts,projC(pid));});
+        const peExpanded=_hrcExpanded.has(peKey);
+        rows.push({level:2,key:peKey,label:pe,counts:peCounts,expandable:pidKeys.length>0,expanded:peExpanded});
+        if(!peExpanded)return;
+        pidKeys.sort((a,b)=>(pidsObj[a].pname||a).localeCompare(pidsObj[b].pname||b)).forEach(pid=>{
+          rows.push({level:3,key:peKey+'|'+pid,label:pidsObj[pid].pname,sublabel:pid+' · '+pidsObj[pid].city,counts:projC(pid),expandable:false,pid});
+        });
+      });
+    });
+  });
+
+  head.innerHTML=`<tr><th style="width:34px;text-align:center;">#</th><th>Cluster Head / City Manager / PE / Project</th><th style="text-align:right;">Projects</th><th style="text-align:right;">Updated</th><th style="text-align:right;">Pending</th><th style="text-align:right;">Onsite Visit</th><th style="text-align:right;">Without Visit</th><th style="text-align:right;">No Activity</th></tr>`;
+
+  if(!rows.length){body.innerHTML='<tr><td colspan="8" class="empty">No data</td></tr>';return;}
+
+  const levelIcons=['ti-users-group','ti-user-cog','ti-user','ti-building-skyscraper'];
+  const levelColors=['#4f8ef7','#9b6dff','#f5a623','#34c98a'];
+
+  let clusterIdx=0;
+  body.innerHTML=rows.map(r=>{
+    const indent=r.level*24;
+    const lvlIcon=levelIcons[r.level];
+    const lvlColor=levelColors[r.level];
+    const fontWeight=r.level===3?500:600;
+    const toggle=r.expandable
+      ? `<button class="hrc-tg" onclick="toggleHRC('${r.key.replace(/'/g,"\\'").replace(/"/g,'&quot;')}')" style="color:${lvlColor};">${r.expanded?'−':'+'}</button>`
+      : `<span style="display:inline-block;width:28px;"></span>`;
+    if(r.level===0)clusterIdx++;
+    const numberCell=r.level===0?`<td style="color:var(--muted);text-align:center;font-weight:500;">${clusterIdx}</td>`:`<td></td>`;
+    const labelNode=r.level===3
+      ? `<span style="font-weight:${fontWeight};">${pemrEsc(r.label)}</span>${r.sublabel?`<div style="font-size:10px;color:var(--muted);margin-left:0;margin-top:2px;">${pemrEsc(r.sublabel)}</div>`:''}`
+      : `<span style="font-weight:${fontWeight};">${pemrEsc(r.label)}</span>`;
+    const projCount=r.counts.projects;
+    return `<tr class="hrc-row-${r.level}">
+      ${numberCell}
+      <td style="padding-left:${12+indent}px;"><span style="display:inline-flex;align-items:center;gap:6px;">${toggle}<i class="ti ${lvlIcon}" style="color:${lvlColor};font-size:14px;"></i>${labelNode}</span></td>
+      <td style="text-align:right;font-weight:${fontWeight};color:${lvlColor};">${projCount}</td>
+      <td style="text-align:right;color:${r.counts.updated?'#34c98a':'var(--muted)'};font-weight:500;">${r.counts.updated||'—'}</td>
+      <td style="text-align:right;color:${r.counts.pending?'#e74c3c':'var(--muted)'};font-weight:500;">${r.counts.pending||'—'}</td>
+      <td style="text-align:right;color:${r.counts.onsite?'#34c98a':'var(--muted)'};">${r.counts.onsite||'—'}</td>
+      <td style="text-align:right;color:${r.counts.without?'#3bc0d8':'var(--muted)'};">${r.counts.without||'—'}</td>
+      <td style="text-align:right;color:${r.counts.noact?'#f5a623':'var(--muted)'};">${r.counts.noact||'—'}</td>
+    </tr>`;
+  }).join('');
 }
 
 loadAll();
